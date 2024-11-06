@@ -1,13 +1,18 @@
-name: Run tests
+name: Deploy to Render
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+    push:
+      tags:
+      - 'v*' 
+    pull_request:
+      branches:
+        - main
 
 jobs:
-  pytest:
+
+  testing:
+
+    name: Run Tests
     runs-on: ubuntu-latest
 
     services:
@@ -23,15 +28,12 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
+
     - uses: actions/checkout@v4
 
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-
-    - name: Prepare environment
-      run: |
-        sed -i '/rosemary @ file:\/\/\/app/d' requirements.txt
 
     - name: Install dependencies
       run: |
@@ -48,3 +50,17 @@ jobs:
         MARIADB_PASSWORD: uvlhub_password
       run: |
         pytest app/modules/ --ignore-glob='*selenium*'
+
+  deploy:
+    name: Deploy to Render
+    needs: testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Deploy to Render
+        env:
+          deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          curl "$deploy_url"
