@@ -1,0 +1,19 @@
+name: Protect Main Branch
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  restrict-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if the source branch is develop
+        if: github.head_ref != 'develop'
+        run: |
+          echo "ERROR: Solo se permiten pull requests a 'main' desde 'develop'."
+          exit 1
+      - name: Allow merge
+        if: github.head_ref == 'develop'
+        run: echo "Pull request desde 'develop' permitido."
