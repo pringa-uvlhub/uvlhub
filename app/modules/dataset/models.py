@@ -58,6 +58,7 @@ class DSMetaData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     deposition_id = db.Column(db.Integer)
     title = db.Column(db.String(120), nullable=False)
+    rating = db.Column(db.Float, default=0.0, nullable=False)
     description = db.Column(db.Text, nullable=False)
     publication_type = db.Column(SQLAlchemyEnum(PublicationType), nullable=False)
     publication_doi = db.Column(db.String(120))
@@ -66,6 +67,12 @@ class DSMetaData(db.Model):
     ds_metrics_id = db.Column(db.Integer, db.ForeignKey('ds_metrics.id'))
     ds_metrics = db.relationship('DSMetrics', uselist=False, backref='ds_meta_data', cascade="all, delete")
     authors = db.relationship('Author', backref='ds_meta_data', lazy=True, cascade="all, delete")
+
+    def update_rating(self):
+        total_ratings = sum(rating.rating for rating in self.ratings)
+        count = len(self.ratings)
+        self.rating = total_ratings / count if count > 0 else 0
+        db.session.commit()
 
 
 class DataSet(db.Model):
@@ -111,6 +118,7 @@ class DataSet(db.Model):
     def to_dict(self):
         return {
             'title': self.ds_meta_data.title,
+            'rating': self.ds_meta_data.rating,
             'id': self.id,
             'created_at': self.created_at,
             'created_at_timestamp': int(self.created_at.timestamp()),
@@ -164,3 +172,13 @@ class DOIMapping(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
+
+
+class DSRating(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    dataset_id = db.Column(db.Integer, db.ForeignKey('ds_meta_data.id'), nullable=False)
+    rating = db.Column(db.Float, nullable=False)
+    rated_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    ds_meta_data = db.relationship('DSMetaData', backref=db.backref('ratings', lazy=True))

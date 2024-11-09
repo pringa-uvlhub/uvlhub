@@ -8,14 +8,15 @@ import uuid
 from flask import request
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData
+from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, DSRating
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DOIMappingRepository,
     DSDownloadRecordRepository,
     DSMetaDataRepository,
     DSViewRecordRepository,
-    DataSetRepository
+    DataSetRepository,
+    DSRatingRepository
 )
 from app.modules.featuremodel.repositories import FMMetaDataRepository, FeatureModelRepository
 from app.modules.hubfile.repositories import (
@@ -196,6 +197,26 @@ class DOIMappingService(BaseService):
             return doi_mapping.dataset_doi_new
         else:
             return None
+
+
+class DSRatingService(BaseService):
+    def __init__(self):
+        super().__init__(DSRatingRepository())
+
+    def add_or_update_rating(self, dataset_id: int, user_id: int, rating_value: int) -> DSRating:
+        rating = self.repository.get_user_rating(dataset_id, user_id)
+        if rating:
+            rating.value = rating_value
+        else:
+            rating = self.repository.create(commit=False, data_set_id=dataset_id, user_id=user_id, value=rating_value)
+        self.repository.session.commit()
+        return rating
+
+    def get_dataset_average_rating(self, dataset_id: int) -> float:
+        return self.repository.get_average_rating(dataset_id)
+
+    def get_total_ratings(self, dataset_id: int) -> int:
+        return self.repository.count_ratings(dataset_id)
 
 
 class SizeService():
