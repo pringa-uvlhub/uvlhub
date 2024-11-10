@@ -13,6 +13,7 @@ class AuthSeeder(BaseSeeder):
         users = [
             User(email='user1@example.com', password='1234'),
             User(email='user2@example.com', password='1234'),
+            User(email='admin1@example.com', password='1234', is_admin=True),
         ]
 
         # Inserted users with their assigned IDs are returned by `self.seed`.
@@ -20,7 +21,7 @@ class AuthSeeder(BaseSeeder):
 
         # Create profiles for each user inserted.
         user_profiles = []
-        names = [("John", "Doe"), ("Jane", "Doe")]
+        names = [("John", "Doe"), ("Jane", "Doe"), ("Admin", "Doe")]
 
         for user, name in zip(seeded_users, names):
             profile_data = {
