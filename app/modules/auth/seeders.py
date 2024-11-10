@@ -14,6 +14,7 @@ class AuthSeeder(BaseSeeder):
             User(email='user2@example.com', password='1234'),
             User(email='admin1@example.com', password='1234', is_admin=True),
             User(email='user3@example.com', password='1234'),  # Este usuario no tendrá comunidades
+            User(email='admin1@example.com', password='1234', is_admin=True),
         ]
 
         seeded_users = self.seed(users)
