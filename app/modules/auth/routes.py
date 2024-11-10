@@ -37,10 +37,13 @@ def show_signup_form():
         except Exception as exc:
             return render_template("auth/signup_form.html", form=form, error=f'Error creating user: {exc}')
 
-        return redirect(url_for('public.index'))
+        return redirect(url_for('auth.confirmation'))
 
     return render_template("auth/signup_form.html", form=form)
 
+@auth_bp.route('/confirmation/')
+def confirmation():
+    return render_template('auth/confirmation.html')
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
