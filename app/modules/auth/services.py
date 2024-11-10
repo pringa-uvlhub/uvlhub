@@ -2,7 +2,7 @@ import os
 from flask_login import login_user
 from flask_login import current_user
 
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Message
 from flask import url_for, render_template
 from app import mail
@@ -30,7 +30,6 @@ class AuthenticationService(BaseService):
     def send_verification_email(self, user_data):
         # Almacenar los datos del usuario en el token
         token = self.serializer.dumps(user_data, salt='email-confirmation-salt')
-        
         confirm_url = url_for('auth.confirm_email', token=token, _external=True)
         html = render_template('auth/email_verification.html', confirm_url=confirm_url, user_name=user_data['name'])
         msg = Message(subject="Please verify your email", recipients=[user_data['email']], html=html)
@@ -39,7 +38,11 @@ class AuthenticationService(BaseService):
     def confirm_token(self, token, expiration=3600):  # 1 hora
         try:
             email = self.serializer.loads(token, salt='email-confirmation-salt', max_age=expiration)
-        except:
+        except SignatureExpired:
+            # El token ha expirado
+            return False
+        except BadSignature:
+            # El token es inválido (posible manipulación)
             return False
         return email
 

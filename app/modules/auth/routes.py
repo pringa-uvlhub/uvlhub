@@ -1,6 +1,7 @@
 from flask import render_template, redirect, url_for, request, flash
 from flask_login import current_user, login_user, logout_user
 
+from itsdangerous import SignatureExpired
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import SignupForm, LoginForm
 from app.modules.auth.services import AuthenticationService
@@ -27,12 +28,11 @@ def show_signup_form():
 
         try:
             user_data = {
-            'email': email,
-            'password': password,
-            'name': name,
-            'surname': surname
+                'email': email,
+                'password': password,
+                'name': name,
+                'surname': surname
             }
-            
             authentication_service.send_verification_email(user_data)
         except Exception as exc:
             return render_template("auth/signup_form.html", form=form, error=f'Error creating user: {exc}')
@@ -41,9 +41,11 @@ def show_signup_form():
 
     return render_template("auth/signup_form.html", form=form)
 
+
 @auth_bp.route('/confirmation/')
 def confirmation():
     return render_template('auth/confirmation.html')
+
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -65,17 +67,18 @@ def logout():
     logout_user()
     return redirect(url_for('public.index'))
 
+
 @auth_bp.route('/confirm/<token>')
 def confirm_email(token):
     try:
         # Desencriptar el token y recuperar los datos del usuario
         user_data = authentication_service.serializer.loads(token, salt='email-confirmation-salt', max_age=3600)
-    #except SignatureExpired:
-    #    flash('The confirmation link has expired.', 'error')
-    #    return redirect(url_for('auth.login'))
+    except SignatureExpired:
+        flash('The confirmation link has expired.', 'error')
+        return redirect(url_for('auth.show_signup_form'))
     except Exception:
         flash('Invalid confirmation token.', 'error')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.show_signup_form'))
     try:
         # Crear el usuario en la base de datos
         user = authentication_service.create_with_profile(**user_data)
@@ -83,4 +86,4 @@ def confirm_email(token):
         return redirect(url_for('public.index'))
     except Exception as e:
         flash(f"Error creating user: {str(e)}", "error")
-        return redirect(url_for('auth.signup'))
+        return redirect(url_for('auth.login'))
