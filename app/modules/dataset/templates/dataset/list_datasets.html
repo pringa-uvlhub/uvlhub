@@ -135,16 +135,19 @@
     document.addEventListener('DOMContentLoaded', function () {
         {% for dataset in datasets %}
         const starRatingContainer{{ dataset.id }} = document.getElementById('star-rating-{{ dataset.id }}');
-        const averageRatingElement{{ dataset.id }} = document.getElementById('average-rating-{{ dataset.id }}');
-        
-        // Función para agregar evento a cada estrella
+                
+        // Agregar evento a cada estrella
         starRatingContainer{{ dataset.id }}.querySelectorAll('span').forEach(star => {
             star.addEventListener('click', function () {
                 const ratingValue = this.getAttribute('data-value');
                 submitRating({{ dataset.id }}, ratingValue);
             });
         });
-
+        
+        // Cargar el promedio de calificación inicial
+        updateAverageRating({{ dataset.id }});
+        {% endfor %}
+        
         // Enviar la calificación al backend
         function submitRating(datasetId, ratingValue) {
             fetch(`/datasets/${datasetId}/rate`, {
@@ -161,7 +164,7 @@
             })
             .catch(error => console.error('Error submitting rating:', error));
         }
-
+        
         // Actualizar el promedio de calificación
         function updateAverageRating(datasetId) {
             fetch(`/datasets/${datasetId}/average-rating`)
@@ -171,12 +174,9 @@
             })
             .catch(error => console.error('Error fetching average rating:', error));
         }
-
-        // Cargar el promedio de calificación inicial
-        updateAverageRating({{ dataset.id }});
-        {% endfor %}
     });
 </script>
+
 
 {% endblock %}
 
