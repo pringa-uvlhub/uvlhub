@@ -32,7 +32,7 @@ class AuthenticationService(BaseService):
         token = self.serializer.dumps(user_data, salt='email-confirmation-salt')
         
         confirm_url = url_for('auth.confirm_email', token=token, _external=True)
-        html = render_template('auth/email_verification.html', confirm_url=confirm_url)
+        html = render_template('auth/email_verification.html', confirm_url=confirm_url, user_name=user_data['name'])
         msg = Message(subject="Please verify your email", recipients=[user_data['email']], html=html)
         mail.send(msg)
 
