@@ -58,8 +58,15 @@ def my_profile():
 @profile_bp.route('/profile/<int:user_id>')
 @login_required
 def user_profile(user_id):
+
+    if user_id == current_user.id:
+        return redirect(url_for('profile.my_profile'))
+
     user = db.session.query(User).filter_by(id=user_id).first()
-        
+
+    if not user:
+        return redirect(url_for('team.index'))
+
     page = request.args.get('page', 1, type=int)
     per_page = 5
     
