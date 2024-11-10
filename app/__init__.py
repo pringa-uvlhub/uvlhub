@@ -5,7 +5,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 from flask_migrate import Migrate
-
+from flask_mail import Mail
 from core.configuration.configuration import get_app_version
 from core.managers.module_manager import ModuleManager
 from core.managers.config_manager import ConfigManager
@@ -18,7 +18,7 @@ load_dotenv()
 # Create the instances
 db = SQLAlchemy()
 migrate = Migrate()
-
+mail = Mail()
 
 def create_app(config_name='development'):
     app = Flask(__name__)
@@ -30,6 +30,19 @@ def create_app(config_name='development'):
     # Initialize SQLAlchemy and Migrate with the app
     db.init_app(app)
     migrate.init_app(app, db)
+    app.config['SECRET_KEY'] = 'secret_key'
+     
+    # Configure mail settings
+    app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USE_SSL'] = False
+    app.config['MAIL_USERNAME'] = 'pruebasegc71@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'hykf iymv omwu rfjy '
+    app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME'] 
+    
+    # Initialize mail
+    mail.init_app(app)
 
     # Register modules
     module_manager = ModuleManager(app)

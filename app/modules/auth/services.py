@@ -2,6 +2,10 @@ import os
 from flask_login import login_user
 from flask_login import current_user
 
+from itsdangerous import URLSafeTimedSerializer
+from flask_mail import Message
+from flask import url_for, render_template
+from app import mail
 from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
@@ -14,13 +18,30 @@ class AuthenticationService(BaseService):
     def __init__(self):
         super().__init__(UserRepository())
         self.user_profile_repository = UserProfileRepository()
-
+        self.serializer = URLSafeTimedSerializer('secret_key')
+        
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
         if user is not None and user.check_password(password):
             login_user(user, remember=remember)
             return True
         return False
+
+    def send_verification_email(self, user_data):
+        # Almacenar los datos del usuario en el token
+        token = self.serializer.dumps(user_data, salt='email-confirmation-salt')
+        
+        confirm_url = url_for('auth.confirm_email', token=token, _external=True)
+        html = render_template('auth/email_verification.html', confirm_url=confirm_url)
+        msg = Message(subject="Please verify your email", recipients=[user_data['email']], html=html)
+        mail.send(msg)
+
+    def confirm_token(self, token, expiration=3600):  # 1 hora
+        try:
+            email = self.serializer.loads(token, salt='email-confirmation-salt', max_age=expiration)
+        except:
+            return False
+        return email
 
     def is_email_available(self, email: str) -> bool:
         return self.repository.get_by_email(email) is None
