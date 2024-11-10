@@ -128,12 +128,12 @@ class DSRatingRepository(BaseRepository):
     def __init__(self):
         super().__init__(DSRating)
 
-    def get_user_rating(self, dataset_id: int, user_id: int) -> Optional[DSRating]:
-        return self.model.query.filter_by(DataSet.id == dataset_id, DataSet.user_id == user_id).first()
+    def get_user_rating(self, ds_meta_data_id: int, user_id: int) -> Optional[DSRating]:
+        return self.model.query.filter(DSMetaData.id == ds_meta_data_id, DataSet.user_id == user_id).first()
 
-    def get_average_rating(self, dataset_id: int) -> float:
-        average = self.model.query.filter_by(DataSet.id == dataset_id).with_entities(func.avg(DSRating.value)).scalar()
+    def get_average_rating(self, ds_meta_data_id: int) -> float:
+        average = self.model.query.filter(DSMetaData.id == ds_meta_data_id).with_entities(func.avg(DSRating.rating)).scalar()
         return average if average else 0.0
 
-    def count_ratings(self, dataset_id: int) -> int:
-        return self.model.query.filter_by(DataSet.id == dataset_id).count()
+    def count_ratings(self, ds_meta_data_id: int) -> int:
+        return self.model.query.filter(DSMetaData.id == ds_meta_data_id).count()
