@@ -51,7 +51,7 @@
                             <div class="col-lg-6 col-xs-12 col-md-12">
                                 <div class="mb-3">
                                     {{ form.title.label(class="form-label") }} *
-                                    {{ form.title(class="form-control") }}
+                                    {{ form.title(class="form-control", value= dataset.title) }}
                                     {% for error in form.title.errors %}
                                         <span style="color: red;">{{ error }}</span>
                                     {% endfor %}
@@ -61,7 +61,7 @@
                             <div class="col-12">
                                 <div class="mb-3">
                                     {{ form.desc.label(class="form-label") }} *
-                                    {{ form.desc(rows=4, class="form-control") }}
+                                    {{ form.desc(rows=4, class="form-control", value= dataset.desc) }}
                                     {% for error in form.desc.errors %}
                                         <span style="color: red;">{{ error }}</span>
                                     {% endfor %}
@@ -71,7 +71,7 @@
                             <div class="col-lg-6 col-6">
                                 <div class="mb-3">
                                     {{ form.publication_type.label(class="form-label") }}
-                                    {{ form.publication_type(class="form-control") }}
+                                    {{ form.publication_type(class="form-control", value= dataset.publication_type) }}
                                 </div>
 
                             </div>
@@ -79,7 +79,7 @@
                             <div class="col-lg-6 col-6">
                                 <div class="mb-3">
                                     {{ form.publication_doi.label(class="form-label") }}
-                                    {{ form.publication_doi(class="form-control") }}
+                                    {{ form.publication_doi(class="form-control", value= dataset.publication_doi) }}
                                     {% for error in form.publication_doi.errors %}
                                         <span style="color: red;">{{ error }}</span>
                                     {% endfor %}
@@ -89,7 +89,7 @@
                             <div class="col-6">
                                 <div class="mb-3">
                                     {{ form.tags.label(class="form-label") }}
-                                    {{ form.tags(class="form-control") }}
+                                    {{ form.tags(class="form-control", value= dataset.tags) }}
                                     {% for error in form.tags.errors %}
                                         <span style="color: red;">{{ error }}</span>
                                     {% endfor %}
@@ -225,33 +225,68 @@
                 <span class="text-danger" id="alerts" style="display: none">
                     </span>
 
-                <ul class="mt-2" id="file-list"></ul>
+                <ul class="mt-2" id="file-list">
+                    {% for feature_model in feature_models %}
+                    {% for file in feature_model.files %}
+                    <li id="file-{{ file.id }}" data-filename="{{ file.name }}" style="display: none">
+                        <!-- Mostrar el nombre del archivo -->
+                        {{ file.name }}
+                    </li>
+                    {% endfor %}
+                    {% endfor %}
+                </ul>
 
                 <script>
-                    let dropzone = Dropzone.options.myDropzone = {
+                   let dropzone = Dropzone.options.myDropzone = {
                         url: "/dataset/file/upload",
                         paramName: 'file',
                         maxFilesize: 10,
                         acceptedFiles: '.uvl',
                         init: function () {
+                            var myDropzone = this;
 
                             let fileList = document.getElementById('file-list');
                             let dropzoneText = document.getElementById('dropzone-text');
                             let alerts = document.getElementById('alerts');
-
                             this.on('addedfile', function (file) {
 
-                                let ext = file.name.split('.').pop();
-                                if (ext !== 'uvl') {
-                                    this.removeFile(file);
+                                    let ext = file.name.split('.').pop();
+                                    if (ext !== 'uvl') {
+                                        this.removeFile(file);
 
-                                    let alert = document.createElement('p');
-                                    alert.textContent = 'Invalid file extension: ' + file.name;
-                                    alerts.appendChild(alert);
-                                    alerts.style.display = 'block';
-                                }
+                                        let alert = document.createElement('p');
+                                        alert.textContent = 'Invalid file extension: ' + file.name;
+                                        alerts.appendChild(alert);
+                                        alerts.style.display = 'block';
+                                    }
 
-                            });
+                                });
+                            
+                            let fileItems = fileList.querySelectorAll('li');
+                                fileItems.forEach(item => {
+                                    let fileName = item.getAttribute('data-filename');
+                                    console.log(fileName)
+                                    fetch(`/file/${fileName}`)
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            throw new Error(`Hubfile with name "${fileName}" not found`);
+                                        }
+                                        return response.json();  
+                                    })
+                                    .then(data => {
+                                        
+                                        console.log('Hubfile data:', data);
+                                        if (data && data.name) {
+
+                                            simulateFileAddition(data); 
+                                        } else {
+                                            console.error('Invalid data structure or missing "name" property');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching hubfile:', error);
+                                    });
+                                })
 
                             this.on('success', function (file, response) {
 
@@ -313,7 +348,7 @@
                                 removeButton.addEventListener('click', function () {
                                     fileList.removeChild(listItem);
                                     this.removeFile(file);
-
+                                    
                                     // Ajax request
                                     let xhr = new XMLHttpRequest();
                                     xhr.open('POST', '/dataset/file/delete', true);
@@ -439,8 +474,13 @@
                                 alerts.style.display = 'block';
                             });
 
+                            function simulateFileAddition(file) {
+                                myDropzone.emit("addedfile", file);
+                                myDropzone.emit("success", file, { filename: file.name });
+                            }
                         }
                     };
+                    
 
 
                 </script>

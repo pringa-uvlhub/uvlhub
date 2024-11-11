@@ -41,10 +41,20 @@ from app.modules.hubfile.repositories import (
 from app.modules.hubfile.services import(
     HubfileService
 )
+from app.modules.dataset.repositories import (
+    AuthorRepository,
+    DOIMappingRepository,
+    DSDownloadRecordRepository,
+    DSMetaDataRepository,
+    DSViewRecordRepository,
+    DataSetRepository
+)
+
 
 logger = logging.getLogger(__name__)
 
-
+metadata_repository=DSMetaDataRepository()
+dataset_repository=DataSetRepository()
 dataset_service = DataSetService()
 author_service = AuthorService()
 dsmetadata_service = DSMetaDataService()
@@ -143,6 +153,14 @@ def create_empty_dataset(feature_model_id):
 @login_required
 def build_dataset():
     form = DataSetForm()
+    metadata = metadata_repository.filter_by_build()
+    if metadata:
+        dataset= dataset_repository.get_dataset_by_metadata_id(metadata.id)
+        feature_models=dataset.feature_models
+
+        print(feature_models)
+    else:
+        metadata=DataSetForm()
     if request.method == "POST":
 
         dataset = None
@@ -152,7 +170,6 @@ def build_dataset():
 
         try:
             logger.info("Creating dataset...")
-            dataset = dataset_service.create_from_form(form=form, current_user=current_user)
             logger.info(f"Created dataset: {dataset}")
             dataset_service.move_feature_models(dataset)
         except Exception as exc:
@@ -199,7 +216,7 @@ def build_dataset():
         msg = "Everything works!"
         return jsonify({"message": msg}), 200
 
-    return render_template("dataset/build_dataset.html", form=form)
+    return render_template("dataset/build_dataset.html", form=form, dataset=metadata, feature_models=feature_models)
 
 
 
@@ -251,6 +268,7 @@ def upload():
 def delete():
     data = request.get_json()
     filename = data.get("file")
+    print(data)
     temp_folder = current_user.temp_folder()
     filepath = os.path.join(temp_folder, filename)
 

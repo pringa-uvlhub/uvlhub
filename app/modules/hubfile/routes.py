@@ -190,3 +190,19 @@ def view_file_name(file_name):
             return jsonify({'success': False, 'error': 'File not found'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@hubfile_bp.route('/file/<string:file_name>', methods=['GET'])
+def get_hubfile(file_name):
+    try:
+        # Llamamos al método del repositorio para obtener el hubfile por su nombre
+        hubfile = HubfileRepository.get_hubfile_by_name(file_name)
+        
+        
+        # Devolver el objeto como un diccionario serializado en formato JSON
+        return jsonify(hubfile.to_dict())
+    except Exception as e:
+        # Si ocurre un error, Flask se encargará de enviar una respuesta 404 automáticamente
+        return jsonify({'error': str(e)}), 404
+
+
