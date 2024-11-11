@@ -19,3 +19,9 @@ class UserRepository(BaseRepository):
 
     def get_by_email(self, email: str):
         return self.model.query.filter_by(email=email).first()
+
+    def count_total_users(self):
+        return self.model.query.count()
+
+    def count_total_admin_users(self):
+        return self.model.query.filter_by(is_admin=True).count()
