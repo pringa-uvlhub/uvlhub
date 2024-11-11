@@ -269,7 +269,7 @@
                             </div>
                             <div class="col-12 text-end" >
 
-                                <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
+                                <button onclick="viewFile('{{ file.name }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
                                     <i data-feather="eye"></i> View
                                 </button>
 
@@ -279,7 +279,7 @@
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
                                         <li>
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">Syntax check</a>
+                                            <a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}', '{{ file.name }}')">Syntax check</a>
                                         </li>
                                         <!--
                                         <li>
@@ -293,29 +293,32 @@
                                     <button id="btnGroupDropExport{{ file.id }}" type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
                                         <i data-feather="download"></i> Export
                                     </button>
-                                    <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.id }}">
+                                    <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.name }}">
                                         <li>
-                                            <a class="dropdown-item" href="{{ url_for('hubfile.download_file', file_id=file.id) }}">
+                                            <a class="dropdown-item" href="{{ url_for('hubfile.download_file_name', file_name=file.name) }}">
                                                 UVL
                                             </a>
-                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe', file_id=file.id) }}">
+                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe_name', file_name=file.name) }}">
                                                 Glencoe
                                             </a>
                                         </li>
                                         <li>
-                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_cnf', file_id=file.id) }}">
+                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_cnf_name', file_name=file.name) }}">
                                                 DIMACS
                                             </a>
                                         </li>
                                         <li>
-                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_splot', file_id=file.id) }}">
+                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_splot_name', file_name=file.name) }}">
                                                 SPLOT
                                             </a>
                                         </li>
                                     </ul>
                                 </div>
-                                
-                                
+
+                                <button onclick="addToDataset('{{ feature_model.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
+                                    <i data-feather="eye"></i>
+                                     Add to build dataset
+                                </button>
 
                             </div>
                         </div>
@@ -372,7 +375,7 @@
     var currentFileId;
 
     function viewFile(fileId) {
-        fetch(`/file/view/${fileId}`)
+        fetch(`/file/view/name/${fileId}`)
             .then(response => response.json())
             .then(data => {
                 document.getElementById('fileContent').textContent = data.content;
@@ -384,6 +387,34 @@
             .catch(error => console.error('Error loading file:', error));
     }
 
+    function addToDataset(feature_model_id) {
+
+        //primero hay que buscar si hay algun dataset que esté build=true
+        // luego hay que hacer una funcion para que si ya hay un dataset asi se añadan los uvl files
+        //
+        
+        fetch(`/dataset/build_empty/${feature_model_id}`, {
+                            method: 'POST',
+                        })
+                            .then(response => {
+                                if (response.ok) {
+                                    console.log('Dataset sent successfully');
+                                    response.json().then(data => {
+                                        console.log(data.message);
+                                        window.location.href = "/dataset/list";
+                                    });
+                                } else {
+                                    response.json().then(data => {
+                                        console.error('Error: ' + data.message);
+                                        hide_loading();
+
+                                        write_upload_error(data.message);
+
+                                    });
+                                }
+                            })
+    }
+
     function showLoading() {
         document.getElementById("loading").style.display = "initial";
     }
@@ -392,11 +423,12 @@
         document.getElementById("loading").style.display = "none";
     }
 
-    function checkUVL(file_id) {
+    function checkUVL(file_id,file_name) {
     const outputDiv = document.getElementById('check_' + file_id);
+    console.log(outputDiv)
     outputDiv.innerHTML = ''; // Clear previous output
 
-    fetch(`/flamapy/check_uvl/${file_id}`)
+    fetch(`/flamapy/check_uvl/${file_name}`)
         .then(response => {
             return response.json().then(data => ({
                 status: response.status,
