@@ -71,6 +71,12 @@ class DataSetService(BaseService):
     def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
         return self.repository.get_unsynchronized_dataset(current_user_id, dataset_id)
 
+    def get_staging_area(self, current_user_id: int) -> DataSet:
+        return self.repository.get_staging_area(current_user_id)
+
+    def get_staging_area_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
+        return self.repository.get_staging_area_dataset(current_user_id, dataset_id)
+
     def latest_synchronized(self):
         return self.repository.latest_synchronized()
 

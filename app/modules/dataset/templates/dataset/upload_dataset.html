@@ -157,16 +157,16 @@
                                             {% endif %}
                                         >
                                             <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.name.label(class="form-label") }}
-                                                {{ subform.form.name(class="form-control", disabled=loop.first) }}
+                                                {{ subform.name.label(class="form-label") }}
+                                                {{ subform.name(class="form-control", disabled=loop.first) }}
                                                 {% for error in subform.name.errors %}
                                                     <span style="color: red;">{{ error }}</span>
                                                 {% endfor %}
                                             </div>
 
                                             <div class="col-lg-6 col-12 mb-3">
-                                                {{ subform.form.affiliation.label(class="form-label") }}
-                                                {{ subform.form.affiliation(class="form-control", disabled=loop.first) }}
+                                                {{ subform.affiliation.label(class="form-label") }}
+                                                {{ subform.affiliation(class="form-control", disabled=loop.first) }}
                                                 {% for error in subform.name.errors %}
                                                     <span style="color: red;">{{ error }}</span>
                                                 {% endfor %}
@@ -450,6 +450,18 @@
 
     </div>
 
+    {% if request.path.startswith('/dataset/upload') %}
+    <div class="col-12">
+
+        <button type="button" class="btn btn-primary mt-2" id="create_button">Crear Dataset</button>
+        <div id="error_message" style="color: red;"></div>
+    </div>
+
+       
+        
+    {% endif %}
+
+    {% if request.path.startswith('/dataset/staging-area/') %}
     <div class="row" id="upload_dataset" style="display: none">
 
         <div class="col-12">
@@ -522,6 +534,7 @@
         </div>
 
     </div>
+    {% endif %}
 
 
 {% endblock %}

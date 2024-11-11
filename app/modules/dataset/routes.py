@@ -20,6 +20,7 @@ from flask import (
 from flask_login import login_required, current_user
 
 from app.modules.dataset.forms import DataSetForm
+from app.modules.dataset.forms import AuthorForm
 from app.modules.dataset.models import (
     DSDownloadRecord
 )
@@ -47,7 +48,7 @@ ds_view_record_service = DSViewRecordService()
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
 @login_required
-def create_dataset():
+def upload_dataset_zenodo():
     form = DataSetForm()
     if request.method == "POST":
 
@@ -108,6 +109,57 @@ def create_dataset():
     return render_template("dataset/upload_dataset.html", form=form)
 
 
+@dataset_bp.route("/dataset/create", methods=["POST"])
+@login_required
+def create_dataset():
+    form = DataSetForm()
+    if request.method == "POST":
+
+        dataset = None
+
+        if not form.validate_on_submit():
+            return jsonify({"message": form.errors}), 400
+
+        try:
+            logger.info("Creating dataset...")
+            dataset = dataset_service.create_from_form(form=form, current_user=current_user)
+            logger.info(f"Created dataset: {dataset}")
+            dataset_service.move_feature_models(dataset)
+        except Exception as exc:
+            logger.exception(f"Exception while create dataset data in local {exc}")
+            return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+
+        # Delete temp folder
+        file_path = current_user.temp_folder()
+        if os.path.exists(file_path) and os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+
+        msg = "Everything works!"
+        return jsonify({"message": msg}), 200
+
+    return render_template("dataset/upload_dataset.html", form=form)
+
+@dataset_bp.route("/dataset/staging-area/<int:dataset_id>", methods=["GET", "POST"])
+@login_required
+def upload_staging_area_dataset(dataset_id):
+    dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+
+    if not dataset:
+        abort(404)
+    form = DataSetForm()
+    if request.method == 'GET':
+        form.title.data = dataset.ds_meta_data.title
+        form.desc.data = dataset.ds_meta_data.description
+        form.publication_type.data = dataset.ds_meta_data.publication_type.value
+        form.publication_doi.data = dataset.ds_meta_data.publication_doi
+        form.dataset_doi.data = dataset.ds_meta_data.dataset_doi
+        form.tags.data = dataset.ds_meta_data.tags
+        form.authors.entries = [AuthorForm(obj=author) for author in dataset.ds_meta_data.authors]
+        feature_models = dataset.feature_models
+
+        return render_template("dataset/upload_dataset.html", dataset=dataset, form=form, feature_models=feature_models)
+
+
 @dataset_bp.route("/dataset/list", methods=["GET", "POST"])
 @login_required
 def list_dataset():
@@ -115,6 +167,7 @@ def list_dataset():
         "dataset/list_datasets.html",
         datasets=dataset_service.get_synchronized(current_user.id),
         local_datasets=dataset_service.get_unsynchronized(current_user.id),
+        unprepared_datasets=dataset_service.get_staging_area(current_user.id),
     )
 
 

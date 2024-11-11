@@ -59,6 +59,7 @@ class DSMetaData(db.Model):
     deposition_id = db.Column(db.Integer)
     title = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text, nullable=False)
+    staging_area = db.Column(db.Boolean, nullable=False, default=True)
     publication_type = db.Column(SQLAlchemyEnum(PublicationType), nullable=False)
     publication_doi = db.Column(db.String(120))
     dataset_doi = db.Column(db.String(120))
@@ -115,6 +116,7 @@ class DataSet(db.Model):
             'created_at': self.created_at,
             'created_at_timestamp': int(self.created_at.timestamp()),
             'description': self.ds_meta_data.description,
+            'staging_area': self.ds_meta_data.staging_area,
             'authors': [author.to_dict() for author in self.ds_meta_data.authors],
             'publication_type': self.get_cleaned_publication_type(),
             'publication_doi': self.ds_meta_data.publication_doi,
