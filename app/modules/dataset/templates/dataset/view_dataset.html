@@ -159,7 +159,7 @@
             </div>
 
             {% if dataset.ds_meta_data.dataset_doi %}
-            <div class="card-body" style="padding-top: 0px">
+            <div class="card-body" style="padding-top: 0px; display: flex; justify-content: space-between; gap: 50px;">
 
                 <div id="dataset_doi_uvlhub" style="display: none">
                     {{ dataset.get_uvlhub_doi() }}
@@ -178,8 +178,22 @@
                 <div id="dataset_doi_uvlhub" style="display: none">
                     {{ dataset.get_uvlhub_doi() }}
                 </div>
-                
-            </div>
+                <div style="display: flex; flex-direction: column;">
+                    <div style="margin-top: 0px; flex-direction: column;">
+                        <div style="display: inline-block; cursor: pointer; color: #ddd;" id="star-rating-{{ dataset.id }}">
+                            {% for i in range(1, 6) %}
+                                <span data-value="{{ i }}" style="font-size: 1.5rem;">☆</span>
+                            {% endfor %}
+                        </div>
+                        <button onclick="submitRating('{{ dataset.id }}')" style="display: inline-block; margin-left: 10px; font-size: 0.9rem;">
+                            Rate
+                        </button>
+                        </div>
+                        <div>
+                            Average Rating: <span id="average-rating-{{ dataset.id }}">0</span>/5
+                        </div>
+                    </div>
+                </div>
             {% endif %}
 
         </div>
@@ -492,6 +506,69 @@
             console.error('Failed to copy text: ', err);
         });
     }
+
+
+    // Variables globales para almacenar las calificaciones seleccionadas
+    const selectedRatings = {};
+
+    // Definir submitRating en el ámbito global
+    function submitRating(datasetId) {
+        const ratingValue = selectedRatings[datasetId]; // Obtiene la calificación seleccionada del dataset
+
+        if (ratingValue > 0) { // Verifica que haya una calificación seleccionada
+            fetch(`/datasets/${datasetId}/rate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ rating: ratingValue })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Rating submitted:', data);
+                updateAverageRating(datasetId); // Actualiza el promedio de calificación después de enviar
+            })
+            .catch(error => console.error('Error submitting rating:', error));
+        } else {
+            alert('Please select a rating before submitting.');
+        }
+    }
+
+    // Definir updateAverageRating en el ámbito global
+    function updateAverageRating(datasetId) {
+        fetch(`/datasets/${datasetId}/average-rating`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('average-rating-' + datasetId).innerText = data.average_rating.toFixed(1);
+        })
+        .catch(error => console.error('Error fetching average rating:', error));
+    }
+
+    // Escuchar el evento DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function () {
+        const datasetId = {{ dataset.id }};
+        const starRatingContainer = document.getElementById('star-rating-' + datasetId);
+
+        // Agregar evento a cada estrella para seleccionar la calificación
+        starRatingContainer.querySelectorAll('span').forEach(star => {
+            star.addEventListener('click', function () {
+                const ratingValue = this.getAttribute('data-value'); // Obtiene el valor de la estrella seleccionada
+                selectedRatings[datasetId] = ratingValue; // Almacena la calificación seleccionada en la variable global
+                highlightStars(starRatingContainer, ratingValue); // Resaltar estrellas
+            });
+        });
+
+        // Actualizar el promedio de calificación inicial
+        updateAverageRating(datasetId);
+
+        // Función para resaltar las estrellas según la calificación seleccionada
+        function highlightStars(container, rating) {
+            container.querySelectorAll('span').forEach(star => {
+                const starValue = star.getAttribute('data-value');
+                star.style.color = starValue <= rating ? '#FFD700' : '#ddd'; // Cambia el color de la estrella
+            });
+        }
+    });
 </script>
 
 {% endblock %}

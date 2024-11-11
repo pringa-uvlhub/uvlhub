@@ -18,6 +18,7 @@
                             <th>Description</th>
                             <th>Publication type</th>
                             <th>Dataset DOI</th>
+                            <th>Rating</th>
                             <th>Options</th>
                         </tr>
                         </thead>
@@ -34,26 +35,20 @@
                                 <td><a href="{{ dataset.get_uvlhub_doi() }}"
                                        target="_blank">{{ dataset.get_uvlhub_doi() }}</a></td>
                                 <td>
+                                    <div id="star-rating-{{ dataset.id }}" style="color: gold; display: inline-block;">
+                                        {% for i in range(1, 6) %}
+                                            <span data-value="{{ i }}" style="font-size: 1.5rem;">★</span>
+                                        {% endfor %}
+                                    </div>
+                                    <span id="average-rating-{{ dataset.id }}" class="ms-2">-</span>/5
+                                </td>
+                                <td>
                                     <a href="{{ dataset.get_uvlhub_doi() }}">
                                         <i data-feather="eye"></i>
                                     </a>
                                     <a href="{{ url_for('dataset.download_dataset', dataset_id=dataset.id) }}">
                                         <i data-feather="download"></i>
                                     </a>
-                                    <div style="margin-top: 10px;">
-                                        <div style="display: inline-block; cursor: pointer; color: #ddd;" id="star-rating-{{ dataset.id }}">
-                                            {% for i in range(1, 6) %}
-                                                <span data-value="{{ i }}" style="font-size: 1.5rem;">☆</span>
-                                            {% endfor %}
-                                        </div>
-                                        <button onclick="submitRating('{{ dataset.id }}')" style="display: inline-block; margin-left: 10px; font-size: 0.9rem;">
-                                            Rate
-                                        </button>
-                                    </div>
-                                    
-                                    <div>
-                                        Average Rating: <span id="average-rating-{{ dataset.id }}">0</span>/5
-                                    </div>
                                 </td>
                                 </td>
                             </tr>
@@ -134,43 +129,23 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         {% for dataset in datasets %}
-        const starRatingContainer{{ dataset.id }} = document.getElementById('star-rating-{{ dataset.id }}');
-                
-        // Agregar evento a cada estrella
-        starRatingContainer{{ dataset.id }}.querySelectorAll('span').forEach(star => {
-            star.addEventListener('click', function () {
-                const ratingValue = this.getAttribute('data-value');
-                submitRating({{ dataset.id }}, ratingValue);
-            });
-        });
-        
-        // Cargar el promedio de calificación inicial
-        updateAverageRating({{ dataset.id }});
+            updateAverageRating({{ dataset.id }});
         {% endfor %}
-        
-        // Enviar la calificación al backend
-        function submitRating(datasetId, ratingValue) {
-            fetch(`/datasets/${datasetId}/rate`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ rating: ratingValue })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Rating submitted:', data);
-                updateAverageRating(datasetId);
-            })
-            .catch(error => console.error('Error submitting rating:', error));
-        }
-        
-        // Actualizar el promedio de calificación
+
+        // Función para actualizar el promedio de calificación en el frontend
         function updateAverageRating(datasetId) {
             fetch(`/datasets/${datasetId}/average-rating`)
             .then(response => response.json())
             .then(data => {
-                document.getElementById('average-rating-' + datasetId).innerText = data.average_rating.toFixed(1);
+                const averageRating = data.average_rating.toFixed(1);
+                document.getElementById('average-rating-' + datasetId).innerText = averageRating;
+
+                // Resaltar estrellas según el promedio de calificación
+                const starRatingContainer = document.getElementById('star-rating-' + datasetId);
+                starRatingContainer.querySelectorAll('span').forEach(star => {
+                    const starValue = parseInt(star.getAttribute('data-value'));
+                    star.style.color = starValue <= Math.round(averageRating) ? '#FFD700' : '#ddd';
+                });
             })
             .catch(error => console.error('Error fetching average rating:', error));
         }
