@@ -6,6 +6,7 @@ from app.modules.auth.repositories import UserRepository
 from app.modules.profile.repositories import UserProfileRepository
 from unittest.mock import patch
 
+
 @pytest.fixture(scope="module")
 def test_client(test_client):
     """

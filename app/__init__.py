@@ -20,6 +20,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 mail = Mail()
 
+
 def create_app(config_name='development'):
     app = Flask(__name__)
 
