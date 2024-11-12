@@ -47,7 +47,6 @@ class DSDownloadRecordRepository(BaseRepository):
         max_dataset = dataset_repo.get_dataset_by_id(max_dataset_id)
         return max_dataset, download_count[max_dataset_id]
 
-
     def datasets_with_most_downloads(self):
         download_count = {}
         for download in self.model.query.all():
@@ -55,21 +54,20 @@ class DSDownloadRecordRepository(BaseRepository):
                 download_count[download.dataset_id] += 1
             else:
                 download_count[download.dataset_id] = 1
-    
+
         most_downloaded_datasets = sorted(download_count.items(), key=lambda x: x[1], reverse=True)[:5]
         datasets = []
         dataset_names = []
         download_counts = []
-    
+
         for dataset_id, count in most_downloaded_datasets:
             dataset_repo = DataSetRepository()
             dataset = dataset_repo.get_dataset_by_id(dataset_id)
             datasets.append((dataset, count))
             dataset_names.append(dataset.name())  # Asegúrate de que `dataset` tenga un atributo `name`
             download_counts.append(count)
-    
+
         return dataset_names, download_counts
-    
 
     def users_with_most_downloads(self):
         download_count = {}
@@ -91,7 +89,6 @@ class DSDownloadRecordRepository(BaseRepository):
             user_email.append(user.email)
             download_counts.append(count)
         return user_email, download_counts
-
 
     def user_max_downloads(self):
         download_count = {}
@@ -142,7 +139,6 @@ class DSViewRecordRepository(BaseRepository):
                 view_date=datetime.now(timezone.utc),
                 view_cookie=user_cookie,
             )
-    
 
     def datasets_with_most_views(self):
         view_count = {}
@@ -151,12 +147,12 @@ class DSViewRecordRepository(BaseRepository):
                 view_count[view.dataset_id] += 1
             else:
                 view_count[view.dataset_id] = 1
-    
+
         most_viewed_datasets = sorted(view_count.items(), key=lambda x: x[1], reverse=True)[:5]
         datasets = []
         dataset_names = []
         view_counts = []
-    
+
         for dataset_id, count in most_viewed_datasets:
             dataset_repo = DataSetRepository()
             dataset = dataset_repo.get_dataset_by_id(dataset_id)
@@ -234,7 +230,6 @@ class DataSetRepository(BaseRepository):
             .all()
         )
 
-
     def get_dataset_by_id(self, dataset_id: int) -> DataSet:
         return self.model.query.filter_by(id=dataset_id).first()
 
@@ -242,7 +237,6 @@ class DataSetRepository(BaseRepository):
 
         dataset = self.model.query.join(DSMetaData).filter(DSMetaData.id == metadata_id).first()
         return dataset
-
 
 
 class DOIMappingRepository(BaseRepository):
