@@ -31,6 +31,19 @@ class DSDownloadRecordRepository(BaseRepository):
         max_id = self.model.query.with_entities(func.max(self.model.id)).scalar()
         return max_id if max_id is not None else 0
 
+    def max_downloads(self):
+        download_count = {}
+        for download in self.model.query:
+            if download.dataset_id in download_count:
+                download_count[download.dataset_id] += 1
+            else:
+                download_count[download.dataset_id] = 1
+        max_dataset_id = max(download_count, key=download_count.get)
+
+        dataset_repo = DataSetRepository()
+        max_dataset = dataset_repo.get_dataset_by_id(max_dataset_id)
+        return max_dataset, download_count[max_dataset_id]
+
 
 class DSMetaDataRepository(BaseRepository):
     def __init__(self):
@@ -113,6 +126,9 @@ class DataSetRepository(BaseRepository):
             .limit(5)
             .all()
         )
+
+    def get_dataset_by_id(self, dataset_id: int) -> DataSet:
+        return self.model.query.filter_by(id=dataset_id).first()
 
 
 class DOIMappingRepository(BaseRepository):
