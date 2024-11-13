@@ -14,6 +14,7 @@ from app.modules.dataset.models import (
     DataSet
 )
 from core.repositories.BaseRepository import BaseRepository
+from app.modules.auth.repositories import UserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,19 @@ class DSDownloadRecordRepository(BaseRepository):
         dataset_repo = DataSetRepository()
         max_dataset = dataset_repo.get_dataset_by_id(max_dataset_id)
         return max_dataset, download_count[max_dataset_id]
+
+    def user_max_downloads(self):
+        download_count = {}
+        for download in self.model.query:
+            if download.user_id in download_count:
+                download_count[download.user_id] += 1
+            else:
+                download_count[download.user_id] = 1
+        max_user_id = max(download_count, key=download_count.get)
+
+        user_repo = UserRepository()
+        max_user = user_repo.get_user_by_id(max_user_id)
+        return max_user, download_count[max_user_id]
 
 
 class DSMetaDataRepository(BaseRepository):

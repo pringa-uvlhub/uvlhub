@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for
+from flask import render_template
 from flask_login import login_required, current_user
 from app.modules.admin import admin_bp
 from app.modules.featuremodel.services import FeatureModelService
@@ -15,7 +15,7 @@ def index():
 @login_required
 def dashboard():
     if not current_user.is_admin:
-        return redirect(url_for('public.index'))
+        raise Exception("Access denied: you don't have authorization.")
 
     dataset_service = DataSetService()
     feature_model_service = FeatureModelService()
@@ -29,6 +29,7 @@ def dashboard():
     total_dataset_downloads = dataset_service.total_dataset_downloads()
     total_feature_model_downloads = feature_model_service.total_feature_model_downloads()
     max_downloads = dataset_service.max_downloads()
+    user_downloads = dataset_service.user_max_downloads()
 
     # Statistics: total views
     total_dataset_views = dataset_service.total_dataset_views()
@@ -50,5 +51,7 @@ def dashboard():
         users_counter=users_counter,
         admin_user_counter=admin_user_counter,
         max_downloads_dataset=max_downloads[0],
-        max_downloads=max_downloads[1]
+        max_downloads=max_downloads[1],
+        user_downloads=user_downloads[0],
+        number_downloads_user=user_downloads[1]
     )
