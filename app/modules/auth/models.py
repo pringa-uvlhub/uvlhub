@@ -18,7 +18,6 @@ class User(db.Model, UserMixin):
 
     data_sets = db.relationship('DataSet', backref='user', lazy=True)
     profile = db.relationship('UserProfile', backref='user', uselist=False)
-    
     reset_token = db.Column(db.String(256), nullable=True)
     reset_token_expiration = db.Column(db.DateTime, nullable=True)
 

@@ -21,9 +21,9 @@ migrate = Migrate()
 # Configurar Mail
 mail = Mail()
 
+
 def create_app(config_name='development'):
     app = Flask(__name__)
-    
     # Configuración del servidor de correo
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = 587
@@ -77,7 +77,7 @@ def create_app(config_name='development'):
 
 
 # Función para enviar correos de restablecimiento de contraseña
-def send_reset_email(to_email, reset_url):    
+def send_reset_email(to_email, reset_url):
     msg = Message("Restablece tu contraseña", recipients=[to_email])
     msg.body = f"Para restablecer tu contraseña, sigue este enlace: {reset_url}"
     mail.send(msg)

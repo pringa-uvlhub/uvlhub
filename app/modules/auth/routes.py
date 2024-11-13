@@ -6,7 +6,7 @@ from app.modules.auth.services import AuthenticationService, send_reset_email
 from app.modules.profile.services import UserProfileService
 
 from flask import flash
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.modules.auth.forms import ForgotPasswordForm, ResetPasswordForm
 from app.modules.auth.models import User
