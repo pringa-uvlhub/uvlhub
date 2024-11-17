@@ -38,7 +38,7 @@ class User(db.Model, UserMixin):
     def temp_folder(self) -> str:
         from app.modules.auth.services import AuthenticationService
         return AuthenticationService().temp_folder_by_user(self)
-    
+
     def generate_reset_token(self, expires_minutes=15):
         s = Serializer(current_app.config['SECRET_KEY'])
         token = s.dumps({'user_id': self.id})
