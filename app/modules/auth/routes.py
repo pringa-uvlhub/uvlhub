@@ -4,6 +4,7 @@ from app.modules.auth import auth_bp
 from app.modules.auth.forms import SignupForm, LoginForm
 from app.modules.auth.services import AuthenticationService, send_reset_email
 from app.modules.profile.services import UserProfileService
+from app.modules.auth.repositories import UserRepository
 
 from flask import flash
 from datetime import datetime
@@ -59,6 +60,7 @@ def logout():
     logout_user()
     return redirect(url_for('public.index'))
 
+
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if current_user.is_authenticated:
@@ -66,7 +68,13 @@ def forgot_password():
 
     form = ForgotPasswordForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        email = request.form.get('email')
+        user = UserRepository().get_by_email(email)
+        print(user)
+        if not user:
+            flash("El correo electrónico no existe en el sistema.", "error")
+            return redirect(url_for('auth.forgot_password'))
+
         if user:
             token = user.generate_reset_token()
             # Enviar el correo con el enlace de restablecimiento
@@ -77,6 +85,7 @@ def forgot_password():
             flash('Si el correo existe, recibirás un enlace de restablecimiento.', 'info')
         return redirect(url_for('auth.login'))
     return render_template('auth/forgot_password.html', form=form)
+
 
 @auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
