@@ -30,6 +30,7 @@ def create_app(config_name='development'):
     app.config['MAIL_USE_TLS'] = True
     app.config['MAIL_USERNAME'] = 'pringauvlhub@gmail.com'
     app.config['MAIL_PASSWORD'] = 'ffiq pmcq bvko tndg'
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = 'pringauvlhub@gmail.com'
     mail.init_app(app)  # Inicializamos el mail con la aplicación
 
