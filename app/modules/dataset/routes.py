@@ -20,7 +20,7 @@ from flask import (
 from flask_login import login_required, current_user
 
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.forms import AuthorForm
+from app.modules.dataset.forms import AuthorForm, FeatureModelForm
 from app.modules.dataset.models import (
     DSDownloadRecord
 )
@@ -59,7 +59,7 @@ def upload_dataset_zenodo():
 
         try:
             logger.info("Creating dataset...")
-            dataset = dataset_service.create_from_form(form=form, current_user=current_user)
+            dataset = dataset_service.create_from_form(form=form, current_user=current_user, staging_area=False)
             logger.info(f"Created dataset: {dataset}")
             dataset_service.move_feature_models(dataset)
         except Exception as exc:
@@ -114,7 +114,7 @@ def upload_dataset_zenodo():
 def create_dataset():
     form = DataSetForm()
     if request.method == "POST":
-
+        print(form.data)
         dataset = None
 
         if not form.validate_on_submit():
@@ -122,7 +122,7 @@ def create_dataset():
 
         try:
             logger.info("Creating dataset...")
-            dataset = dataset_service.create_from_form(form=form, current_user=current_user)
+            dataset = dataset_service.create_from_form(form=form, current_user=current_user, staging_area=True)
             logger.info(f"Created dataset: {dataset}")
             dataset_service.move_feature_models(dataset)
         except Exception as exc:
@@ -139,6 +139,7 @@ def create_dataset():
 
     return render_template("dataset/upload_dataset.html", form=form)
 
+
 @dataset_bp.route("/dataset/staging-area/<int:dataset_id>", methods=["GET", "POST"])
 @login_required
 def upload_staging_area_dataset(dataset_id):
@@ -147,6 +148,22 @@ def upload_staging_area_dataset(dataset_id):
     if not dataset:
         abort(404)
     form = DataSetForm()
+
+    if request.method == 'POST':
+        print(form.data)
+        if form.validate_on_submit():
+            try:
+                dataset_service.update_from_form(dataset, form)
+                print(dataset.feature_models)
+                return redirect(url_for('dataset.upload_staging_area_dataset', dataset_id=dataset_id))
+            except Exception as exc:
+                print(dataset.feature_models)
+                logger.exception(f"Exception while updating dataset: {exc}")
+                return jsonify({"Exception while updating dataset: ": str(exc)}), 400
+        else:
+            print(dataset.feature_models[0].fm_meta_data.title)
+            return jsonify({"message": form.errors}), 400
+
     if request.method == 'GET':
         form.title.data = dataset.ds_meta_data.title
         form.desc.data = dataset.ds_meta_data.description
@@ -155,9 +172,21 @@ def upload_staging_area_dataset(dataset_id):
         form.dataset_doi.data = dataset.ds_meta_data.dataset_doi
         form.tags.data = dataset.ds_meta_data.tags
         form.authors.entries = [AuthorForm(obj=author) for author in dataset.ds_meta_data.authors]
+        form.feature_models.entries = [FeatureModelForm(obj=fm.fm_meta_data) for fm 
+                                       in dataset.feature_models]
+        
+        print(form.feature_models.entries)
         feature_models = dataset.feature_models
+        feature_models_data = [
+            {
+                'title': fm.fm_meta_data.title,
+                'files': [{'name': file.name, 'size': file.size} for file in fm.files]
+            }
+            for fm in feature_models
+        ]
 
-        return render_template("dataset/upload_dataset.html", dataset=dataset, form=form, feature_models=feature_models)
+        return render_template("dataset/upload_dataset.html", dataset=dataset, form=form, 
+                               feature_models=feature_models_data)
 
 
 @dataset_bp.route("/dataset/list", methods=["GET", "POST"])

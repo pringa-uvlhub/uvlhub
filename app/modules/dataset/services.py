@@ -8,7 +8,7 @@ import uuid
 from flask import request
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData
+from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, Author
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DOIMappingRepository,
@@ -98,7 +98,7 @@ class DataSetService(BaseService):
     def total_dataset_views(self) -> int:
         return self.dsviewrecord_repostory.total_dataset_views()
 
-    def create_from_form(self, form, current_user) -> DataSet:
+    def create_from_form(self, form, current_user, staging_area) -> DataSet:
         main_author = {
             "name": f"{current_user.profile.surname}, {current_user.profile.name}",
             "affiliation": current_user.profile.affiliation,
@@ -107,6 +107,8 @@ class DataSetService(BaseService):
         try:
             logger.info(f"Creating dsmetadata...: {form.get_dsmetadata()}")
             dsmetadata = self.dsmetadata_repository.create(**form.get_dsmetadata())
+            if not staging_area:
+                dsmetadata.staging_area = False
             for author_data in [main_author] + form.get_authors():
                 author = self.author_repository.create(commit=False, ds_meta_data_id=dsmetadata.id, **author_data)
                 dsmetadata.authors.append(author)
@@ -138,6 +140,42 @@ class DataSetService(BaseService):
             self.repository.session.rollback()
             raise exc
         return dataset
+    
+    def update_from_form(self, dataset: DataSet, form):
+        dataset.ds_meta_data.title = form.title.data
+        dataset.ds_meta_data.description = form.desc.data
+        dataset.ds_meta_data.publication_type = form.publication_type.data
+        dataset.ds_meta_data.publication_doi = form.publication_doi.data
+        dataset.ds_meta_data.dataset_doi = form.dataset_doi.data
+        dataset.ds_meta_data.tags = form.tags.data
+
+        # Update authors
+        dataset.ds_meta_data.authors = []
+        for author_form in form.authors.entries:
+            author = Author(
+                name=author_form.name.data,
+                affiliation=author_form.affiliation.data,
+                orcid=author_form.orcid.data
+            )
+            dataset.ds_meta_data.authors.append(author)
+
+        # Update feature models
+        for fm in dataset.feature_models:
+            print(request.form.get(f'feature_models-{fm.id}-title'))
+            fm_data = request.form.get(f'feature_models-{fm.id}-title')
+            if fm_data:
+                fm.fm_meta_data.title = fm_data
+                fm.fm_meta_data.description = request.form.get(f'feature_models-{fm.id}-desc')
+                fm.fm_meta_data.publication_type = request.form.get(f'feature_models-{fm.id}-publication_type')
+                fm.fm_meta_data.publication_doi = request.form.get(f'feature_models-{fm.id}-publication_doi')
+                fm.fm_meta_data.tags = request.form.get(f'feature_models-{fm.id}-tags')
+                fm.fm_meta_data.uvl_version = request.form.get(f'feature_models-{fm.id}-uvl_version')
+                fm.fm_meta_data.uvl_filename = request.form.get(f'feature_models-{fm.id}-uvl_filename')
+
+        print(dataset)
+        print(dataset.feature_models)
+
+        self.repository.session.commit() 
 
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)
