@@ -329,6 +329,8 @@ var currentId = 0;
         };
         document.getElementById('update_button').addEventListener('click', function () {
             // process data form
+            clean_upload_errors();
+            show_loading();
             const formData = {};
 
             ["basic_info_form", "uploaded_models_form"].forEach((formId) => {
@@ -392,10 +394,10 @@ var currentId = 0;
                         console.log(formUploadData);
                         if (response.ok) {
                             console.log('Dataset enviado con éxito');
+                            window.location.href = "/dataset/list";
                             response.json().then(data => {
-                                console.log(data.message);
                                 window.location.href = "/dataset/list";
-                            });
+                                    });
                         } else {
                             // Extraer el mensaje de error desde el objeto JSON
                             response.json().then(data => {

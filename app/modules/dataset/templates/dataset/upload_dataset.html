@@ -232,10 +232,7 @@
                     document.addEventListener('DOMContentLoaded', function() {
                         const featureModels = {{ feature_models | tojson }};
                 
-                        // Function to generate incremental ID
-                        function generateIncrementalId() {
-                            return 'form_' + Math.random().toString(36).substr(2, 9);
-                        }
+                        
                 
                         // Function to update the dropzone
                         function updateDropzone(models) {

@@ -129,11 +129,7 @@ def create_dataset():
             logger.exception(f"Exception while create dataset data in local {exc}")
             return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
 
-        # Delete temp folder
-        file_path = current_user.temp_folder()
-        if os.path.exists(file_path) and os.path.isdir(file_path):
-            shutil.rmtree(file_path)
-
+        
         msg = "Everything works!"
         return jsonify({"message": msg}), 200
 
@@ -150,11 +146,10 @@ def upload_staging_area_dataset(dataset_id):
     form = DataSetForm()
 
     if request.method == 'POST':
-        print(form.data)
+        print(form.feature_models.entries)
         if form.validate_on_submit():
             try:
-                dataset_service.update_from_form(dataset, form)
-                print(dataset.feature_models)
+                dataset_service.update_from_form(dataset, form, current_user)
                 return redirect(url_for('dataset.upload_staging_area_dataset', dataset_id=dataset_id))
             except Exception as exc:
                 print(dataset.feature_models)
