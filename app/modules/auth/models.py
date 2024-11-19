@@ -1,10 +1,9 @@
 from datetime import datetime, timezone
-
+from app.modules.community.common import community_user
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import db
-
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -15,7 +14,8 @@ class User(db.Model, UserMixin):
 
     data_sets = db.relationship('DataSet', backref='user', lazy=True)
     profile = db.relationship('UserProfile', backref='user', uselist=False)
-
+    communities = db.relationship('Community', secondary=community_user, backref=db.backref('users', lazy='dynamic'))
+    
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if 'password' in kwargs:
