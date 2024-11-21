@@ -129,7 +129,6 @@ def create_dataset():
             logger.exception(f"Exception while create dataset data in local {exc}")
             return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
 
-        
         msg = "Everything works!"
         return jsonify({"message": msg}), 200
 
@@ -138,7 +137,7 @@ def create_dataset():
 
 @dataset_bp.route("/dataset/staging-area/<int:dataset_id>", methods=["GET", "POST"])
 @login_required
-def upload_staging_area_dataset(dataset_id):
+def update_staging_area_dataset(dataset_id):
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
 
     if not dataset:
@@ -150,7 +149,7 @@ def upload_staging_area_dataset(dataset_id):
         if form.validate_on_submit():
             try:
                 dataset_service.update_from_form(dataset, form, current_user)
-                return redirect(url_for('dataset.upload_staging_area_dataset', dataset_id=dataset_id))
+                return redirect(url_for('dataset.update_staging_area_dataset', dataset_id=dataset_id))
             except Exception as exc:
                 print(dataset.feature_models)
                 logger.exception(f"Exception while updating dataset: {exc}")
