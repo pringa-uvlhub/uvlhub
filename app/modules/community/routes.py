@@ -7,3 +7,7 @@ from app.modules.community.models import Community
 def index():
     communities = Community.query.all()
     return render_template('community/index.html', communities=communities)
+
+@community_bp.route('/community/create', methods=['POST'])
+def create():
+    pass
