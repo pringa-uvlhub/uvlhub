@@ -1,8 +1,31 @@
 {% extends "base_template.html" %}
 
-{% block title %}View community{% endblock %}
+{% block title %}View Communities{% endblock %}
 
 {% block content %}
+
+    <h1 class="h3 mb-3"><b>Communities</b></h1>
+
+    <div class="row row-cols-1 row-cols-lg-3 row-cols-md-2 row-cols-12 g-4">
+        {% for community in communities %}
+        <div class="col">
+            <div class="card h-100">
+                <!-- Renderiza el logo dinámico o el predeterminado -->
+                <img src="{{ url_for('static', filename=community.logo) }}" 
+                     class="card-img-top custom-img" alt="{{ community.name }}">
+                <div class="card-body custom-card-body">
+                    <h5 class="card-title">{{ community.name }}</h5>
+                    <p class="card-text">
+                        {{ community.description }}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ community.website or '#' }}" target="_blank">{{ community.website or 'Visit Website' }}</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 
 {% endblock %}
 
