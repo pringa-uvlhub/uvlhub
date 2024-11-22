@@ -116,7 +116,6 @@ def upload_dataset_zenodo_from_staging(dataset_id):
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
     dataset.ds_meta_data.staging_area = False
     dataset = dataset_service.update_from_form(dataset, form, current_user)
-    
     data = {}
     try:
         zenodo_response_json = zenodo_service.create_new_deposition(dataset)
@@ -214,8 +213,6 @@ def update_staging_area_dataset(dataset_id):
         form.authors.entries = [AuthorForm(obj=author) for author in dataset.ds_meta_data.authors]
         form.feature_models.entries = [FeatureModelForm(obj=fm.fm_meta_data) for fm 
                                        in dataset.feature_models]
-        
-        print(form.feature_models.entries)
         feature_models = dataset.feature_models
         feature_models_data = [
             {
@@ -224,7 +221,6 @@ def update_staging_area_dataset(dataset_id):
             }
             for fm in feature_models
         ]
-
         return render_template("dataset/upload_dataset.html", dataset=dataset, form=form, 
                                feature_models=feature_models_data)
 

@@ -402,7 +402,7 @@ var currentId = 0;
                             if (response.ok) {
                                 console.log('Dataset enviado con éxito');
                                 window.location.href = "/dataset/list";
-                                response.json().then(data => {
+                                response.json().then(() => {
                                     window.location.href = "/dataset/list";
                                         });
                             } else {
