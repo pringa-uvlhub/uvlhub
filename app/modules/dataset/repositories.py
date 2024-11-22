@@ -57,11 +57,11 @@ class DSViewRecordRepository(BaseRepository):
 
     def create_new_record(self, dataset: DataSet, user_cookie: str) -> DSViewRecord:
         return self.create(
-                user_id=current_user.id if current_user.is_authenticated else None,
-                dataset_id=dataset.id,
-                view_date=datetime.now(timezone.utc),
-                view_cookie=user_cookie,
-            )
+            user_id=current_user.id if current_user.is_authenticated else None,
+            dataset_id=dataset.id,
+            view_date=datetime.now(timezone.utc),
+            view_cookie=user_cookie,
+        )
 
 
 class DataSetRepository(BaseRepository):
@@ -79,7 +79,8 @@ class DataSetRepository(BaseRepository):
     def get_unsynchronized(self, current_user_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)
-            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None))
+            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None),
+                    DSMetaData.staging_area.is_(False))
             .order_by(self.model.created_at.desc())
             .all()
         )
@@ -87,7 +88,24 @@ class DataSetRepository(BaseRepository):
     def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)
-            .filter(DataSet.user_id == current_user_id, DataSet.id == dataset_id, DSMetaData.dataset_doi.is_(None))
+            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None),
+                    DSMetaData.staging_area.is_(False))
+            .first()
+        )
+
+    def get_staging_area(self, current_user_id: int) -> DataSet:
+        return (
+            self.model.query.join(DSMetaData)
+            .filter(DataSet.user_id == current_user_id, DSMetaData.staging_area.is_(True))
+            .order_by(self.model.created_at.desc())
+            .all()
+        )
+
+    def get_staging_area_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
+        return (
+            self.model.query.join(DSMetaData)
+            .filter(DataSet.user_id == current_user_id, DataSet.id == dataset_id, DSMetaData.staging_area.is_(True))
+            .order_by(self.model.created_at.desc())
             .first()
         )
 

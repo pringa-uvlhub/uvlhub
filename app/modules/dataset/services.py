@@ -6,9 +6,10 @@ from typing import Optional
 import uuid
 
 from flask import request
+from app import db
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData
+from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, Author
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DOIMappingRepository,
@@ -55,13 +56,11 @@ class DataSetService(BaseService):
 
         working_dir = os.getenv("WORKING_DIR", "")
         dest_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
-
         os.makedirs(dest_dir, exist_ok=True)
-
         for feature_model in dataset.feature_models:
             uvl_filename = feature_model.fm_meta_data.uvl_filename
-            shutil.move(os.path.join(source_dir, uvl_filename), dest_dir)
-
+            if not os.path.exists(dest_dir):
+                shutil.move(os.path.join(source_dir, uvl_filename), dest_dir)
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
 
@@ -70,6 +69,12 @@ class DataSetService(BaseService):
 
     def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
         return self.repository.get_unsynchronized_dataset(current_user_id, dataset_id)
+
+    def get_staging_area(self, current_user_id: int) -> DataSet:
+        return self.repository.get_staging_area(current_user_id)
+
+    def get_staging_area_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
+        return self.repository.get_staging_area_dataset(current_user_id, dataset_id)
 
     def latest_synchronized(self):
         return self.repository.latest_synchronized()
@@ -92,7 +97,7 @@ class DataSetService(BaseService):
     def total_dataset_views(self) -> int:
         return self.dsviewrecord_repostory.total_dataset_views()
 
-    def create_from_form(self, form, current_user) -> DataSet:
+    def create_from_form(self, form, current_user, staging_area) -> DataSet:
         main_author = {
             "name": f"{current_user.profile.surname}, {current_user.profile.name}",
             "affiliation": current_user.profile.affiliation,
@@ -101,6 +106,8 @@ class DataSetService(BaseService):
         try:
             logger.info(f"Creating dsmetadata...: {form.get_dsmetadata()}")
             dsmetadata = self.dsmetadata_repository.create(**form.get_dsmetadata())
+            if not staging_area:
+                dsmetadata.staging_area = False
             for author_data in [main_author] + form.get_authors():
                 author = self.author_repository.create(commit=False, ds_meta_data_id=dsmetadata.id, **author_data)
                 dsmetadata.authors.append(author)
@@ -131,6 +138,52 @@ class DataSetService(BaseService):
             logger.info(f"Exception creating dataset from form...: {exc}")
             self.repository.session.rollback()
             raise exc
+        return dataset
+    def update_from_form(self, dataset: DataSet, form, current_user):
+        dataset.ds_meta_data.title = form.title.data
+        dataset.ds_meta_data.description = form.desc.data
+        dataset.ds_meta_data.publication_type = form.publication_type.data
+        dataset.ds_meta_data.publication_doi = form.publication_doi.data
+        dataset.ds_meta_data.dataset_doi = form.dataset_doi.data
+        dataset.ds_meta_data.tags = form.tags.data
+
+        # Update authors
+        dataset.ds_meta_data.authors = []
+        for author_form in form.authors.entries:
+            author = Author(
+                name=author_form.name.data,
+                affiliation=author_form.affiliation.data,
+                orcid=author_form.orcid.data
+            )
+            dataset.ds_meta_data.authors.append(author)
+
+        for feature_model in dataset.feature_models:
+            db.session.delete(feature_model)
+
+        # Luego, commit para reflejar los cambios (si es necesario)
+        db.session.commit()
+    # Actualizar o agregar nuevos FeatureModels
+        for feature_model in form.feature_models:
+            uvl_filename = feature_model.uvl_filename.data
+            fmmetadata = self.fmmetadata_repository.create(commit=True, **feature_model.get_fmmetadata())
+            for author_data in feature_model.get_authors():
+                author = self.author_repository.create(commit=True, fm_meta_data_id=fmmetadata.id, **author_data)
+                fmmetadata.authors.append(author)
+
+            fm = self.feature_model_repository.create(
+                commit=True, data_set_id=dataset.id, fm_meta_data_id=fmmetadata.id
+            )
+
+            # Ahora, podemos asociar el nuevo archivo como lo hacías antes.
+            file_path = os.path.join(current_user.temp_folder(), uvl_filename)
+            checksum, size = calculate_checksum_and_size(file_path)
+
+            file = self.hubfilerepository.create(
+                commit=False, name=uvl_filename, checksum=checksum, size=size, feature_model_id=fm.id
+            )
+            fm.files.append(file)
+
+        self.repository.session.commit()
         return dataset
 
     def update_dsmetadata(self, id, **kwargs):

@@ -40,6 +40,7 @@ class DataSetSeeder(BaseSeeder):
                 publication_doi=f'10.1234/dataset{i+1}',
                 dataset_doi=f'10.1234/dataset{i+1}',
                 tags='tag1, tag2',
+                staging_area=False,
                 ds_metrics_id=seeded_ds_metrics.id
             ) for i in range(4)
         ]
