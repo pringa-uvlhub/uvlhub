@@ -61,7 +61,6 @@ class DataSetService(BaseService):
             uvl_filename = feature_model.fm_meta_data.uvl_filename
             if not os.path.exists(dest_dir):
                 shutil.move(os.path.join(source_dir, uvl_filename), dest_dir)
-        
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
 

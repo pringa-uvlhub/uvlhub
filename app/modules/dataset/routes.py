@@ -211,7 +211,7 @@ def update_staging_area_dataset(dataset_id):
         form.dataset_doi.data = dataset.ds_meta_data.dataset_doi
         form.tags.data = dataset.ds_meta_data.tags
         form.authors.entries = [AuthorForm(obj=author) for author in dataset.ds_meta_data.authors]
-        form.feature_models.entries = [FeatureModelForm(obj=fm.fm_meta_data) for fm 
+        form.feature_models.entries = [FeatureModelForm(obj=fm.fm_meta_data) for fm
                                        in dataset.feature_models]
         feature_models = dataset.feature_models
         feature_models_data = [
@@ -221,7 +221,7 @@ def update_staging_area_dataset(dataset_id):
             }
             for fm in feature_models
         ]
-        return render_template("dataset/upload_dataset.html", dataset=dataset, form=form, 
+        return render_template("dataset/upload_dataset.html", dataset=dataset, form=form,
                                feature_models=feature_models_data)
 
 
