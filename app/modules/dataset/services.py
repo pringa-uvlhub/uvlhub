@@ -141,7 +141,7 @@ class DataSetService(BaseService):
             raise exc
         return dataset
     
-    def update_from_form(self, dataset: DataSet, form, current_user ):
+    def update_from_form(self, dataset: DataSet, form, current_user):
         dataset.ds_meta_data.title = form.title.data
         dataset.ds_meta_data.description = form.desc.data
         dataset.ds_meta_data.publication_type = form.publication_type.data
@@ -159,8 +159,6 @@ class DataSetService(BaseService):
             )
             dataset.ds_meta_data.authors.append(author)
 
-        
-
         for feature_model in dataset.feature_models:
             db.session.delete(feature_model)
 
@@ -168,30 +166,27 @@ class DataSetService(BaseService):
         db.session.commit()
     # Actualizar o agregar nuevos FeatureModels
         for feature_model in form.feature_models:
-                uvl_filename = feature_model.uvl_filename.data
-                fmmetadata = self.fmmetadata_repository.create(commit=True, **feature_model.get_fmmetadata())
-                for author_data in feature_model.get_authors():
-                    author = self.author_repository.create(commit=True, fm_meta_data_id=fmmetadata.id, **author_data)
-                    fmmetadata.authors.append(author)
+            uvl_filename = feature_model.uvl_filename.data
+            fmmetadata = self.fmmetadata_repository.create(commit=True, **feature_model.get_fmmetadata())
+            for author_data in feature_model.get_authors():
+                author = self.author_repository.create(commit=True, fm_meta_data_id=fmmetadata.id, **author_data)
+                fmmetadata.authors.append(author)
 
-                fm = self.feature_model_repository.create(
-                    commit=True, data_set_id=dataset.id, fm_meta_data_id=fmmetadata.id
-                )
+            fm = self.feature_model_repository.create(
+                commit=True, data_set_id=dataset.id, fm_meta_data_id=fmmetadata.id
+            )
 
-                # associated files in feature model
-                
+            # Ahora, podemos asociar el nuevo archivo como lo hacías antes.
+            file_path = os.path.join(current_user.temp_folder(), uvl_filename)
+            checksum, size = calculate_checksum_and_size(file_path)
 
-                # Ahora, podemos asociar el nuevo archivo como lo hacías antes.
-                file_path = os.path.join(current_user.temp_folder(), uvl_filename)
-                checksum, size = calculate_checksum_and_size(file_path)
-
-                file = self.hubfilerepository.create(
-                    commit=False, name=uvl_filename, checksum=checksum, size=size, feature_model_id=fm.id
-                )
-                fm.files.append(file)
+            file = self.hubfilerepository.create(
+                commit=False, name=uvl_filename, checksum=checksum, size=size, feature_model_id=fm.id
+            )
+            fm.files.append(file)
 
         self.repository.session.commit()
-        
+        return dataset
 
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)

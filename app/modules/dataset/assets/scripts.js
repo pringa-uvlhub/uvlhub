@@ -236,7 +236,6 @@ var currentId = 0;
                 } else {
                     url = '/dataset/upload'; // Default to the upload route
                 }
-                console.log(url)
                 clean_upload_errors();
                 show_loading();
 
