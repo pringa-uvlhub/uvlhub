@@ -139,7 +139,6 @@ class DataSetService(BaseService):
             self.repository.session.rollback()
             raise exc
         return dataset
-    
     def update_from_form(self, dataset: DataSet, form, current_user):
         dataset.ds_meta_data.title = form.title.data
         dataset.ds_meta_data.description = form.desc.data
