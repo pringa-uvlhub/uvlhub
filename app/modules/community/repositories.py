@@ -8,7 +8,6 @@ class CommunityRepository(BaseRepository):
     def __init__(self):
         super().__init__(Community)
 
-
     def get_community_by_id(self, name: str) -> Optional[Community]:
         return self.model.query.filter_by(id=id).first()
     

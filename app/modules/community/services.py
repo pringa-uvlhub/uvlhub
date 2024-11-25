@@ -1,8 +1,7 @@
 import os
 import logging
 from werkzeug.utils import secure_filename
-from datetime import datetime
-from flask import app
+from datetime import datetime, timezone
 from app.modules.community.models import Community
 from app.modules.community.repositories import CommunityRepository
 from core.services.BaseService import BaseService
@@ -10,18 +9,18 @@ from core.services.BaseService import BaseService
 # Configurar el logger
 logger = logging.getLogger(__name__)
 
+
 class CommunityService(BaseService):
     def __init__(self):
         super().__init__(CommunityRepository())
-
+        
     def create_from_form(self, form, current_user) -> Community:
         try:
-            logger.info(f"Creating community with name: {form.name.data} by {current_user.username}")
+            logger.info(f"Creating community with name: {form.name.data} by {current_user.id}")
 
             upload_folder = 'app/static/img/community'
             if not os.path.exists(upload_folder):
                 os.makedirs(upload_folder)
-
 
             logo_filename = None
             if form.logo.data:
@@ -29,27 +28,31 @@ class CommunityService(BaseService):
                 logo_filename = secure_filename(logo_file.filename)
                 logger.info(f"Saving logo file: {logo_filename}")
                 logo_file.save(os.path.join(upload_folder, logo_filename))
+            name_value = form.name.data
+            description_value = form.description.data
+            created_by_id = current_user.id
+
+            logger.info(f"Valores antes de crear Community: name={name_value}, description={description_value}, created_by_id={created_by_id}")
 
             new_community = Community(
                 name=form.name.data,
                 description=form.description.data,
-                created_at=datetime.now(datetime.timezone.utc),
-                created_by_id=current_user.id, 
-                logo=f'img/community/{logo_filename}' if logo_filename else None 
+                created_at=datetime.utcnow(),
+                created_by_id=current_user.id,
+                logo=f'img/community/{logo_filename}' if logo_filename else None
             )
 
-            self.repository.create(new_community)
-            self.repository.session.commit()
+            self.repository.session.add(new_community)
 
-            logger.info(f"Community {new_community.name} created successfully.")
+            self.repository.session.flush()
+
+            self.repository.session.commit()
             return new_community
 
         except Exception as exc:
             logger.error(f"Error creating community: {exc}")
             self.repository.session.rollback()
             raise exc
-
-
 
     def get_all_communities(self):
         return self.repository.get_all()
