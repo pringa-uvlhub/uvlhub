@@ -19,6 +19,7 @@ function send_query() {
             const searchCriteria = {
                 csrf_token: csrfToken,
                 query: document.querySelector('#query').value,
+                queryAuthor: document.querySelector('#queryAuthor').value,
                 publication_type: document.querySelector('#publication_type').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
             };
