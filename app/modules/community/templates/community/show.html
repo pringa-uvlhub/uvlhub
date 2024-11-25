@@ -1,0 +1,22 @@
+{% extends "base_template.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ community.name }}</h1>
+    <p><strong>Description:</strong> {{ community.description }}</p>
+    <p><strong>Created At:</strong> {{ community.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+    <p><strong>Created By:</strong> {{ user_fullname }}</p>
+    {% if community.logo %}
+        <p><img src="{{ url_for('static', filename=community.logo) }}" alt="Community Logo" width="150"></p>
+    {% else %}
+        <p><em>No logo available.</em></p>
+    {% endif %}
+    <p><strong>Datasets:</strong> {{ community.datasets | length }}</p>
+    <ul>
+        {% for dataset in community.datasets %}
+            <li>{{ dataset.name }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('community.index') }}" class="btn btn-primary">Back to Communities</a>
+</div>
+{% endblock %}

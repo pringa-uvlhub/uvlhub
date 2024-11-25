@@ -12,3 +12,6 @@ class UserProfileService(BaseService):
             return updated_instance, None
 
         return None, form.errors
+    
+    def get_by_user_id(self, user_id):
+        return self.model.query.filter_by(user_id=user_id).first()

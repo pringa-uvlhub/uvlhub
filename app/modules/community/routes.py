@@ -4,6 +4,7 @@ from app import db
 from app.modules.community.forms import CommunityForm
 from app.modules.community.models import Community
 from app.modules.community.repositories import CommunityRepository
+from app.modules.auth.services import AuthenticationService
 from app.modules.community.services import CommunityService
 from app.modules.community import community_bp
 from werkzeug.utils import secure_filename
@@ -12,6 +13,7 @@ import os
 
 
 community_service = CommunityService()
+auth_service = AuthenticationService()
 
 
 @community_bp.route('/community', methods=['GET'])
@@ -57,3 +59,21 @@ def create():
             return jsonify({"message": str(e)}), 400
 
     return render_template('community/create.html', form=form)
+
+
+
+@community_bp.route('/community/<int:id>', methods=['GET'])
+def show_community(id):
+    community = community_service.get_by_id(id)
+
+    user = auth_service.get_by_id(community.created_by_id)
+
+    user_fullname = f"{user.profile.name} {user.profile.surname}" if user.profile else "Unknown"
+
+
+    if not community:
+        flash('Community not found!', 'danger')
+        return redirect(url_for('community.index'))
+    
+    return render_template('community/show.html', community=community, user_fullname=user_fullname)
+    
