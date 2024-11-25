@@ -13,6 +13,12 @@ class FeatureModel(db.Model):
 
     def __repr__(self):
         return f'FeatureModel<{self.id}>'
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.fm_meta_data.title,
+            'files': [file.to_dict() for file in self.files]
+        }
 
 
 class FMMetaData(db.Model):
