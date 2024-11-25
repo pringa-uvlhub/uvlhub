@@ -1,13 +1,55 @@
+import os
+import logging
+from werkzeug.utils import secure_filename
+from datetime import datetime
+from flask import app
+from app.modules.community.models import Community
 from app.modules.community.repositories import CommunityRepository
 from core.services.BaseService import BaseService
-from typing import Optional
-import logging
 
+# Configurar el logger
 logger = logging.getLogger(__name__)
 
 class CommunityService(BaseService):
     def __init__(self):
         super().__init__(CommunityRepository())
+
+    def create_from_form(self, form, current_user) -> Community:
+        try:
+            logger.info(f"Creating community with name: {form.name.data} by {current_user.username}")
+
+            upload_folder = 'app/static/img/community'
+            if not os.path.exists(upload_folder):
+                os.makedirs(upload_folder)
+
+
+            logo_filename = None
+            if form.logo.data:
+                logo_file = form.logo.data
+                logo_filename = secure_filename(logo_file.filename)
+                logger.info(f"Saving logo file: {logo_filename}")
+                logo_file.save(os.path.join(upload_folder, logo_filename))
+
+            new_community = Community(
+                name=form.name.data,
+                description=form.description.data,
+                created_at=datetime.now(datetime.timezone.utc),
+                created_by_id=current_user.id, 
+                logo=f'img/community/{logo_filename}' if logo_filename else None 
+            )
+
+            self.repository.create(new_community)
+            self.repository.session.commit()
+
+            logger.info(f"Community {new_community.name} created successfully.")
+            return new_community
+
+        except Exception as exc:
+            logger.error(f"Error creating community: {exc}")
+            self.repository.session.rollback()
+            raise exc
+
+
 
     def get_all_communities(self):
         return self.repository.get_all()
@@ -17,16 +59,6 @@ class CommunityService(BaseService):
     
     def get_community_by_id(self, community_id: int):
         return self.repository.get_by_id(community_id)
-    
-    def create_community(self, name: str, description: Optional[str] = None):
-        try:
-            community = self.repository.create(name=name, description=description)
-            self.repository.session.commit()
-            return community
-        except Exception as exc:
-            logger.error(f"Error creando comunidad: {exc}")
-            self.repository.session.rollback()
-            raise exc
         
     def delete_community(self, community_id: int):
         try:
@@ -36,3 +68,5 @@ class CommunityService(BaseService):
             logger.error(f"Error eliminando comunidad con ID {community_id}: {exc}")
             self.repository.session.rollback()
             raise exc
+        
+
