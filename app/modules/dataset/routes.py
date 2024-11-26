@@ -31,7 +31,8 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
     DataSetService,
-    DOIMappingService
+    DOIMappingService,
+    DSRatingService
 )
 from app.modules.zenodo.services import ZenodoService
 from app.modules.hubfile.repositories import (
@@ -62,6 +63,7 @@ dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
+ds_rating_service = DSRatingService()
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -499,3 +501,18 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
 
     return render_template("dataset/view_dataset.html", dataset=dataset)
+
+
+@dataset_bp.route("/datasets/<int:dataset_id>/rate", methods=["POST"])
+@login_required
+def rate_dataset(dataset_id):
+    user_id = current_user.id
+    rating_value = request.json.get('rating')
+    rating = ds_rating_service.add_or_update_rating(dataset_id, user_id, rating_value)
+    return jsonify({'message': 'Rating added', 'rating': rating.to_dict()}), 200
+
+
+@dataset_bp.route('/datasets/<int:dataset_id>/average-rating', methods=['GET'])
+def get_dataset_average_rating(dataset_id):
+    average_rating = ds_rating_service.get_dataset_average_rating(dataset_id)
+    return jsonify({'average_rating': average_rating}), 200

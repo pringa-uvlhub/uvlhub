@@ -18,6 +18,7 @@
                             <th>Description</th>
                             <th>Publication type</th>
                             <th>Dataset DOI</th>
+                            <th>Rating</th>
                             <th>Options</th>
                         </tr>
                         </thead>
@@ -34,12 +35,21 @@
                                 <td><a href="{{ dataset.get_uvlhub_doi() }}"
                                        target="_blank">{{ dataset.get_uvlhub_doi() }}</a></td>
                                 <td>
+                                    <div id="star-rating-{{ dataset.id }}" style="color: gold; display: inline-block;">
+                                        {% for i in range(1, 6) %}
+                                            <span data-value="{{ i }}" style="font-size: 1.5rem;">★</span>
+                                        {% endfor %}
+                                    </div>
+                                    <span id="average-rating-{{ dataset.id }}" class="ms-2">-</span>/5
+                                </td>
+                                <td>
                                     <a href="{{ dataset.get_uvlhub_doi() }}">
                                         <i data-feather="eye"></i>
                                     </a>
                                     <a href="{{ url_for('dataset.download_dataset', dataset_id=dataset.id) }}">
                                         <i data-feather="download"></i>
                                     </a>
+                                </td>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -164,4 +174,34 @@
             {% endif %}
         </div>
 
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% for dataset in datasets %}
+            updateAverageRating({{ dataset.id }});
+        {% endfor %}
+
+        // Función para actualizar el promedio de calificación en el frontend
+        function updateAverageRating(datasetId) {
+            fetch(`/datasets/${datasetId}/average-rating`)
+            .then(response => response.json())
+            .then(data => {
+                const averageRating = data.average_rating.toFixed(1);
+                document.getElementById('average-rating-' + datasetId).innerText = averageRating;
+
+                // Resaltar estrellas según el promedio de calificación
+                const starRatingContainer = document.getElementById('star-rating-' + datasetId);
+                starRatingContainer.querySelectorAll('span').forEach(star => {
+                    const starValue = parseInt(star.getAttribute('data-value'));
+                    star.style.color = starValue <= Math.round(averageRating) ? '#FFD700' : '#ddd';
+                });
+            })
+            .catch(error => console.error('Error fetching average rating:', error));
+        }
+    });
+</script>
+
+
 {% endblock %}
+
+
