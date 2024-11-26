@@ -63,13 +63,10 @@ class CommunityService(BaseService):
     def get_community_by_id(self, community_id: int):
         return self.repository.get_by_id(community_id)
         
-    def delete_community(self, community_id: int):
-        try:
-            self.repository.delete_community(community_id)
-            self.repository.session.commit()
-        except Exception as exc:
-            logger.error(f"Error eliminando comunidad con ID {community_id}: {exc}")
-            self.repository.session.rollback()
-            raise exc
-        
+
+    def delete_community(self, community_id: int) -> bool:
+        community = self.repository.get_by_id(community_id)
+        if not community:
+            raise ValueError(f"Community with ID {community_id} not found.")
+        return self.repository.delete_community(community_id)
 

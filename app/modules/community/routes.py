@@ -1,6 +1,6 @@
 import logging
 from flask import request, render_template, flash, redirect, url_for, jsonify
-from flask_login import current_user
+from flask_login import current_user, login_required
 from app.modules.community.forms import CommunityForm
 from app.modules.community.models import Community
 from app.modules.auth.services import AuthenticationService
@@ -79,3 +79,27 @@ def show_community(id):
         return redirect(url_for('community.index'))
     
     return render_template('community/show.html', community=community, user_fullname=user_fullname)
+
+
+
+@community_bp.route('/community/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_community(id):
+    community = community_service.get_by_id(id)
+    if not community:
+        flash('Community not found!', 'danger')
+        return redirect(url_for('community.index'))
+
+    if community.created_by_id != current_user.id:
+        flash('You are not authorized to delete this community.', 'danger')
+        return redirect(url_for('community.index'))
+
+    try:
+        if community_service.delete_community(id):
+            flash('Community deleted successfully!', 'success')
+        else:
+            flash('Community could not be deleted.', 'danger')
+    except Exception as e:
+        flash(f'Error deleting community: {e}', 'danger')
+
+    return redirect(url_for('community.index'))

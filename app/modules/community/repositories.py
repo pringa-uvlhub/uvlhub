@@ -2,6 +2,9 @@ from app.modules.community.models import Community
 from core.repositories.BaseRepository import BaseRepository
 from typing import Optional
 from datetime import datetime, timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CommunityRepository(BaseRepository):
@@ -25,8 +28,6 @@ class CommunityRepository(BaseRepository):
             created_at=datetime.now(timezone.utc)
         )
     
-    def delete_community(self, community_id: int):
-        community = self.get_by_id(community_id)
-        if community:
-            self.delete(community)
-        return community
+    def delete_community(self, community_id: int) -> bool:
+        return self.delete(community_id)
+
