@@ -21,6 +21,7 @@ def index():
 
 
 @community_bp.route('/community/create', methods=["GET", "POST"])
+@login_required
 def create():
     form = CommunityForm()
 
