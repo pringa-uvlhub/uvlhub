@@ -1,4 +1,3 @@
-import json
 import pytest
 from enum import Enum
 from app import create_app, db
@@ -6,7 +5,6 @@ from app.modules.conftest import login, logout
 from app.modules.dataset.models import DataSet, DSMetaData, DSRating
 # from app.modules.profile.models import UserProfile
 from app.modules.auth.models import User
-from sqlalchemy import Enum as SQLAlchemyEnum
 from datetime import datetime
 
 
