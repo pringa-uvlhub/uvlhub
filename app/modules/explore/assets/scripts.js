@@ -106,6 +106,18 @@ function send_query() {
 
                                     </div>
 
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 col-12">
+                                            <span class="text-secondary">Rating</span>
+                                        </div>
+                                        <div class="col-md-8 col-12 d-flex align-items-center">
+                                            <div id="star-rating-${dataset.id}" class="stars" style="color: gold;">
+                                                ${'<span data-value="1">★</span>'.repeat(5)} <!-- Estrellas para interacción -->
+                                            </div>
+                                                <span id="average-rating-${dataset.id}" class="ms-2">-</span> <!-- Valor inicial vacío -->
+                                        </div>
+                                    </div>
+
                                     <div class="row">
 
                                         <div class="col-md-4 col-12">
@@ -128,6 +140,9 @@ function send_query() {
                         `;
 
                         document.getElementById('results').appendChild(card);
+                        // Llamada a updateAverageRating para cargar el rating actual
+                        updateAverageRating(dataset.id);
+
                     });
                 });
         });
@@ -203,3 +218,24 @@ document.addEventListener('DOMContentLoaded', () => {
         queryInput.dispatchEvent(new Event('input', {bubbles: true}));
     }
 });
+
+function updateAverageRating(datasetId) {
+    fetch(`/datasets/${datasetId}/average-rating`)
+        .then(response => response.json())
+        .then(data => {
+            const ratingValue = data.average_rating.toFixed(1);
+            document.getElementById('average-rating-' + datasetId).innerText = ratingValue;
+
+            // Resaltar el número correcto de estrellas en amarillo
+            const starContainer = document.getElementById('star-rating-' + datasetId);
+            highlightStars(starContainer, Math.round(data.average_rating));
+        })
+        .catch(error => console.error('Error fetching average rating:', error));
+}
+
+function highlightStars(container, rating) {
+    container.querySelectorAll('span').forEach(star => {
+        const starValue = star.getAttribute('data-value');
+        star.style.color = starValue <= rating ? '#FFD700' : '#ddd'; // Estrellas doradas según el rating
+    });
+}

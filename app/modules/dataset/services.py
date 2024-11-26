@@ -9,14 +9,16 @@ from flask import request
 from app import db
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, Author
+from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, DSRating, Author
+
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DOIMappingRepository,
     DSDownloadRecordRepository,
     DSMetaDataRepository,
     DSViewRecordRepository,
-    DataSetRepository
+    DataSetRepository,
+    DSRatingRepository
 )
 from app.modules.featuremodel.repositories import FMMetaDataRepository, FeatureModelRepository
 from app.modules.hubfile.repositories import (
@@ -48,6 +50,7 @@ class DataSetService(BaseService):
         self.hubfiledownloadrecord_repository = HubfileDownloadRecordRepository()
         self.hubfilerepository = HubfileRepository()
         self.dsviewrecord_repostory = DSViewRecordRepository()
+        self.dsrating_repository = DSRatingRepository()
         self.hubfileviewrecord_repository = HubfileViewRecordRepository()
 
     def move_feature_models(self, dataset: DataSet):
@@ -249,6 +252,29 @@ class DOIMappingService(BaseService):
             return doi_mapping.dataset_doi_new
         else:
             return None
+
+
+class DSRatingService(BaseService):
+    def __init__(self):
+        super().__init__(DSRatingRepository())
+
+    def add_or_update_rating(self, dsmetadata_id: int, user_id: int, rating_value: int) -> DSRating:
+        rating = self.repository.get_user_rating(dsmetadata_id, user_id)
+        if rating:
+            print(f"Actualizando rating a {rating_value}")
+            rating.rating = rating_value
+        else:
+            print("Valor de rating en el servicio:", rating_value)
+            rating = self.repository.create(commit=False, ds_meta_data_id=dsmetadata_id, user_id=user_id, rating=rating_value)
+            print("Valor de rating en el servicio:", rating.rating)
+        self.repository.session.commit()
+        return rating
+
+    def get_dataset_average_rating(self, dsmetadata_id: int) -> float:
+        return self.repository.get_average_rating(dsmetadata_id)
+
+    def get_total_ratings(self, dsmetadata_id: int) -> int:
+        return self.repository.count_ratings(dsmetadata_id)
 
 
 class SizeService():
