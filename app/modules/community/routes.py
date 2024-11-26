@@ -1,6 +1,6 @@
 import logging
 from flask import request, render_template, flash, redirect, url_for, jsonify
-from flask_login import current_user
+from flask_login import current_user, login_required
 from app.modules.community.forms import CommunityForm
 from app.modules.community.models import Community
 from app.modules.auth.services import AuthenticationService
@@ -21,6 +21,7 @@ def index():
 
 
 @community_bp.route('/community/create', methods=["GET", "POST"])
+@login_required
 def create():
     form = CommunityForm()
 
