@@ -7,6 +7,7 @@ from app.modules.dataset.models import DataSet, DSMetaData, DSRating
 # from app.modules.profile.models import UserProfile
 from app.modules.auth.models import User
 from sqlalchemy import Enum as SQLAlchemyEnum
+from datetime import datetime
 
 
 class PublicationType(Enum):
@@ -39,10 +40,10 @@ def client():
             # Configuración de la base de datos en modo de prueba
             db.drop_all()
             db.create_all()
-            user = User(id=5, email="user5@example.com", password="1234", created_at=13/3/2022)
+            user = User(id=5, email="user5@example.com", password="1234", created_at=datetime(13, 3, 2022))
             db.session.add(user)
             db.session.commit()
-            user1 = User(id=6, email="user6@example.com", password="1234", created_at=13/3/2022)
+            user1 = User(id=6, email="user6@example.com", password="1234", created_at=datetime(13, 3, 2022))
             db.session.add(user1)
             db.session.commit()
             dsmetadata = DSMetaData(id=10, title="Sample Dataset 11", rating=1, description="Description for dataset 11",
@@ -51,7 +52,7 @@ def client():
             dataset = DataSet(id=10, user_id=user.id, ds_meta_data_id=dsmetadata.id)
             db.session.add(dataset)
             db.session.commit()
-            dsrating = DSRating(id=10, user_id=user.id, ds_meta_data_id=dsmetadata.id, rating=dsmetadata.rating, rated_date=13/3/2022)
+            dsrating = DSRating(id=10, user_id=user.id, ds_meta_data_id=dsmetadata.id, rating=dsmetadata.rating, rated_date=datetime(13, 3, 2022))
             db.session.add(dsrating)
             db.session.commit()
         yield client
