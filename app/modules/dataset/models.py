@@ -62,6 +62,7 @@ class DSMetaData(db.Model):
     staging_area = db.Column(db.Boolean, nullable=False, default=True)
     publication_type = db.Column(SQLAlchemyEnum(PublicationType), nullable=False)
     publication_doi = db.Column(db.String(120))
+    build=db.Column(db.Boolean)
     dataset_doi = db.Column(db.String(120))
     tags = db.Column(db.String(120))
     ds_metrics_id = db.Column(db.Integer, db.ForeignKey('ds_metrics.id'))

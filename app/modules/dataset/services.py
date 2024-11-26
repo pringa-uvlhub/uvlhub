@@ -9,7 +9,7 @@ from flask import request
 from app import db
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, Author
+from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, PublicationType,Author
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DOIMappingRepository,
@@ -19,6 +19,7 @@ from app.modules.dataset.repositories import (
     DataSetRepository
 )
 from app.modules.featuremodel.repositories import FMMetaDataRepository, FeatureModelRepository
+from app.modules.featuremodel.services import FeatureModelService
 from app.modules.hubfile.repositories import (
     HubfileDownloadRecordRepository,
     HubfileRepository,
@@ -43,6 +44,7 @@ class DataSetService(BaseService):
         self.feature_model_repository = FeatureModelRepository()
         self.author_repository = AuthorRepository()
         self.dsmetadata_repository = DSMetaDataRepository()
+        self.dataset_repository = DataSetRepository()
         self.fmmetadata_repository = FMMetaDataRepository()
         self.dsdownloadrecord_repository = DSDownloadRecordRepository()
         self.hubfiledownloadrecord_repository = HubfileDownloadRecordRepository()
@@ -186,6 +188,61 @@ class DataSetService(BaseService):
         self.repository.session.commit()
         return dataset
 
+    def create_empty_dataset(self, current_user, feature_model_id) -> DataSet:
+
+
+        metadata = self.dsmetadata_repository.filter_by_build()
+        if not metadata:
+            main_author = {
+                "name": f"{current_user.profile.surname}, {current_user.profile.name}",
+                "affiliation": current_user.profile.affiliation,
+                "orcid": current_user.profile.orcid,
+            }
+        
+            try:
+                logger.info("Creating empty dsmetadata...")
+                feature_model= self.feature_model_repository.get_by_id(id=feature_model_id)
+                print(feature_model)
+
+
+                dsmetadata = self.dsmetadata_repository.create(
+                    title="Build Dataset",
+                    description="This is an empty dataset.",
+                    publication_type=PublicationType.NONE,
+                    tags = "",
+                    build=True,
+                    )
+                
+                author = self.author_repository.create(
+                commit=False, ds_meta_data_id=dsmetadata.id, **main_author
+                )
+                dsmetadata.authors.append(author)
+
+                # Crear el dataset vacío
+                dataset = self.create(
+                    commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id
+                )
+                self.repository.session.commit()
+                
+                logger.info(f"Created empty dataset: {dataset}")
+                
+                original_feature_model = self.feature_model_repository.get_by_id(feature_model_id)
+
+                FeatureModelService.copy_feature_model(self,original_feature_model,dataset.id)
+
+                self.repository.session.commit()
+
+            except Exception as exc:
+                logger.error(f"Exception creating empty dataset: {exc}")
+                self.repository.session.rollback()
+                raise exc
+        else:
+            dataset= self.dataset_repository.get_dataset_by_metadata_id(metadata.id)
+            original_feature_model = self.feature_model_repository.get_by_id(feature_model_id)
+            FeatureModelService.copy_feature_model(self,original_feature_model,dataset.id)
+        return dataset
+
+
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)
 
@@ -213,7 +270,6 @@ class DSMetaDataService(BaseService):
 
     def filter_by_doi(self, doi: str) -> Optional[DSMetaData]:
         return self.repository.filter_by_doi(doi)
-
 
 class DSViewRecordService(BaseService):
     def __init__(self):

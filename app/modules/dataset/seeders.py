@@ -38,6 +38,7 @@ class DataSetSeeder(BaseSeeder):
                 description=f'Description for dataset {i+1}',
                 publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
                 publication_doi=f'10.1234/dataset{i+1}',
+                build= False,
                 dataset_doi=f'10.1234/dataset{i+1}',
                 tags='tag1, tag2',
                 staging_area=False,
