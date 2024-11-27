@@ -69,7 +69,7 @@ def user_profile(user_id):
 
     page = request.args.get('page', 1, type=int)
     per_page = 5
-    
+
     user_datasets_pagination = db.session.query(DataSet) \
         .filter(DataSet.user_id == user.id) \
         .order_by(DataSet.created_at.desc()) \

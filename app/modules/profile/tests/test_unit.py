@@ -1,6 +1,6 @@
 import pytest
 
-from app import db, create_app
+from app import db
 from app.modules.conftest import login, logout
 from app.modules.auth.models import User
 from app.modules.profile.models import UserProfile
@@ -59,23 +59,6 @@ def test_user_profile_own_profile(test_client):
     assert response.location.endswith("/profile/summary"), "Redirected URL is incorrect for own profile."
 
     logout(test_client)
-
-'''
-def test_user_profile_another_user(test_client, user_test2):
-    """
-    Verifica que el usuario logueado pueda acceder al perfil de otro usuario.
-    """
-    # Login del primer usuario
-    login_response = login(test_client, "user@example.com", "test1234")
-    assert login_response.status_code == 200, "Login was unsuccessful."
-
-    # Acceder al perfil del segundo usuario
-    response = test_client.get(f"/profile/{user_test2.id}")
-    assert response.status_code == 200, "Unable to access another user's profile."
-    assert b"OtherName" in response.data, "Profile data for the other user is not displayed correctly."
-
-    logout(test_client)
-'''
 
 
 def test_user_profile_nonexistent_user(test_client):
