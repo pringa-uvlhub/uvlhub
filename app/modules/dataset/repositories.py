@@ -40,6 +40,10 @@ class DSMetaDataRepository(BaseRepository):
     def filter_by_doi(self, doi: str) -> Optional[DSMetaData]:
         return self.model.query.filter_by(dataset_doi=doi).first()
 
+    
+    def filter_by_build(self) -> Optional[DSMetaData]:
+        return self.model.query.filter_by(build=True).first()
+
 
 class DSViewRecordRepository(BaseRepository):
     def __init__(self):
@@ -132,6 +136,10 @@ class DataSetRepository(BaseRepository):
             .limit(5)
             .all()
         )
+    def get_dataset_by_metadata_id(self, metadata_id):
+        
+        dataset = self.model.query.join(DSMetaData).filter(DSMetaData.id == metadata_id).first()
+        return dataset
 
 
 class DOIMappingRepository(BaseRepository):

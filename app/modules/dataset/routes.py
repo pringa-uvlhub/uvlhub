@@ -35,10 +35,28 @@ from app.modules.dataset.services import (
     DSRatingService
 )
 from app.modules.zenodo.services import ZenodoService
+from app.modules.hubfile.repositories import (
+    HubfileDownloadRecordRepository,
+    HubfileRepository,
+    HubfileViewRecordRepository
+)
+from app.modules.hubfile.services import(
+    HubfileService
+)
+from app.modules.dataset.repositories import (
+    AuthorRepository,
+    DOIMappingRepository,
+    DSDownloadRecordRepository,
+    DSMetaDataRepository,
+    DSViewRecordRepository,
+    DataSetRepository
+)
+
 
 logger = logging.getLogger(__name__)
 
-
+metadata_repository=DSMetaDataRepository()
+dataset_repository=DataSetRepository()
 dataset_service = DataSetService()
 author_service = AuthorService()
 dsmetadata_service = DSMetaDataService()
@@ -237,6 +255,90 @@ def list_dataset():
         unprepared_datasets=dataset_service.get_staging_area(current_user.id),
     )
 
+@dataset_bp.route("/dataset/build_empty/<int:feature_model_id>", methods=["POST"])
+@login_required
+def create_empty_dataset(feature_model_id):
+    print("12")
+    try:
+        dataset = dataset_service.create_empty_dataset(current_user=current_user, feature_model_id=feature_model_id)
+        logger.info(f"Created empty dataset: {dataset}")
+            
+        return jsonify({"message": "Empty dataset created successfully and UVL file added.", "dataset_id": dataset.id}), 200
+    except Exception as exc:
+        # En caso de error, capturamos la excepción y respondemos con un mensaje adecuado
+        logger.exception(f"Exception while processing dataset: {exc}")
+        return jsonify({"error": "Exception while processing dataset", "details": str(exc)}), 400
+
+@dataset_bp.route("/dataset/build", methods=["GET", "POST"])
+@login_required
+def build_dataset():
+    form = DataSetForm()
+    metadata = metadata_repository.filter_by_build()
+    if metadata:
+        dataset= dataset_repository.get_dataset_by_metadata_id(metadata.id)
+        feature_models=dataset.feature_models
+
+        print(feature_models)
+    else:
+        metadata=DataSetForm()
+    if request.method == "POST":
+
+        dataset = None
+
+        if not form.validate_on_submit():
+            return jsonify({"message": form.errors}), 400
+
+        try:
+            logger.info("Creating dataset...")
+            logger.info(f"Created dataset: {dataset}")
+            dataset_service.move_feature_models(dataset)
+        except Exception as exc:
+            logger.exception(f"Exception while create dataset data in local {exc}")
+            return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+
+        # send dataset as deposition to Zenodo
+        data = {}
+        try:
+            zenodo_response_json = zenodo_service.create_new_deposition(dataset)
+            response_data = json.dumps(zenodo_response_json)
+            data = json.loads(response_data)
+        except Exception as exc:
+            data = {}
+            zenodo_response_json = {}
+            logger.exception(f"Exception while create dataset data in Zenodo {exc}")
+
+        if data.get("conceptrecid"):
+            deposition_id = data.get("id")
+
+            # update dataset with deposition id in Zenodo
+            dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
+
+            try:
+                # iterate for each feature model (one feature model = one request to Zenodo)
+                for feature_model in dataset.feature_models:
+                    zenodo_service.upload_file(dataset, deposition_id, feature_model)
+
+                # publish deposition
+                zenodo_service.publish_deposition(deposition_id)
+
+                # update DOI
+                deposition_doi = zenodo_service.get_doi(deposition_id)
+                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
+            except Exception as e:
+                msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
+                return jsonify({"message": msg}), 200
+
+        # Delete temp folder
+        file_path = current_user.temp_folder()
+        if os.path.exists(file_path) and os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+
+        msg = "Everything works!"
+        return jsonify({"message": msg}), 200
+
+    return render_template("dataset/build_dataset.html", form=form, dataset=metadata, feature_models=feature_models)
+
+
 
 @dataset_bp.route("/dataset/file/upload", methods=["POST"])
 @login_required
@@ -286,6 +388,7 @@ def upload():
 def delete():
     data = request.get_json()
     filename = data.get("file")
+    print(data)
     temp_folder = current_user.temp_folder()
     filepath = os.path.join(temp_folder, filename)
 
