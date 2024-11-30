@@ -1,4 +1,4 @@
-from flask import render_template
+from flask import render_template, abort
 from flask_login import login_required, current_user
 from app.modules.admin import admin_bp
 from app.modules.featuremodel.services import FeatureModelService
@@ -15,7 +15,8 @@ def index():
 @login_required
 def dashboard():
     if not current_user.is_admin:
-        raise Exception("Access denied: you don't have authorization.")
+        abort(403)  # Raise a 403 Forbidden exception
+        # raise Exception("Access denied: you don't have authorization.")
 
     dataset_service = DataSetService()
     feature_model_service = FeatureModelService()
