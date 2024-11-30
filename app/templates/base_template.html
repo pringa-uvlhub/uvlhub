@@ -96,8 +96,8 @@ chico sundermann">
                         Datasets
                     </li>
 
-                    <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.create_dataset' else '' }}">
-                        <a class="sidebar-link" href="{{ url_for('dataset.create_dataset') }}">
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.upload_dataset_zenodo' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('dataset.upload_dataset_zenodo') }}">
                             <i class="align-middle" data-feather="upload"></i> <span
                                 class="align-middle">Upload dataset</span>
                         </a>
@@ -109,6 +109,14 @@ chico sundermann">
                                 class="align-middle">My datasets</span>
                         </a>
                     </li>
+
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.build_dataset' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('dataset.build_dataset') }}">
+                            <i class="align-middle" data-feather="upload"></i> <span
+                                class="align-middle">Build dataset</span>
+                        </a>
+                    </li>
+
 
                     <li class="sidebar-header">
                         Options
