@@ -56,10 +56,9 @@ def my_profile():
     )
 
 @profile_bp.route('/profile/<int:user_id>')
-@login_required
 def user_profile(user_id):
 
-    if user_id == current_user.id:
+    if current_user.is_authenticated and user_id == current_user.id:
         return redirect(url_for('profile.my_profile'))
 
     user = db.session.query(User).filter_by(id=user_id).first()
@@ -74,7 +73,7 @@ def user_profile(user_id):
         .filter(DataSet.user_id == user.id) \
         .order_by(DataSet.created_at.desc()) \
         .paginate(page=page, per_page=per_page, error_out=False)
-    
+
     total_datasets_count = user_datasets_pagination.total
 
     return render_template(

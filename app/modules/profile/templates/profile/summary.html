@@ -19,9 +19,9 @@
                 <p class="card-text h5"><i class="fa fa-user"></i> <strong>Name:</strong> {{user_profile.name}}</p>
                 <p class="card-text h5"><i class="fa fa-user-circle"></i> <strong>Surname:</strong> {{user_profile.surname}}</p>
                 <p class="card-text h5"><i class="fa fa-building"></i> <strong>Affiliation:</strong> {{user_profile.affiliation}}</p>
-                {% if user.id == current_user.id %}
-                    <p class="card-text h5"><i class="fa fa-id-card"></i> <strong>Orcid:</strong> {{user_profile.orcid}}</p>
-                    <p class="card-text h5"><i class="fa fa-envelope"></i> <strong>Email:</strong> {{user.email}}</p>
+                {% if current_user.is_authenticated and user.id == current_user.id %}
+                    <p class="card-text h5"><i class="fa fa-id-card"></i> <strong>Orcid:</strong> {{ user_profile.orcid }}</p>
+                    <p class="card-text h5"><i class="fa fa-envelope"></i> <strong>Email:</strong> {{ user.email }}</p>
                 {% endif %}
                 <p class="card-text h5"><i class="fa fa-database"></i> <strong>Uploaded datasets:</strong> {{ total_datasets }} datasets</p>
             </div>
@@ -85,19 +85,19 @@
                 <nav>
                     <ul class="pagination">
                         <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                            <a class="page-link" href="{% if pagination.has_prev %}{{ url_for('profile.my_profile', page=pagination.prev_num) }}{% else %}# {% endif %}" aria-label="Previous">
+                            <a class="page-link" href="{% if pagination.has_prev %}{{ url_for('profile.user_profile', user_id=user.id, page=pagination.prev_num) }}{% else %}# {% endif %}" aria-label="Previous">
                                 &laquo;
                             </a>
                         </li>
                         {% for num in pagination.iter_pages() %}
                         <li class="page-item {% if num == pagination.page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('profile.my_profile', page=num) }}">
+                            <a class="page-link" href="{{ url_for('profile.user_profile', user_id=user.id, page=num) }}">
                                 {{ num }}
                             </a>
                         </li>
                         {% endfor %}
                         <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                            <a class="page-link" href="{% if pagination.has_next %}{{ url_for('profile.my_profile', page=pagination.next_num) }}{% else %}# {% endif %}" aria-label="Next">
+                            <a class="page-link" href="{% if pagination.has_next %}{{ url_for('profile.user_profile', user_id=user.id, page=pagination.next_num) }}{% else %}# {% endif %}" aria-label="Next">
                                 &raquo;
                             </a>
                         </li>
