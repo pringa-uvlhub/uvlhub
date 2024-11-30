@@ -47,13 +47,23 @@ def client():
             db.session.commit()
             
             dsmetadata = DSMetaData(id=10, title="Sample Dataset 11", rating=1, description="Description for dataset 11",
-                                    publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name)
+                                    publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name, staging_area=False)
             db.session.add(dsmetadata)
             dataset = DataSet(id=10, user_id=user.id, ds_meta_data_id=dsmetadata.id)
             db.session.add(dataset)
             db.session.commit()
+            
             dsrating = DSRating(id=10, user_id=user.id, ds_meta_data_id=dsmetadata.id, rating=dsmetadata.rating, rated_date=datetime(2022, 3, 13))
             db.session.add(dsrating)
+            db.session.commit()
+            
+            
+            # Crear un dataset en el staging area
+            dsmetadata_sa = DSMetaData(id=11, title="Staging area Dataset", description="Description for unique dataset",
+                                    publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name)
+            db.session.add(dsmetadata_sa)
+            dataset_staging_area = DataSet(id=11, user_id=user.id, ds_meta_data_id=dsmetadata_sa.id)
+            db.session.add(dataset_staging_area)
             db.session.commit()
             
             user1 = User(id=6, email="user6@example.com", password="1234", created_at=datetime(2022, 3, 13))
@@ -153,6 +163,55 @@ def test_create_and_list_unprepared_dataset(client):
     # Verificar que el dataset creado esté en los unprepared_datasets
     html_data = response.data.decode('utf-8')
     assert "test" in html_data, "The created dataset is not in the unprepared_datasets"
+
+    logout(client)
+
+def test_update_staging_area_dataset(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Obtener el ID del dataset creado en la fixture
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Staging area Dataset").first()
+    assert dataset is not None, "Dataset with title 'Staging area Dataset' not found"
+    dataset_id = dataset.id
+
+    # Hacer una solicitud GET a la ruta /dataset/staging-area/<int:dataset_id> para obtener el formulario de actualización
+    response = client.get(f'/dataset/staging-area/{dataset_id}')
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+
+    # Datos de ejemplo para actualizar el dataset
+    form_data_update = {
+        "title": "updated unique dataset",
+        "desc": "updated description",
+        "publication_type": "none",
+        "publication_doi": "",
+        "dataset_doi": "",
+        "tags": "",
+        "authors-0-name": "Updated Author Name",
+        "authors-0-affiliation": "Updated Author Affiliation",
+        "authors-0-orcid": "0000-0001-2345-6789",
+        "feature_models-0-uvl_filename": "file9.uvl",
+        "feature_models-0-title": "Updated Feature Model Title",
+        "feature_models-0-desc": "Updated Feature Model Description",
+        "feature_models-0-publication_type": "none",
+        "feature_models-0-publication_doi": "",
+        "feature_models-0-tags": "",
+        "feature_models-0-version": "1.0",
+        "feature_models-0-authors-0-name": "Updated FM Author Name",
+        "feature_models-0-authors-0-affiliation": "Updated FM Author Affiliation",
+        "feature_models-0-authors-0-orcid": "0000-0002-3456-7890"
+    }
+
+    # Enviar la solicitud POST con los datos del formulario para actualizar el dataset
+    response = client.post(f'/dataset/staging-area/{dataset_id}', data=form_data_update)
+    assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}"
+
+    # Verificar que las propiedades del dataset se hayan actualizado correctamente
+    updated_dataset = DataSet.query.get(dataset_id)
+    assert updated_dataset.ds_meta_data.title == "updated unique dataset", f"Expected title 'updated unique dataset', but got {updated_dataset.ds_meta_data.title}"
+    assert updated_dataset.ds_meta_data.description == "updated description", f"Expected description 'updated description', but got {updated_dataset.ds_meta_data.description}"
+    assert updated_dataset.ds_meta_data.authors[0].name == "TestSurname, TestName", f"Expected author name 'TestSurname, TestName', but got {updated_dataset.ds_meta_data.authors[0].name}"
+    assert updated_dataset.ds_meta_data.authors[1].name == "Updated Author Name", f"Expected author name 'Updated Author Name', but got {updated_dataset.ds_meta_data.authors[0].name}"
 
     logout(client)
 
