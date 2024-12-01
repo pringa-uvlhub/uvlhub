@@ -1,5 +1,6 @@
 from app.modules.auth.services import AuthenticationService
 from app.modules.dataset.models import DataSet
+from app.modules.auth.models import User
 from flask import render_template, redirect, url_for, request
 from flask_login import login_required, current_user
 
@@ -49,6 +50,36 @@ def my_profile():
         'profile/summary.html',
         user_profile=current_user.profile,
         user=current_user,
+        datasets=user_datasets_pagination.items,
+        pagination=user_datasets_pagination,
+        total_datasets=total_datasets_count
+    )
+
+@profile_bp.route('/profile/<int:user_id>')
+def user_profile(user_id):
+
+    if current_user.is_authenticated and user_id == current_user.id:
+        return redirect(url_for('profile.my_profile'))
+
+    user = db.session.query(User).filter_by(id=user_id).first()
+
+    if not user:
+        return redirect(url_for('team.index'))
+
+    page = request.args.get('page', 1, type=int)
+    per_page = 5
+
+    user_datasets_pagination = db.session.query(DataSet) \
+        .filter(DataSet.user_id == user.id) \
+        .order_by(DataSet.created_at.desc()) \
+        .paginate(page=page, per_page=per_page, error_out=False)
+
+    total_datasets_count = user_datasets_pagination.total
+
+    return render_template(
+        'profile/summary.html',
+        user_profile=user.profile,
+        user=user,
         datasets=user_datasets_pagination.items,
         pagination=user_datasets_pagination,
         total_datasets=total_datasets_count
