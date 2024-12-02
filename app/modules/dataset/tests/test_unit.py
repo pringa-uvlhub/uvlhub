@@ -45,7 +45,6 @@ def client():
             profile = UserProfile(user_id=user.id, surname="TestSurname", name="TestName", affiliation="TestAffiliation", orcid="0000-0001-2345-6789")
             db.session.add(profile)
             db.session.commit()
-            
             dsmetadata = DSMetaData(id=10, title="Sample Dataset 11", rating=1, description="Description for dataset 11",
                                     publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name, staging_area=False)
             db.session.add(dsmetadata)
