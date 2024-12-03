@@ -49,7 +49,7 @@ def create():
                 community_service.create_from_form(
                     form=form,
                     current_user=current_user,
-                    logo_filename=logo_filename)
+                    )
             else:
                 community_service = CommunityService()
                 community_service.create_from_form(

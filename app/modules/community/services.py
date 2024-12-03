@@ -14,7 +14,7 @@ class CommunityService(BaseService):
     def __init__(self):
         super().__init__(CommunityRepository())
 
-    def create_from_form(self, form, current_user, logo_filename=None) -> Community:
+    def create_from_form(self, form, current_user) -> Community:
         try:
             logger.info(f"Creating community with name: {form.name.data} by {current_user.id}")
 
@@ -32,8 +32,10 @@ class CommunityService(BaseService):
             description_value = form.description.data
             created_by_id = current_user.id
 
-            logger.info(f"Valores antes de crear Community: name={name_value}, description={description_value},created_by_id={created_by_id}")
-
+            logger.info(
+                f"Valores antes de crear Community: name={name_value}, "
+                f"description={description_value}, created_by_id={created_by_id}"
+            )
             new_community = Community(
                 name=form.name.data,
                 description=form.description.data,
