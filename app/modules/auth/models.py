@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import db
 
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
 
@@ -18,12 +19,11 @@ class User(db.Model, UserMixin):
     # El backref define la relación inversa automáticamente
     communities = db.relationship('Community', secondary=community_user, backref=db.backref('users', lazy='dynamic'))
 
-    
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if 'password' in kwargs:
             self.set_password(kwargs['password'])
-    
+
     def __repr__(self):
         return f'<User {self.email}>'
 

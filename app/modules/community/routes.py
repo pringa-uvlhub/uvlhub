@@ -67,8 +67,8 @@ def create():
 
 
 @community_bp.route('/community/<int:id>', methods=['GET'])
-def show_community(id):
-    community = community_service.get_by_id(id)
+def show_community(community_id):
+    community = community_service.get_by_id(community_id)
 
     user = auth_service.get_by_id(community.created_by_id)
 

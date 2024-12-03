@@ -43,7 +43,10 @@ class CommunitySeeder(BaseSeeder):
             ),
             Community(
                 name="Scientific Community",
-                description="Explore scientific breakthroughs, collaborate on research papers, and connect with leading academics in various fields of science and technology.",
+                description=(
+                        "Explore scientific breakthroughs, collaborate on research papers, and connect "
+                        "with leading academics in various fields of science and technology."
+                ),
                 created_by_id=user_ids[0],  # Usar el primer usuario.
                 created_at=datetime.now(timezone.utc),
                 logo=None  # No se asigna logo, utilizará el predeterminado.
