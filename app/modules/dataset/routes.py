@@ -220,7 +220,7 @@ def update_staging_area_dataset(dataset_id):
                 logger.exception(f"Exception while updating dataset: {exc}")
                 return jsonify({"Exception while updating dataset: ": str(exc)}), 400
         else:
-            print(dataset.feature_models[0].fm_meta_data.title)
+            print("Form errors:", form.errors)
             return jsonify({"message": form.errors}), 400
 
     if request.method == 'GET':
@@ -230,7 +230,6 @@ def update_staging_area_dataset(dataset_id):
         form.publication_doi.data = dataset.ds_meta_data.publication_doi
         form.dataset_doi.data = dataset.ds_meta_data.dataset_doi
         form.tags.data = dataset.ds_meta_data.tags
-        form.authors.entries = [AuthorForm(obj=author) for author in dataset.ds_meta_data.authors]
         form.feature_models.entries = [FeatureModelForm(obj=fm.fm_meta_data) for fm
                                        in dataset.feature_models]
         feature_models = dataset.feature_models
@@ -500,6 +499,8 @@ def get_unsynchronized_dataset(dataset_id):
     if not dataset:
         abort(404)
 
+    print(dataset.to_dict())
+    
     return render_template("dataset/view_dataset.html", dataset=dataset)
 
 
