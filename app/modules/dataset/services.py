@@ -150,21 +150,25 @@ class DataSetService(BaseService):
         dataset.ds_meta_data.publication_doi = form.publication_doi.data
         dataset.ds_meta_data.dataset_doi = form.dataset_doi.data
         dataset.ds_meta_data.tags = form.tags.data
+        main_author = {
+            "name": f"{current_user.profile.surname}, {current_user.profile.name}",
+            "affiliation": current_user.profile.affiliation,
+            "orcid": current_user.profile.orcid,
+        }
 
-        # Update authors
+        # Limpiar los autores anteriores
         dataset.ds_meta_data.authors = []
-        for author_form in form.authors.entries:
-            author = Author(
-                name=author_form.name.data,
-                affiliation=author_form.affiliation.data,
-                orcid=author_form.orcid.data
-            )
+
+        # Añadir el autor principal y los autores del formulario
+        for author_data in [main_author] + form.get_authors():
+            # Crear o actualizar autores en el repositorio
+            author = self.author_repository.create(commit=False, ds_meta_data_id=dataset.ds_meta_data.id, **author_data)
             dataset.ds_meta_data.authors.append(author)
 
         for feature_model in dataset.feature_models:
             db.session.delete(feature_model)
 
-        # Luego, commit para reflejar los cambios (si es necesario)
+        # Luego, commit para reflejar los cambios
         db.session.commit()
     # Actualizar o agregar nuevos FeatureModels
         for feature_model in form.feature_models:
@@ -188,6 +192,7 @@ class DataSetService(BaseService):
             fm.files.append(file)
 
         self.repository.session.commit()
+        print(dataset.ds_meta_data.authors)
         return dataset
 
     def create_empty_dataset(self, current_user, feature_model_id) -> DataSet:
