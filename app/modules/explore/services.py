@@ -6,5 +6,6 @@ class ExploreService(BaseService):
     def __init__(self):
         super().__init__(ExploreRepository())
 
-    def filter(self, query="", queryAuthor="", sorting="newest", publication_type="any", tags=[], **kwargs):
-        return self.repository.filter(query, queryAuthor, sorting, publication_type, tags, **kwargs)
+    def filter(self, query="", queryAuthor="", queryTag="", sorting="newest", publication_type="any", tags=[],
+               **kwargs):
+        return self.repository.filter(query, queryAuthor, queryTag, sorting, publication_type, tags, **kwargs)

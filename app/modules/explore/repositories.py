@@ -10,13 +10,16 @@ class ExploreRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
 
-    def filter(self, query="", queryAuthor="", sorting="newest", publication_type="any", tags=[], **kwargs):
+    def filter(self, query="", queryAuthor="", queryTag="", sorting="newest", publication_type="any", tags=[], **kwargs):
         # Normalize and remove unwanted characters
         normalized_query = unidecode.unidecode(query).lower()
         cleaned_query = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query)
 
         normalized_query_author = unidecode.unidecode(queryAuthor)
         cleaned_query_author = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query_author)
+
+        normalized_query_tag = unidecode.unidecode(queryTag)
+        cleaned_query_tag = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query_tag)
 
         filters = []
         for word in cleaned_query.split():
@@ -36,6 +39,10 @@ class ExploreRepository(BaseRepository):
         filters_author.append(Author.name.contains(cleaned_query_author))
         filters_author.append(Author.affiliation.contains(cleaned_query_author))
         filters_author.append(Author.orcid.contains(cleaned_query_author))
+
+        filters_tag = []
+        filters_tag.append(FMMetaData.tags.contains(cleaned_query_tag))
+        filters_tag.append(DSMetaData.tags.contains(cleaned_query_tag))
 
         datasets = (
             self.model.query
