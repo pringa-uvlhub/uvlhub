@@ -51,12 +51,9 @@ def client():
             dataset = DataSet(id=10, user_id=user.id, ds_meta_data_id=dsmetadata.id)
             db.session.add(dataset)
             db.session.commit()
-            
             dsrating = DSRating(id=10, user_id=user.id, ds_meta_data_id=dsmetadata.id, rating=dsmetadata.rating, rated_date=datetime(2022, 3, 13))
             db.session.add(dsrating)
             db.session.commit()
-            
-            
             # Crear un dataset en el staging area
             dsmetadata_sa = DSMetaData(id=11, title="Staging area Dataset", description="Description for unique dataset",
                                     publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name)
@@ -64,17 +61,14 @@ def client():
             dataset_staging_area = DataSet(id=11, user_id=user.id, ds_meta_data_id=dsmetadata_sa.id)
             db.session.add(dataset_staging_area)
             db.session.commit()
-            
             user1 = User(id=6, email="user6@example.com", password="1234", created_at=datetime(2022, 3, 13))
             db.session.add(user1)
             db.session.commit()
-            
             # Crear el archivo temporal en la ruta esperada
             temp_folder = os.path.join('uploads', 'temp', str(user.id))
             os.makedirs(temp_folder, exist_ok=True)
             with open(os.path.join(temp_folder, 'file9.uvl'), 'w') as f:
                 f.write('Temporary file content')
-
             yield client
 
             # Limpiar el archivo temporal después de la prueba
@@ -90,7 +84,6 @@ def client():
 def test_create_dataset(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
-    
     # Datos de ejemplo para el formulario
     form_data = {
         "title": "test",
@@ -121,7 +114,6 @@ def test_create_dataset(client):
     assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
     data = response.get_json()
     assert data["message"] == "Everything works!", f"Expected message 'Everything works!', but got {data['message']}"
-
     logout(client)
     
 def test_upload_dataset_zenodo(client):
