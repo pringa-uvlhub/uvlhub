@@ -21,6 +21,8 @@ function send_query() {
                 query: document.querySelector('#query').value,
                 queryAuthor: document.querySelector('#queryAuthor').value,
                 queryTag: document.querySelector('#queryTag').value,
+                queryFeatures: document.querySelector('#queryFeatures').value,
+                queryModels: document.querySelector('#queryModels').value,
                 publication_type: document.querySelector('#publication_type').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
             };

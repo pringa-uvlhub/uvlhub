@@ -1,7 +1,7 @@
 import re
 from sqlalchemy import any_, or_
 import unidecode
-from app.modules.dataset.models import Author, DSMetaData, DataSet, PublicationType
+from app.modules.dataset.models import Author, DSMetaData, DataSet, PublicationType, DSMetrics
 from app.modules.featuremodel.models import FMMetaData, FeatureModel
 from core.repositories.BaseRepository import BaseRepository
 
@@ -10,7 +10,10 @@ class ExploreRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
 
-    def filter(self, query="", queryAuthor="", queryTag="", sorting="newest", publication_type="any", tags=[], **kwargs):
+    def filter(
+        self, query="", queryAuthor="", queryTag="", queryFeatures="", queryModels="", sorting="newest",
+        publication_type="any", tags=[], **kwargs
+    ):
         # Normalize and remove unwanted characters
         normalized_query = unidecode.unidecode(query).lower()
         cleaned_query = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query)
@@ -20,6 +23,12 @@ class ExploreRepository(BaseRepository):
 
         normalized_query_tag = unidecode.unidecode(queryTag)
         cleaned_query_tag = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query_tag)
+
+        normalized_query_features = unidecode.unidecode(queryFeatures)
+        cleaned_query_features = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query_features)
+
+        normalized_query_models = unidecode.unidecode(queryModels)
+        cleaned_query_models = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query_models)
 
         filters = []
         for word in cleaned_query.split():
@@ -44,14 +53,24 @@ class ExploreRepository(BaseRepository):
         filters_tag.append(FMMetaData.tags.contains(cleaned_query_tag))
         filters_tag.append(DSMetaData.tags.contains(cleaned_query_tag))
 
+        filters_features = []
+        filters_features.append(DSMetrics.number_of_features.contains(cleaned_query_features))
+
+        filters_models = []
+        filters_models.append(DSMetrics.number_of_models.contains(cleaned_query_models))
+
         datasets = (
             self.model.query
             .join(DataSet.ds_meta_data)
             .join(DSMetaData.authors)
             .join(DataSet.feature_models)
             .join(FeatureModel.fm_meta_data)
+            .join(DSMetaData.ds_metrics)
             .filter(or_(*filters))
             .filter(or_(*filters_author))
+            .filter(or_(*filters_tag))
+            .filter(or_(*filters_features))
+            .filter(or_(*filters_models))
             .filter(DSMetaData.dataset_doi.isnot(None))  # Exclude datasets with empty dataset_doi
         )
 
