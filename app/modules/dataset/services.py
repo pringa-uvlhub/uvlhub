@@ -110,6 +110,9 @@ class DataSetService(BaseService):
     
     def users_with_most_downloads(self):
         return self.dsdownloadrecord_repository.users_with_most_downloads()
+    
+    def datasets_with_most_views(self):
+        return self.dsviewrecord_repostory.datasets_with_most_views()
 
     def datasets_with_most_downloads(self):
         return self.dsdownloadrecord_repository.datasets_with_most_downloads()

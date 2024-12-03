@@ -34,7 +34,6 @@ def dashboard():
     total_feature_model_downloads = feature_model_service.total_feature_model_downloads()
     fm_downloads = hubfile_download_service.features_models_with_most_downloads()
     max_downloads = dataset_service.max_downloads()
-    #datasets_with_most_downloads = dataset_service.datasets_with_most_downloads()
     user_downloads = dataset_service.user_max_downloads()
 
     # Statistics: total views
@@ -75,7 +74,6 @@ def dashboard():
         admin_user_counter=admin_user_counter,
         max_downloads_dataset=max_downloads[0],
         max_downloads=max_downloads[1],
-        #datasets_with_most_downloads = datasets_with_most_downloads,
         user_downloads=user_downloads[0],
         number_downloads_user=user_downloads[1],
         plot_url=plot_url,
