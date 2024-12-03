@@ -116,6 +116,7 @@ def test_create_dataset(client):
     assert data["message"] == "Everything works!", f"Expected message 'Everything works!', but got {data['message']}"
     logout(client)
     
+    
 def test_upload_dataset_zenodo(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
@@ -161,6 +162,7 @@ def test_upload_dataset_zenodo(client):
 
     logout(client)
 
+
 def test_create_and_list_unprepared_dataset(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
@@ -203,6 +205,7 @@ def test_create_and_list_unprepared_dataset(client):
     assert "test" in html_data, "The created dataset is not in the unprepared_datasets"
 
     logout(client)
+
 
 def test_update_staging_area_dataset(client):
     login_response = login(client, "user5@example.com", "1234")
@@ -252,6 +255,7 @@ def test_update_staging_area_dataset(client):
     assert updated_dataset.ds_meta_data.authors[1].name == "Updated Author Name", f"Expected author name 'Updated Author Name', but got {updated_dataset.ds_meta_data.authors[0].name}"
 
     logout(client)
+    
     
 def test_upload_dataset_zenodo_from_staging(client):
     login_response = login(client, "user5@example.com", "1234")
@@ -303,6 +307,7 @@ def test_upload_dataset_zenodo_from_staging(client):
     assert "updated unique dataset" in html_data, "The updated dataset is not in the local_datasets"
 
     logout(client)
+
 
 def test_rate_dataset(client):
     login_response = login(client, "user5@example.com", "1234")
