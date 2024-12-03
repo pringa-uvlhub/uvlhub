@@ -5,7 +5,7 @@ from app.modules.featuremodel.services import FeatureModelService
 from app.modules.dataset.services import DataSetService
 from app.modules.hubfile.services import HubfileService, HubfileDownloadRecordService
 from app.modules.auth.services import AuthenticationService
-from app.modules.charts.charts import plot_downloads_bar_chart, plot_users_with_most_downloads, plot_feature_models_with_most_downloads, plot_datasets_with_most_views
+from app.modules.charts.charts import ChartGenerator
 
 
 
@@ -47,19 +47,21 @@ def dashboard():
 
     # Plot datasets with most dowloads
     dataset_names, download_counts = dataset_service.datasets_with_most_downloads()
-    plot_url = plot_downloads_bar_chart(dataset_names, download_counts)
+    plot_url = ChartGenerator.plot_downloads_bar_chart(dataset_names, download_counts)
 
     #Plot users with most downloads
     users_email, downloads = dataset_service.users_with_most_downloads()
-    plot_users = plot_users_with_most_downloads(users_email, downloads)
+    plot_users = ChartGenerator.plot_users_with_most_downloads(users_email, downloads)
 
     #Plot feature models with most downloads
     features_title, download_feature = hubfile_download_service.features_models_with_most_downloads()
-    plot_features_downloads = plot_feature_models_with_most_downloads(features_title, download_feature)
+    plot_features_downloads = ChartGenerator.plot_feature_models_with_most_downloads(features_title, download_feature)
 
     #Plot datasets with most views
     datasets, views = dataset_service.datasets_with_most_views()
-    plot_datasets_views = plot_datasets_with_most_views(datasets, views)
+    plot_datasets_views = ChartGenerator.plot_datasets_with_most_views(datasets, views)
+
+
 
     return render_template(
         "admin/dashboard.html",
