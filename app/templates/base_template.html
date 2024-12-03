@@ -71,6 +71,14 @@ chico sundermann">
                     </a>
                 </li>
 
+                {% if current_user.is_admin %}
+                <li class="sidebar-item {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}">
+                    <a class="sidebar-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard</span>
+                    </a>
+                </li>
+                {% endif %}
+
                 {% if current_user.is_anonymous %}
 
                     <li class="sidebar-header">
