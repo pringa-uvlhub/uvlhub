@@ -3,6 +3,7 @@ from app.modules.auth.models import User
 from core.seeders.BaseSeeder import BaseSeeder
 from datetime import datetime, timezone
 
+
 class CommunitySeeder(BaseSeeder):
 
     priority = 2  # Prioridad menor que AuthSeeder si los usuarios ya deben existir.

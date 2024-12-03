@@ -13,13 +13,13 @@ class CommunityRepository(BaseRepository):
 
     def get_community_by_id(self, name: str) -> Optional[Community]:
         return self.model.query.filter_by(id=id).first()
-    
+
     def get_community_by_name(self, name: str) -> Optional[Community]:
         return self.model.query.filter_by(name=name).first()
-    
+
     def list_communities(self, limit: int = 10):
         return self.model.query.order_by(self.model.created_at.desc()).limit(limit).all()
-    
+
     def create_new_community(self, name: str, description: str, user_id: int) -> Community:
         return self.create(
             name=name,
@@ -27,7 +27,6 @@ class CommunityRepository(BaseRepository):
             created_by=user_id,
             created_at=datetime.now(timezone.utc)
         )
-    
+
     def delete_community(self, community_id: int) -> bool:
         return self.delete(community_id)
-

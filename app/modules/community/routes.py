@@ -25,8 +25,7 @@ def index():
 def create():
     form = CommunityForm()
 
-    if request.method == 'POST':  
-        
+    if request.method == 'POST':
         if not form.validate_on_submit():
             return jsonify({"message": form.errors}), 400
 
@@ -48,13 +47,13 @@ def create():
 
                 community_service = CommunityService()
                 community_service.create_from_form(
-                    form=form, 
-                    current_user=current_user, 
+                    form=form,
+                    current_user=current_user,
                     logo_filename=logo_filename)
             else:
                 community_service = CommunityService()
                 community_service.create_from_form(
-                    form=form, 
+                    form=form,
                     current_user=current_user
                     )
             flash('Community created successfully!', 'success')
@@ -78,15 +77,13 @@ def show_community(id):
     if not community:
         flash('Community not found!', 'danger')
         return redirect(url_for('community.index'))
-    
     return render_template('community/show.html', community=community, user_fullname=user_fullname)
-
 
 
 @community_bp.route('/community/<int:id>/delete', methods=['POST'])
 @login_required
-def delete_community(id):
-    community = community_service.get_by_id(id)
+def delete_community(community_id):
+    community = community_service.get_by_id(community_id)
     if not community:
         flash('Community not found!', 'danger')
         return redirect(url_for('community.index'))
@@ -96,7 +93,7 @@ def delete_community(id):
         return redirect(url_for('community.index'))
 
     try:
-        if community_service.delete_community(id):
+        if community_service.delete_community(community_id):
             flash('Community deleted successfully!', 'success')
         else:
             flash('Community could not be deleted.', 'danger')

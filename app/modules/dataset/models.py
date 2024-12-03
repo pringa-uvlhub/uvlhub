@@ -6,8 +6,6 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 
 from app import db
 
-from app.modules.auth.models import User
-from app.modules.community.models import Community
 
 class PublicationType(Enum):
     NONE = 'none'
@@ -110,14 +108,13 @@ class DataSet(db.Model):
     def get_uvlhub_doi(self):
         from app.modules.dataset.services import DataSetService
         return DataSetService().get_uvlhub_doi(self)
-    
-    #FIXME
+
     '''
     def get_community(self):
         from app.modules.community.services import CommunityService
         return CommunityService().get_community_by_id(self.community_id)
     '''
-    
+
     def to_dict(self):
         return {
             'title': self.ds_meta_data.title,
