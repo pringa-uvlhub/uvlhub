@@ -34,24 +34,73 @@ class DSDownloadRecordRepository(BaseRepository):
 
     def max_downloads(self):
         download_count = {}
-        for download in self.model.query:
+        for download in self.model.query.all():
             if download.dataset_id in download_count:
                 download_count[download.dataset_id] += 1
             else:
                 download_count[download.dataset_id] = 1
+        if not download_count:
+            return None  # O algún valor por defecto apropiado
         max_dataset_id = max(download_count, key=download_count.get)
-
         dataset_repo = DataSetRepository()
         max_dataset = dataset_repo.get_dataset_by_id(max_dataset_id)
         return max_dataset, download_count[max_dataset_id]
 
-    def user_max_downloads(self):
+
+    def datasets_with_most_downloads(self):
         download_count = {}
-        for download in self.model.query:
+        for download in self.model.query.all():
+            if download.dataset_id in download_count:
+                download_count[download.dataset_id] += 1
+            else:
+                download_count[download.dataset_id] = 1
+    
+        most_downloaded_datasets = sorted(download_count.items(), key=lambda x: x[1], reverse=True)[:5]
+        datasets = []
+        dataset_names = []
+        download_counts = []
+    
+        for dataset_id, count in most_downloaded_datasets:
+            dataset_repo = DataSetRepository()
+            dataset = dataset_repo.get_dataset_by_id(dataset_id)
+            datasets.append((dataset, count))
+            dataset_names.append(dataset.name())  # Asegúrate de que `dataset` tenga un atributo `name`
+            download_counts.append(count)
+    
+        return dataset_names, download_counts
+    
+
+    def users_with_most_downloads(self):
+        download_count = {}
+        for download in self.model.query.all():
             if download.user_id in download_count:
                 download_count[download.user_id] += 1
             else:
                 download_count[download.user_id] = 1
+        if not download_count:
+            return None
+        user_with_most_downloads = sorted(download_count.items(), key=lambda x: x[1], reverse=True)[:5]
+        users = []
+        user_email = []
+        download_counts = []
+        for user_id, count in user_with_most_downloads:
+            user_repo = UserRepository()
+            user = user_repo.get_user_by_id(user_id)
+            users.append((user, count))
+            user_email.append(user.email)
+            download_counts.append(count)
+        return user_email, download_counts
+
+
+    def user_max_downloads(self):
+        download_count = {}
+        for download in self.model.query.all():
+            if download.user_id in download_count:
+                download_count[download.user_id] += 1
+            else:
+                download_count[download.user_id] = 1
+        if not download_count:
+            return None  # O algún valor por defecto apropiado
         max_user_id = max(download_count, key=download_count.get)
 
         user_repo = UserRepository()
