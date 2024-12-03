@@ -24,6 +24,17 @@ class HubfileRepository(BaseRepository):
     def get_dataset_by_hubfile(self, hubfile: Hubfile) -> DataSet:
         return db.session.query(DataSet).join(FeatureModel).join(Hubfile).filter(Hubfile.id == hubfile.id).first()
 
+    
+    def get_featureModels_by_hubfile_id( id: int) -> DataSet:
+        return db.session.query(FeatureModel).join(FeatureModel).join(Hubfile).filter(Hubfile.id == id).first()
+
+    def get_hubfile_by_name(file_name: str):
+        hubfile = Hubfile.query.filter_by(name=file_name).first()
+        if hubfile is None:
+            abort(404, description=f'Hubfile with name "{file_name}" not found')
+        return hubfile
+
+
 
 class HubfileViewRecordRepository(BaseRepository):
     def __init__(self):

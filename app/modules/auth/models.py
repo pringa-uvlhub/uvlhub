@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-
+from app.modules.community.common import community_user
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -20,6 +20,9 @@ class User(db.Model, UserMixin):
     profile = db.relationship('UserProfile', backref='user', uselist=False)
     reset_token = db.Column(db.String(256), nullable=True)
     reset_token_expiration = db.Column(db.DateTime, nullable=True)
+
+    # El backref define la relación inversa automáticamente
+    communities = db.relationship('Community', secondary=community_user, backref=db.backref('users', lazy='dynamic'))
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)

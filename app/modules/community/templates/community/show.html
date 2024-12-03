@@ -1,0 +1,46 @@
+{% extends "base_template.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex align-items-center mb-4">
+        {% if community.logo %}
+            <img 
+                src="{{ url_for('static', filename=community.logo) }}" 
+                alt="Community Logo" 
+                width="50"  
+                class="logo-bordered me-3"> 
+        {% else %}
+            <span class="me-3">No logo available.</span>
+        {% endif %}
+        
+        <h1 class="m-0">{{ community.name }}</h1>
+    </div>
+
+    <p><strong>Description:</strong> {{ community.description }}</p>
+    <p><strong>Created At:</strong> {{ community.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+    <p><strong>Created By:</strong> {{ user_fullname }}</p>
+    
+    <p><strong>Datasets:</strong> {{ community.datasets | length }}</p>
+    <ul>
+        {% for dataset in community.datasets %}
+            <li>{{ dataset.name }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('community.index') }}" class="btn btn-primary">Back to Communities</a>
+
+    {% if community.created_by_id == current_user.id %}
+    <form action="{{ url_for('community.delete_community', id=community.id) }}" method="POST" style="display:inline;">
+        <button type="submit" class="btn btn-danger">Delete Community</button>
+    </form>
+    {% endif %}
+</div>
+
+<style>
+    .logo-bordered {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 5px;
+    }
+</style>
+{% endblock %}

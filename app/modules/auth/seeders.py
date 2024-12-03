@@ -5,22 +5,21 @@ from core.seeders.BaseSeeder import BaseSeeder
 
 class AuthSeeder(BaseSeeder):
 
-    priority = 1  # Higher priority
+    priority = 1
 
     def run(self):
-
-        # Seeding users
+        # Crear usuarios sin asociarlos inicialmente a comunidades
         users = [
             User(email='user1@example.com', password='1234'),
             User(email='user2@example.com', password='1234'),
+            User(email='user3@example.com', password='1234'),  # Este usuario no tendrá comunidades
         ]
 
-        # Inserted users with their assigned IDs are returned by `self.seed`.
         seeded_users = self.seed(users)
 
-        # Create profiles for each user inserted.
+        # Crear perfiles asociados a usuarios (opcional)
         user_profiles = []
-        names = [("John", "Doe"), ("Jane", "Doe")]
+        names = [("John", "Doe"), ("Jane", "Doe"), ("Alex", "Smith")]
 
         for user, name in zip(seeded_users, names):
             profile_data = {
@@ -33,5 +32,4 @@ class AuthSeeder(BaseSeeder):
             user_profile = UserProfile(**profile_data)
             user_profiles.append(user_profile)
 
-        # Seeding user profiles
         self.seed(user_profiles)
