@@ -59,3 +59,22 @@ def plot_feature_models_with_most_downloads(feature_model_names, download_counts
     plot_url = base64.b64encode(img.getvalue()).decode()
     plt.close()  # Cierra la figura para evitar consumo excesivo de memoria
     return plot_url
+
+
+#Gráfico para los datasets con más descargas
+def plot_datasets_with_most_views(dataset_names, view_counts):
+    plt.figure(figsize=(10, 6))
+    plt.bar(dataset_names, view_counts, color='skyblue')
+    plt.title('Top 5 Datasets con Más Vistas', fontsize=16)
+    plt.xlabel('Dataset', fontsize=14)
+    plt.ylabel('Vistas', fontsize=14)
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+
+    # Save the plot to a BytesIO object
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plot_url = base64.b64encode(img.getvalue()).decode()
+    plt.close()  # Cierra la figura para evitar consumo excesivo de memoria
+    return plot_url

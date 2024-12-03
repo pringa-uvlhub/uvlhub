@@ -138,6 +138,28 @@ class DSViewRecordRepository(BaseRepository):
                 view_date=datetime.now(timezone.utc),
                 view_cookie=user_cookie,
             )
+    
+
+    def datasets_with_most_views(self):
+        view_count = {}
+        for view in self.model.query.all():
+            if view.dataset_id in view_count:
+                view_count[view.dataset_id] += 1
+            else:
+                view_count[view.dataset_id] = 1
+    
+        most_viewed_datasets = sorted(view_count.items(), key=lambda x: x[1], reverse=True)[:5]
+        datasets = []
+        dataset_names = []
+        view_counts = []
+    
+        for dataset_id, count in most_viewed_datasets:
+            dataset_repo = DataSetRepository()
+            dataset = dataset_repo.get_dataset_by_id(dataset_id)
+            datasets.append((dataset, count))
+            dataset_names.append(dataset.name())
+            view_counts.append(count)
+        return dataset_names, view_counts
 
 
 class DataSetRepository(BaseRepository):
