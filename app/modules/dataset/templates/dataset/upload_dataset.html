@@ -3,6 +3,11 @@
 {% block title %}Upload dataset{% endblock %}
 
 {% block content %}
+    {% if request.path.startswith('/dataset/staging-area') %}
+        <script>document.addEventListener("DOMContentLoaded", function () {
+            show_upload_dataset();
+            });</script>
+    {% endif %}
 
     <h1 class="h2 mb-3"><b>Upload</b> dataset</h1>
 
@@ -297,7 +302,12 @@
                 
                                     removeButton.addEventListener('click', function () {
                                         fileList.removeChild(listItem);
+                                        if (fileList.querySelectorAll('li').length === 0) {
+                                            document.getElementById("upload_dataset").style.display = "none";
+                                        }
+                                        
                                     });
+                                    
                 
                                     /*
                                         ##########################################
@@ -495,7 +505,7 @@
                                         if (xhr.status === 200) {
                                             console.log('Deleted file from server');
 
-                                            if (dropzone.files.length === 0) {
+                                            if (dropzone.files.length === 0 && document.querySelectorAll("#file-list li").length === 0)  {
                                                 document.getElementById("upload_dataset").style.display = "none";
                                                 clean_upload_errors();
                                             }
@@ -642,6 +652,8 @@
     </div>
         
     {% endif %}
+
+    
 
     <div class="row" id="upload_dataset" style="display: none">
 
