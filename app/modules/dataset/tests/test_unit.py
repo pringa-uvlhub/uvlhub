@@ -5,6 +5,7 @@ from app import create_app, db
 from app.modules.conftest import login, logout
 from app.modules.dataset.models import DataSet, DSMetaData, DSRating
 from app.modules.profile.models import UserProfile
+from app.modules.featuremodel.models import *
 from app.modules.auth.models import User
 from datetime import datetime
 
@@ -63,6 +64,25 @@ def client():
             db.session.commit()
             user1 = User(id=6, email="user6@example.com", password="1234", created_at=datetime(2022, 3, 13))
             db.session.add(user1)
+            db.session.commit()
+            fm_metadata = FMMetaData(
+                uvl_filename="test_model.uvl",
+                title="Test Feature Model",
+                description="A feature model for testing purposes",
+                publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name,
+                publication_doi="",
+                tags="test,feature,model",
+                uvl_version="1.0"
+            )
+            db.session.add(fm_metadata)
+            db.session.commit()
+
+            # Crear un FeatureModel relacionado con un DataSet
+            feature_model = FeatureModel(
+                data_set_id=dataset.id,
+                fm_meta_data_id=fm_metadata.id
+            )
+            db.session.add(feature_model)
             db.session.commit()
             # Crear el archivo temporal en la ruta esperada
             temp_folder = os.path.join('uploads', 'temp', str(user.id))
@@ -388,4 +408,44 @@ def test_get_dataset_average_rating(client):
     assert 'average_rating' in data
     assert data['average_rating'] == 4.5
 
+    logout(client)
+
+def test_create_empty_dataset(client):
+    # Iniciar sesión como el usuario de prueba
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+    
+    # Crear un dataset vacío con un ID de modelo de características existente
+    feature_model_id = 1 # Asegúrate de usar un ID válido desde la fixture
+    response = client.post(f"/dataset/build_empty/{feature_model_id}")
+    
+    # Verificar que la solicitud fue exitosa
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    data = response.get_json()
+    assert "message" in data, "Response JSON does not contain 'message'"
+    assert data["message"] == "Empty dataset created successfully and UVL file added."
+    assert "dataset_id" in data, "Response JSON does not contain 'dataset_id'"
+    
+    # Verificar que el dataset vacío se creó en la base de datos
+    dataset = DataSet.query.get(data["dataset_id"])
+    assert dataset is not None, "Dataset was not created in the database."
+    
+    logout(client)
+
+
+def test_create_empty_dataset_with_invalid_id(client):
+    # Iniciar sesión como el usuario de prueba
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+    
+    # Intentar crear un dataset vacío con un ID de modelo de características no válido
+    invalid_feature_model_id = 999  # Usar un ID que no existe
+    response = client.post(f"/dataset/build_empty/{invalid_feature_model_id}")
+    
+    # Verificar que la solicitud falló correctamente
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+    data = response.get_json()
+    assert "error" in data, "Response JSON does not contain 'error'"
+    assert data["error"] == "Exception while processing dataset"
+    
     logout(client)
