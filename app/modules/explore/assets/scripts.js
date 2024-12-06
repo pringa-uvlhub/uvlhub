@@ -176,6 +176,18 @@ function clearFilters() {
     publicationTypeSelect.value = "any"; // replace "any" with whatever your default value is
     // publicationTypeSelect.dispatchEvent(new Event('input', {bubbles: true}));
 
+    let queryInputAuthor = document.querySelector('#queryAuthor');
+    queryInputAuthor.value = "";
+
+    let queryInputTag = document.querySelector('#queryTag');
+    queryInputTag.value = "";
+
+    let queryInputModels = document.querySelector('#queryModels');
+    queryInputModels.value = "";
+
+    let queryInputFeatures = document.querySelector('#queryFeatures');
+    queryInputFeatures.value = "";
+
     // Reset the sorting option
     let sortingOptions = document.querySelectorAll('[name="sorting"]');
     sortingOptions.forEach(option => {
