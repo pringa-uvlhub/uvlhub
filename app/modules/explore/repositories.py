@@ -31,18 +31,17 @@ class ExploreRepository(BaseRepository):
         cleaned_query_models = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query_models)
 
         filters = []
-        for word in cleaned_query.split():
-            filters.append(DSMetaData.title.ilike(f"%{word}%"))
-            filters.append(DSMetaData.description.ilike(f"%{word}%"))
-            filters.append(Author.name.ilike(f"%{word}%"))
-            filters.append(Author.affiliation.ilike(f"%{word}%"))
-            filters.append(Author.orcid.ilike(f"%{word}%"))
-            filters.append(FMMetaData.uvl_filename.ilike(f"%{word}%"))
-            filters.append(FMMetaData.title.ilike(f"%{word}%"))
-            filters.append(FMMetaData.description.ilike(f"%{word}%"))
-            filters.append(FMMetaData.publication_doi.ilike(f"%{word}%"))
-            filters.append(FMMetaData.tags.ilike(f"%{word}%"))
-            filters.append(DSMetaData.tags.ilike(f"%{word}%"))
+        filters.append(DSMetaData.title.ilike(f"%{cleaned_query}%"))
+        filters.append(DSMetaData.description.ilike(f"%{cleaned_query}%"))
+        filters.append(Author.name.ilike(f"%{cleaned_query}%"))
+        filters.append(Author.affiliation.ilike(f"%{cleaned_query}%"))
+        filters.append(Author.orcid.ilike(f"%{cleaned_query}%"))
+        filters.append(FMMetaData.uvl_filename.ilike(f"%{cleaned_query}%"))
+        filters.append(FMMetaData.title.ilike(f"%{cleaned_query}%"))
+        filters.append(FMMetaData.description.ilike(f"%{cleaned_query}%"))
+        filters.append(FMMetaData.publication_doi.ilike(f"%{cleaned_query}%"))
+        filters.append(FMMetaData.tags.ilike(f"%{cleaned_query}%"))
+        filters.append(DSMetaData.tags.ilike(f"%{cleaned_query}%"))
 
         filters_author = []
         filters_author.append(Author.name.contains(cleaned_query_author))
