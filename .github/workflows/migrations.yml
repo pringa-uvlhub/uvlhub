@@ -1,0 +1,115 @@
+name: Run Migrations
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: uvlhubdb_root_password
+          MYSQL_DATABASE: uvlhubdb_test
+          MYSQL_USER: uvlhubdb_user
+          MYSQL_PASSWORD: uvlhubdb_password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 --silent" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Prepare environment
+      run: |
+        sed -i '/rosemary @ file:\/\/\/app/d' requirements.txt
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Wait for MySQL
+      run: |
+        until mysqladmin ping -h 127.0.0.1 -uuvlhubdb_user -puvlhubdb_password --silent; do
+          echo "Waiting for MySQL..."
+          sleep 5
+        done
+
+    - name: Execute MySQL Commands
+      run: |
+        # Eliminar bases de datos y usuario si existen
+        mysql -h127.0.0.1 -uroot -puvlhubdb_root_password -e '
+        DROP DATABASE IF EXISTS uvlhubdb;
+        DROP DATABASE IF EXISTS uvlhubdb_test;
+        DROP USER IF EXISTS "uvlhubdb_user"@"%";
+        CREATE DATABASE uvlhubdb;
+        CREATE DATABASE uvlhubdb_test;
+        CREATE USER "uvlhubdb_user"@"%" IDENTIFIED BY "uvlhubdb_password";
+        GRANT ALL PRIVILEGES ON uvlhubdb.* TO "uvlhubdb_user"@"%";
+        GRANT ALL PRIVILEGES ON uvlhubdb_test.* TO "uvlhubdb_user"@"%";
+        FLUSH PRIVILEGES;'
+
+    - name: Debug MySQL Setup
+      run: |
+        mysql -h127.0.0.1 -uroot -puvlhubdb_root_password -e "
+        SHOW DATABASES;
+        SELECT user, host FROM mysql.user;"
+
+    - name: Run Flask Migrations
+      env:
+        FLASK_APP_NAME: "UVLHUB.IO(dev)"
+        FLASK_ENV: development
+        DOMAIN: localhost
+        MARIADB_HOSTNAME: 127.0.0.1
+        MARIADB_PORT: 3306
+        MARIADB_DATABASE: uvlhubdb
+        MARIADB_TEST_DATABASE: uvlhubdb_test
+        MARIADB_USER: uvlhubdb_user
+        MARIADB_PASSWORD: uvlhubdb_password
+        MARIADB_ROOT_PASSWORD: uvlhubdb_root_password
+        WORKING_DIR: ""
+        DATABASE_URL: mysql+pymysql://uvlhubdb_user:uvlhubdb_password@127.0.0.1:3306/uvlhubdb_test
+      run: |
+        flask db upgrade
+        flask db migrate -m "new_migration"
+        flask db upgrade
+
+    - name: Commit migration file
+      if: |
+        github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+      run: |
+        # Configurar usuario de Git para hacer commit con el token de GitHub
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Añadir los archivos de migración generados
+        git add migrations/versions/*.py
+
+        # Verificar si hay archivos para hacer commit
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+        else
+          # Si hay cambios, hacer commit
+          git commit -m "Migrations: Add new migration" || echo "No changes to commit, skipping commit"
+
+          # Verificar si el flujo se ejecuta en un PR o en una rama
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # Si es un PR, hacer push a la rama base del PR
+            git push origin ${{ github.base_ref }}
+          else
+            # Si es un push a una rama, hacer push a la misma rama
+            git push origin ${{ github.ref }}
+          fi
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
