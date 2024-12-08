@@ -5,7 +5,7 @@ from app import create_app, db
 from app.modules.conftest import login, logout
 from app.modules.dataset.models import DataSet, DSMetaData, DSRating
 from app.modules.profile.models import UserProfile
-from app.modules.featuremodel.models import *
+from app.modules.featuremodel.models import FMMetaData, FeatureModel
 from app.modules.auth.models import User
 from datetime import datetime
 
@@ -43,21 +43,39 @@ def client():
             user = User(id=5, email="user5@example.com", password="1234", created_at=datetime(2022, 3, 13))
             db.session.add(user)
             db.session.commit()
-            profile = UserProfile(user_id=user.id, surname="TestSurname", name="TestName", affiliation="TestAffiliation", orcid="0000-0001-2345-6789")
+            profile = UserProfile(
+                user_id=user.id,
+                surname="TestSurname",
+                name="TestName",
+                affiliation="TestAffiliation",
+                orcid="0000-0001-2345-6789")
             db.session.add(profile)
             db.session.commit()
-            dsmetadata = DSMetaData(id=10, title="Sample Dataset 11", rating=1, description="Description for dataset 11",
-                                    publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name, staging_area=False)
+            dsmetadata = DSMetaData(
+                id=10,
+                title="Sample Dataset 11",
+                rating=1,
+                description="Description for dataset 11",
+                publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name,
+                staging_area=False)
             db.session.add(dsmetadata)
             dataset = DataSet(id=10, user_id=user.id, ds_meta_data_id=dsmetadata.id)
             db.session.add(dataset)
             db.session.commit()
-            dsrating = DSRating(id=10, user_id=user.id, ds_meta_data_id=dsmetadata.id, rating=dsmetadata.rating, rated_date=datetime(2022, 3, 13))
+            dsrating = DSRating(
+                id=10,
+                user_id=user.id,
+                ds_meta_data_id=dsmetadata.id,
+                rating=dsmetadata.rating,
+                rated_date=datetime(2022, 3, 13))
             db.session.add(dsrating)
             db.session.commit()
             # Crear un dataset en el staging area
-            dsmetadata_sa = DSMetaData(id=11, title="Staging area Dataset", description="Description for unique dataset",
-                                    publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name)
+            dsmetadata_sa = DSMetaData(
+                id=11,
+                title="Staging area Dataset",
+                description="Description for unique dataset",
+                publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name)
             db.session.add(dsmetadata_sa)
             dataset_staging_area = DataSet(id=11, user_id=user.id, ds_meta_data_id=dsmetadata_sa.id)
             db.session.add(dataset_staging_area)
@@ -135,8 +153,8 @@ def test_create_dataset(client):
     data = response.get_json()
     assert data["message"] == "Everything works!", f"Expected message 'Everything works!', but got {data['message']}"
     logout(client)
-    
-    
+
+
 def test_upload_dataset_zenodo(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
@@ -172,7 +190,8 @@ def test_upload_dataset_zenodo(client):
     dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "test dataset in zenodo").first()
     assert dataset is not None, "Dataset was not created"
 
-    # Hacer una solicitud GET a la ruta /dataset/list para verificar que el dataset se encuentra en el listado de datasets
+    # Hacer una solicitud GET a la ruta /dataset/list para verificar que el dataset se encuentra
+    # en el listado de datasets
     response = client.get('/dataset/list')
     assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
 
@@ -186,7 +205,7 @@ def test_upload_dataset_zenodo(client):
 def test_create_and_list_unprepared_dataset(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
-    
+
     # Datos de ejemplo para el formulario
     form_data = {
         "title": "test",
@@ -236,7 +255,8 @@ def test_update_staging_area_dataset(client):
     assert dataset is not None, "Dataset with title 'Staging area Dataset' not found"
     dataset_id = dataset.id
 
-    # Hacer una solicitud GET a la ruta /dataset/staging-area/<int:dataset_id> para obtener el formulario de actualización
+    # Hacer una solicitud GET a la ruta /dataset/staging-area/<int:dataset_id> para obtener
+    # el formulario de actualización
     response = client.get(f'/dataset/staging-area/{dataset_id}')
     assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
 
@@ -269,14 +289,18 @@ def test_update_staging_area_dataset(client):
 
     # Verificar que las propiedades del dataset se hayan actualizado correctamente
     updated_dataset = DataSet.query.get(dataset_id)
-    assert updated_dataset.ds_meta_data.title == "updated unique dataset", f"Expected title 'updated unique dataset', but got {updated_dataset.ds_meta_data.title}"
-    assert updated_dataset.ds_meta_data.description == "updated description", f"Expected description 'updated description', but got {updated_dataset.ds_meta_data.description}"
-    assert updated_dataset.ds_meta_data.authors[0].name == "TestSurname, TestName", f"Expected author name 'TestSurname, TestName', but got {updated_dataset.ds_meta_data.authors[0].name}"
-    assert updated_dataset.ds_meta_data.authors[1].name == "Updated Author Name", f"Expected author name 'Updated Author Name', but got {updated_dataset.ds_meta_data.authors[0].name}"
+    assert updated_dataset.ds_meta_data.title == "updated unique dataset", \
+        f"Expected title 'updated unique dataset', but got {updated_dataset.ds_meta_data.title}"
+    assert updated_dataset.ds_meta_data.description == "updated description", \
+        f"Expected description 'updated description', but got {updated_dataset.ds_meta_data.description}"
+    assert updated_dataset.ds_meta_data.authors[0].name == "TestSurname, TestName", \
+        f"Expected author name 'TestSurname, TestName', but got {updated_dataset.ds_meta_data.authors[0].name}"
+    assert updated_dataset.ds_meta_data.authors[1].name == "Updated Author Name", \
+        f"Expected author name 'Updated Author Name', but got {updated_dataset.ds_meta_data.authors[0].name}"
 
     logout(client)
-    
-    
+
+
 def test_upload_dataset_zenodo_from_staging(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
@@ -311,14 +335,15 @@ def test_upload_dataset_zenodo_from_staging(client):
 
     # Enviar la solicitud POST con los datos del formulario para actualizar el dataset
     response = client.post(f'/dataset/upload/{dataset_id}', data=form_data_update)
-    
+
     # Espera 200 en caso de que se suba satisfactoramente a zenodo o 403 en caso de que zenodo rechace la conexion
     assert response.status_code == (200 or 403), f"Expected status code 200 or 403, but got {response.status_code}"
-    
-    # Se espera que tenga el valor de False en staging_area
-    assert dataset.ds_meta_data.staging_area == False, f"Expected staging_area False, but got {dataset.staging_area}"
 
-    # Hacer una solicitud GET a la ruta /dataset/list para verificar que el dataset se encuentra en la sección local_datasets
+    # Se espera que tenga el valor de False en staging_area
+    assert dataset.ds_meta_data.staging_area is False, f"Expected staging_area False, but got {dataset.staging_area}"
+
+    # Hacer una solicitud GET a la ruta /dataset/list para verificar que el dataset se encuentra
+    # en la sección local_datasets
     response = client.get('/dataset/list')
     assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
 
@@ -381,26 +406,27 @@ def test_get_dataset_average_rating(client):
 
     logout(client)
 
+
 def test_create_empty_dataset(client):
     # Iniciar sesión como el usuario de prueba
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
-    
+
     # Crear un dataset vacío con un ID de modelo de características existente
-    feature_model_id = 1 # Asegúrate de usar un ID válido desde la fixture
+    feature_model_id = 1  # Asegúrate de usar un ID válido desde la fixture
     response = client.post(f"/dataset/build_empty/{feature_model_id}")
-    
+
     # Verificar que la solicitud fue exitosa
     assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
     data = response.get_json()
     assert "message" in data, "Response JSON does not contain 'message'"
     assert data["message"] == "Empty dataset created successfully and UVL file added."
     assert "dataset_id" in data, "Response JSON does not contain 'dataset_id'"
-    
+
     # Verificar que el dataset vacío se creó en la base de datos
     dataset = DataSet.query.get(data["dataset_id"])
     assert dataset is not None, "Dataset was not created in the database."
-    
+
     logout(client)
 
 
@@ -408,15 +434,15 @@ def test_create_empty_dataset_with_invalid_id(client):
     # Iniciar sesión como el usuario de prueba
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
-    
+
     # Intentar crear un dataset vacío con un ID de modelo de características no válido
     invalid_feature_model_id = 999  # Usar un ID que no existe
     response = client.post(f"/dataset/build_empty/{invalid_feature_model_id}")
-    
+
     # Verificar que la solicitud falló correctamente
     assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
     data = response.get_json()
     assert "error" in data, "Response JSON does not contain 'error'"
     assert data["error"] == "Exception while processing dataset"
-    
+
     logout(client)

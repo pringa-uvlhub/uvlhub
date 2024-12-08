@@ -1,19 +1,12 @@
 from app.modules.featuremodel.repositories import FMMetaDataRepository, FeatureModelRepository
 from app.modules.hubfile.services import HubfileService
 from core.services.BaseService import BaseService
-from app.modules.featuremodel.models import FeatureModel, FMMetaData
 from app.modules.hubfile.models import Hubfile
-from app import create_app, db
+from app import db
 from flask import (
-    redirect,
-    render_template,
-    request,
-    jsonify,
-    send_from_directory,
-    make_response,
-    abort,
-    url_for,
+    jsonify
 )
+
 
 class FeatureModelService(BaseService):
     def __init__(self):
@@ -31,8 +24,7 @@ class FeatureModelService(BaseService):
     def count_feature_models(self):
         return self.repository.count_feature_models()
 
-    def copy_feature_model(self,original_feature_model,dataset_id):
-        
+    def copy_feature_model(self, original_feature_model, dataset_id):
 
         # Copiar el FMMetaData (si es necesario)
         new_fm_meta_data = self.fmmetadata_repository.create(
@@ -61,12 +53,13 @@ class FeatureModelService(BaseService):
                 feature_model_id=new_feature_model.id,  # Asociamos el nuevo archivo con el nuevo FeatureModel
             )
             db.session.add(new_file)
-        
+
         # Agregar el nuevo FeatureModel a la base de datos
         db.session.add(new_feature_model)
         db.session.commit()
 
-        return jsonify({"message": "FeatureModel copiado exitosamente", "new_feature_model_id": new_feature_model.id}), 201
+        return jsonify({
+            "message": "FeatureModel copiado exitosamente", "new_feature_model_id": new_feature_model.id}), 201
 
     class FMMetaDataService(BaseService):
         def __init__(self):
