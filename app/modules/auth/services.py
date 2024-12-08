@@ -12,6 +12,7 @@ from core.services.BaseService import BaseService
 from flask_mail import Message
 from app import mail
 
+
 class AuthenticationService(BaseService):
     def __init__(self):
         super().__init__(UserRepository())
