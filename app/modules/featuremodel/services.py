@@ -39,7 +39,7 @@ class FeatureModelService(BaseService):
         )
         # Crear una copia del FeatureModel
         new_feature_model = self.feature_model_repository.create(
-            data_set_id=dataset_id,  
+            data_set_id=dataset_id,
             fm_meta_data_id=new_fm_meta_data.id,
         )
         db.session.add(new_fm_meta_data)

@@ -252,7 +252,7 @@ def create_empty_dataset(feature_model_id):
         logger.info(f"Created empty dataset: {dataset}")
 
         return jsonify({
-            "message": "Empty dataset created successfully and UVL file added.", 
+            "message": "Empty dataset created successfully and UVL file added.",
             "dataset_id": dataset.id
         }), 200
     except Exception as exc:
