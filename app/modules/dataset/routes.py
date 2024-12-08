@@ -136,6 +136,7 @@ def upload_dataset_zenodo_from_staging(dataset_id):
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
     dataset.ds_meta_data.staging_area = False
     dataset = dataset_service.update_from_form(dataset, form, current_user)
+    dataset_service.move_feature_models(dataset)
     data = {}
     try:
         zenodo_response_json = zenodo_service.create_new_deposition(dataset)
@@ -214,6 +215,7 @@ def update_staging_area_dataset(dataset_id):
         if form.validate_on_submit():
             try:
                 dataset_service.update_from_form(dataset, form, current_user)
+                dataset_service.move_feature_models(dataset)
                 return redirect(url_for('dataset.update_staging_area_dataset', dataset_id=dataset_id))
             except Exception as exc:
                 print(dataset.feature_models)

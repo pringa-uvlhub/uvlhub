@@ -61,10 +61,13 @@ class DataSetService(BaseService):
         working_dir = os.getenv("WORKING_DIR", "")
         dest_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
         os.makedirs(dest_dir, exist_ok=True)
+
         for feature_model in dataset.feature_models:
             uvl_filename = feature_model.fm_meta_data.uvl_filename
-            if not os.path.exists(dest_dir):
-                shutil.move(os.path.join(source_dir, uvl_filename), dest_dir)
+            source_path = os.path.join(source_dir, uvl_filename)
+            dest_path = os.path.join(dest_dir, uvl_filename)
+            if os.path.exists(source_path):
+                shutil.move(source_path, dest_path)
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
 
@@ -166,11 +169,20 @@ class DataSetService(BaseService):
             dataset.ds_meta_data.authors.append(author)
 
         for feature_model in dataset.feature_models:
+            working_dir = os.getenv("WORKING_DIR", "")
+            source_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
+            uvl_filename = feature_model.fm_meta_data.uvl_filename
+            dest_dir = current_user.temp_folder()
+            source_path = os.path.join(source_dir, uvl_filename)
+            dest_path = os.path.join(dest_dir, uvl_filename)
+            if os.path.exists(source_path):
+                shutil.move(source_path, dest_path)
             db.session.delete(feature_model)
 
         # Luego, commit para reflejar los cambios
         db.session.commit()
     # Actualizar o agregar nuevos FeatureModels
+        print(form.feature_models.data)
         for feature_model in form.feature_models:
             uvl_filename = feature_model.uvl_filename.data
             fmmetadata = self.fmmetadata_repository.create(commit=True, **feature_model.get_fmmetadata())
