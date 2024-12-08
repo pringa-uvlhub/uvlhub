@@ -86,6 +86,7 @@ def to_glencoe(file_id):
         # Clean up the temporary file
         os.remove(temp_file.name)
 
+
 @flamapy_bp.route('/flamapy/to_glencoe/<string:file_name>', methods=['GET'])
 def to_glencoe_name(file_name):
     temp_file = tempfile.NamedTemporaryFile(suffix='.json', delete=False)
@@ -114,6 +115,7 @@ def to_splot(file_id):
     finally:
         # Clean up the temporary file
         os.remove(temp_file.name)
+
 
 @flamapy_bp.route('/flamapy/to_splot/<string:file_name>', methods=['GET'])
 def to_splot_name(file_name):
