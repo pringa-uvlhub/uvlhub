@@ -55,6 +55,7 @@ def my_profile():
         total_datasets=total_datasets_count
     )
 
+
 @profile_bp.route('/profile/<int:user_id>')
 def user_profile(user_id):
 
