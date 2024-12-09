@@ -503,9 +503,13 @@ def get_unsynchronized_dataset(dataset_id):
 @login_required
 def rate_dataset(dataset_id):
     user_id = current_user.id
-    rating_value = request.json.get('rating')
 
-    if not isinstance(rating_value, (int, float)) or rating_value < 0 or rating_value > 5:
+    try:
+        rating_value = float(request.json.get('rating'))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid rating value. Must be a number between 0 and 5.'}), 400
+
+    if rating_value < 0 or rating_value > 5:
         return jsonify({'error': 'Invalid rating value. Must be between 0 and 5.'}), 400
 
     rating = ds_rating_service.add_or_update_rating(dataset_id, user_id, rating_value)
