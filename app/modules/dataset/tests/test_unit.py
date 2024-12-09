@@ -6,6 +6,7 @@ from app.modules.conftest import login, logout
 from app.modules.dataset.models import DataSet, DSMetaData, DSRating
 from app.modules.profile.models import UserProfile
 from app.modules.featuremodel.models import FMMetaData, FeatureModel
+from app.modules.hubfile.models import Hubfile
 from app.modules.auth.models import User
 from datetime import datetime
 
@@ -102,18 +103,41 @@ def client():
             )
             db.session.add(feature_model)
             db.session.commit()
+
+            hubfile = Hubfile(
+                id=15,
+                name="file9.uvl",
+                checksum="checksum1",
+                size=128,
+                feature_model_id=feature_model.id
+            )
+
+            db.session.add(hubfile)
+            db.session.commit()
+
             # Crear el archivo temporal en la ruta esperada
             temp_folder = os.path.join('uploads', 'temp', str(user.id))
             os.makedirs(temp_folder, exist_ok=True)
             with open(os.path.join(temp_folder, 'file9.uvl'), 'w') as f:
                 f.write('Temporary file content')
-            yield client
 
+            # Crear el archivo temporal en la ruta esperada
+            temp_folder2 = os.path.join('uploads', 'user_'+str(user.id), 'dataset_10')
+            os.makedirs(temp_folder2, exist_ok=True)
+            with open(os.path.join(temp_folder2, 'file9.uvl'), 'w') as f:
+                f.write('Temporary file content')
+            print(temp_folder2)
+            yield client
+            
             # Limpiar el archivo temporal después de la prueba
             if os.path.exists(os.path.join(temp_folder, 'file9.uvl')):
                 os.remove(os.path.join(temp_folder, 'file9.uvl'))
             if os.path.exists(temp_folder):
                 os.rmdir(temp_folder)
+            if os.path.exists(os.path.join(temp_folder2, 'file9.uvl')):
+                os.remove(os.path.join(temp_folder2, 'file9.uvl'))
+            if os.path.exists(temp_folder2):
+                os.rmdir(temp_folder2)
 
             db.session.remove()
             db.drop_all()
