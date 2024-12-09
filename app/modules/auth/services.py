@@ -19,7 +19,7 @@ class AuthenticationService(BaseService):
         super().__init__(UserRepository())
         self.user_profile_repository = UserProfileRepository()
         self.serializer = URLSafeTimedSerializer('secret_key')
-        
+
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
         if user is not None and user.check_password(password):
