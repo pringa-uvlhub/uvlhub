@@ -17,7 +17,6 @@ load_dotenv()
 # Crear las instancias
 db = SQLAlchemy()
 migrate = Migrate()
-mail = Mail()
 
 # Configurar Mail
 mail = Mail()
