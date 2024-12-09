@@ -507,7 +507,8 @@ def rate_dataset(dataset_id):
     try:
         rating_value = float(request.json.get('rating'))
 
-        if not (0 <= rating_value <= 5) or rating_value != rating_value or not float('-inf') < rating_value < float('inf'):
+        if not (0 <= rating_value <= 5) or rating_value != rating_value \
+                or not float('-inf') < rating_value < float('inf'):
             raise ValueError
     except (TypeError, ValueError):
         return jsonify({'error': 'Invalid rating value. Must be a finite number between 0 and 5.'}), 400
