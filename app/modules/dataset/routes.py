@@ -506,11 +506,11 @@ def rate_dataset(dataset_id):
 
     try:
         rating_value = float(request.json.get('rating'))
-    except (TypeError, ValueError):
-        return jsonify({'error': 'Invalid rating value. Must be a number between 0 and 5.'}), 400
 
-    if rating_value < 0 or rating_value > 5:
-        return jsonify({'error': 'Invalid rating value. Must be between 0 and 5.'}), 400
+        if not (0 <= rating_value <= 5) or rating_value != rating_value or not float('-inf') < rating_value < float('inf'):
+            raise ValueError
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid rating value. Must be a finite number between 0 and 5.'}), 400
 
     rating = ds_rating_service.add_or_update_rating(dataset_id, user_id, rating_value)
     return jsonify({'message': 'Rating added', 'rating': rating.to_dict()}), 200
