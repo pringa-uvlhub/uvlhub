@@ -68,7 +68,7 @@ class DataSetService(BaseService):
             dest_path = os.path.join(dest_dir, uvl_filename)
             if os.path.exists(source_path):
                 shutil.move(source_path, dest_path)
-                
+
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
 
