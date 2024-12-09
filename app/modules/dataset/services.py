@@ -230,6 +230,7 @@ class DataSetService(BaseService):
                     publication_type=PublicationType.NONE,
                     tags="",
                     build=True,
+                    staging_area=True,
                     )
 
                 author = self.author_repository.create(
@@ -247,7 +248,7 @@ class DataSetService(BaseService):
 
                 original_feature_model = self.feature_model_repository.get_by_id(feature_model_id)
 
-                FeatureModelService.copy_feature_model(self, original_feature_model, dataset.id)
+                FeatureModelService.copy_feature_model(self, original_feature_model, dataset.id, current_user)
 
                 self.repository.session.commit()
 
@@ -258,7 +259,7 @@ class DataSetService(BaseService):
         else:
             dataset = self.dataset_repository.get_dataset_by_metadata_id(metadata.id)
             original_feature_model = self.feature_model_repository.get_by_id(feature_model_id)
-            FeatureModelService.copy_feature_model(self, original_feature_model, dataset.id)
+            FeatureModelService.copy_feature_model(self, original_feature_model, dataset.id, current_user)
         return dataset
 
     def update_dsmetadata(self, id, **kwargs):
