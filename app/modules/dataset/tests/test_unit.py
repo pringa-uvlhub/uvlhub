@@ -128,7 +128,6 @@ def client():
                 f.write('Temporary file content')
             print(temp_folder2)
             yield client
-            
             # Limpiar el archivo temporal después de la prueba
             if os.path.exists(os.path.join(temp_folder, 'file9.uvl')):
                 os.remove(os.path.join(temp_folder, 'file9.uvl'))
