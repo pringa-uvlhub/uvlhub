@@ -450,19 +450,13 @@ def test_create_empty_dataset(client):
     # Iniciar sesión como el usuario de prueba
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
-
-    # Crear un dataset vacío con un ID de modelo de características existente
-    feature_model_id = 1  # Asegúrate de usar un ID válido desde la fixture
+    feature_model_id = 1
     response = client.post(f"/dataset/build_empty/{feature_model_id}")
-
-    # Verificar que la solicitud fue exitosa
     assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
     data = response.get_json()
     assert "message" in data, "Response JSON does not contain 'message'"
     assert data["message"] == "Empty dataset created successfully and UVL file added."
     assert "dataset_id" in data, "Response JSON does not contain 'dataset_id'"
-
-    # Verificar que el dataset vacío se creó en la base de datos
     dataset = DataSet.query.get(data["dataset_id"])
     assert dataset is not None, "Dataset was not created in the database."
 
@@ -470,15 +464,10 @@ def test_create_empty_dataset(client):
 
 
 def test_create_empty_dataset_with_invalid_id(client):
-    # Iniciar sesión como el usuario de prueba
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
-
-    # Intentar crear un dataset vacío con un ID de modelo de características no válido
-    invalid_feature_model_id = 999  # Usar un ID que no existe
+    invalid_feature_model_id = 999
     response = client.post(f"/dataset/build_empty/{invalid_feature_model_id}")
-
-    # Verificar que la solicitud falló correctamente
     assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
     data = response.get_json()
     assert "error" in data, "Response JSON does not contain 'error'"
