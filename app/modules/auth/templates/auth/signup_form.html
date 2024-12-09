@@ -5,6 +5,18 @@
 {% block content %}
 
     <h1 class="h2 mb-3"><b>Sign</b> Up</h1>
+    <!-- Bloque para mostrar los mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="alert-container">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
 
     <div class="row">
         <div class="col-5">

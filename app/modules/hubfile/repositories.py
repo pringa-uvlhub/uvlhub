@@ -1,3 +1,4 @@
+from flask import abort
 from sqlalchemy import func
 from app.modules.auth.models import User
 from app.modules.dataset.models import DataSet
@@ -24,8 +25,7 @@ class HubfileRepository(BaseRepository):
     def get_dataset_by_hubfile(self, hubfile: Hubfile) -> DataSet:
         return db.session.query(DataSet).join(FeatureModel).join(Hubfile).filter(Hubfile.id == hubfile.id).first()
 
-    
-    def get_featureModels_by_hubfile_id( id: int) -> DataSet:
+    def get_featureModels_by_hubfile_id(id: int) -> DataSet:
         return db.session.query(FeatureModel).join(FeatureModel).join(Hubfile).filter(Hubfile.id == id).first()
 
     def get_hubfile_by_name(file_name: str):
@@ -33,7 +33,6 @@ class HubfileRepository(BaseRepository):
         if hubfile is None:
             abort(404, description=f'Hubfile with name "{file_name}" not found')
         return hubfile
-
 
 
 class HubfileViewRecordRepository(BaseRepository):

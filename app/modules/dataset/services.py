@@ -9,7 +9,7 @@ from flask import request
 from app import db
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, DSRating, Author, PublicationType
+from app.modules.dataset.models import DSViewRecord, DataSet, DSMetaData, DSRating, PublicationType
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DOIMappingRepository,
@@ -61,10 +61,14 @@ class DataSetService(BaseService):
         working_dir = os.getenv("WORKING_DIR", "")
         dest_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
         os.makedirs(dest_dir, exist_ok=True)
+
         for feature_model in dataset.feature_models:
             uvl_filename = feature_model.fm_meta_data.uvl_filename
-            if not os.path.exists(dest_dir):
-                shutil.move(os.path.join(source_dir, uvl_filename), dest_dir)
+            source_path = os.path.join(source_dir, uvl_filename)
+            dest_path = os.path.join(dest_dir, uvl_filename)
+            if os.path.exists(source_path):
+                shutil.move(source_path, dest_path)
+
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
 
@@ -143,6 +147,7 @@ class DataSetService(BaseService):
             self.repository.session.rollback()
             raise exc
         return dataset
+
     def update_from_form(self, dataset: DataSet, form, current_user):
         dataset.ds_meta_data.title = form.title.data
         dataset.ds_meta_data.description = form.desc.data
@@ -166,11 +171,20 @@ class DataSetService(BaseService):
             dataset.ds_meta_data.authors.append(author)
 
         for feature_model in dataset.feature_models:
+            working_dir = os.getenv("WORKING_DIR", "")
+            source_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
+            uvl_filename = feature_model.fm_meta_data.uvl_filename
+            dest_dir = current_user.temp_folder()
+            source_path = os.path.join(source_dir, uvl_filename)
+            dest_path = os.path.join(dest_dir, uvl_filename)
+            if os.path.exists(source_path):
+                shutil.move(source_path, dest_path)
             db.session.delete(feature_model)
 
         # Luego, commit para reflejar los cambios
         db.session.commit()
     # Actualizar o agregar nuevos FeatureModels
+        print(form.feature_models.data)
         for feature_model in form.feature_models:
             uvl_filename = feature_model.uvl_filename.data
             fmmetadata = self.fmmetadata_repository.create(commit=True, **feature_model.get_fmmetadata())
@@ -197,7 +211,6 @@ class DataSetService(BaseService):
 
     def create_empty_dataset(self, current_user, feature_model_id) -> DataSet:
 
-
         metadata = self.dsmetadata_repository.filter_by_build()
         if not metadata:
             main_author = {
@@ -205,23 +218,22 @@ class DataSetService(BaseService):
                 "affiliation": current_user.profile.affiliation,
                 "orcid": current_user.profile.orcid,
             }
-        
+
             try:
                 logger.info("Creating empty dsmetadata...")
-                feature_model= self.feature_model_repository.get_by_id(id=feature_model_id)
+                feature_model = self.feature_model_repository.get_by_id(id=feature_model_id)
                 print(feature_model)
-
 
                 dsmetadata = self.dsmetadata_repository.create(
                     title="Build Dataset",
                     description="This is an empty dataset.",
                     publication_type=PublicationType.NONE,
-                    tags = "",
+                    tags="",
                     build=True,
                     )
-                
+
                 author = self.author_repository.create(
-                commit=False, ds_meta_data_id=dsmetadata.id, **main_author
+                    commit=False, ds_meta_data_id=dsmetadata.id, **main_author
                 )
                 dsmetadata.authors.append(author)
 
@@ -230,12 +242,12 @@ class DataSetService(BaseService):
                     commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id
                 )
                 self.repository.session.commit()
-                
+
                 logger.info(f"Created empty dataset: {dataset}")
-                
+
                 original_feature_model = self.feature_model_repository.get_by_id(feature_model_id)
 
-                FeatureModelService.copy_feature_model(self,original_feature_model,dataset.id)
+                FeatureModelService.copy_feature_model(self, original_feature_model, dataset.id)
 
                 self.repository.session.commit()
 
@@ -244,11 +256,10 @@ class DataSetService(BaseService):
                 self.repository.session.rollback()
                 raise exc
         else:
-            dataset= self.dataset_repository.get_dataset_by_metadata_id(metadata.id)
+            dataset = self.dataset_repository.get_dataset_by_metadata_id(metadata.id)
             original_feature_model = self.feature_model_repository.get_by_id(feature_model_id)
-            FeatureModelService.copy_feature_model(self,original_feature_model,dataset.id)
+            FeatureModelService.copy_feature_model(self, original_feature_model, dataset.id)
         return dataset
-
 
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)
@@ -277,6 +288,7 @@ class DSMetaDataService(BaseService):
 
     def filter_by_doi(self, doi: str) -> Optional[DSMetaData]:
         return self.repository.filter_by_doi(doi)
+
 
 class DSViewRecordService(BaseService):
     def __init__(self):
@@ -325,7 +337,8 @@ class DSRatingService(BaseService):
             rating.rating = rating_value
         else:
             print("Valor de rating en el servicio:", rating_value)
-            rating = self.repository.create(commit=False, ds_meta_data_id=dsmetadata_id, user_id=user_id, rating=rating_value)
+            rating = self.repository.create(
+                commit=False, ds_meta_data_id=dsmetadata_id, user_id=user_id, rating=rating_value)
             print("Valor de rating en el servicio:", rating.rating)
         self.repository.session.commit()
         return rating

@@ -20,7 +20,7 @@ from flask import (
 from flask_login import login_required, current_user
 
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.forms import AuthorForm, FeatureModelForm
+from app.modules.dataset.forms import FeatureModelForm
 from app.modules.dataset.models import (
     DSDownloadRecord
 )
@@ -35,28 +35,16 @@ from app.modules.dataset.services import (
     DSRatingService
 )
 from app.modules.zenodo.services import ZenodoService
-from app.modules.hubfile.repositories import (
-    HubfileDownloadRecordRepository,
-    HubfileRepository,
-    HubfileViewRecordRepository
-)
-from app.modules.hubfile.services import(
-    HubfileService
-)
 from app.modules.dataset.repositories import (
-    AuthorRepository,
-    DOIMappingRepository,
-    DSDownloadRecordRepository,
     DSMetaDataRepository,
-    DSViewRecordRepository,
     DataSetRepository
 )
 
 
 logger = logging.getLogger(__name__)
 
-metadata_repository=DSMetaDataRepository()
-dataset_repository=DataSetRepository()
+metadata_repository = DSMetaDataRepository()
+dataset_repository = DataSetRepository()
 dataset_service = DataSetService()
 author_service = AuthorService()
 dsmetadata_service = DSMetaDataService()
@@ -136,6 +124,7 @@ def upload_dataset_zenodo_from_staging(dataset_id):
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
     dataset.ds_meta_data.staging_area = False
     dataset = dataset_service.update_from_form(dataset, form, current_user)
+    dataset_service.move_feature_models(dataset)
     data = {}
     try:
         zenodo_response_json = zenodo_service.create_new_deposition(dataset)
@@ -214,6 +203,7 @@ def update_staging_area_dataset(dataset_id):
         if form.validate_on_submit():
             try:
                 dataset_service.update_from_form(dataset, form, current_user)
+                dataset_service.move_feature_models(dataset)
                 return redirect(url_for('dataset.update_staging_area_dataset', dataset_id=dataset_id))
             except Exception as exc:
                 print(dataset.feature_models)
@@ -254,6 +244,7 @@ def list_dataset():
         unprepared_datasets=dataset_service.get_staging_area(current_user.id),
     )
 
+
 @dataset_bp.route("/dataset/build_empty/<int:feature_model_id>", methods=["POST"])
 @login_required
 def create_empty_dataset(feature_model_id):
@@ -261,12 +252,16 @@ def create_empty_dataset(feature_model_id):
     try:
         dataset = dataset_service.create_empty_dataset(current_user=current_user, feature_model_id=feature_model_id)
         logger.info(f"Created empty dataset: {dataset}")
-            
-        return jsonify({"message": "Empty dataset created successfully and UVL file added.", "dataset_id": dataset.id}), 200
+
+        return jsonify({
+            "message": "Empty dataset created successfully and UVL file added.",
+            "dataset_id": dataset.id
+        }), 200
     except Exception as exc:
         # En caso de error, capturamos la excepción y respondemos con un mensaje adecuado
         logger.exception(f"Exception while processing dataset: {exc}")
         return jsonify({"error": "Exception while processing dataset", "details": str(exc)}), 400
+
 
 @dataset_bp.route("/dataset/build", methods=["GET", "POST"])
 @login_required
@@ -274,12 +269,12 @@ def build_dataset():
     form = DataSetForm()
     metadata = metadata_repository.filter_by_build()
     if metadata:
-        dataset= dataset_repository.get_dataset_by_metadata_id(metadata.id)
-        feature_models=dataset.feature_models
+        dataset = dataset_repository.get_dataset_by_metadata_id(metadata.id)
+        feature_models = dataset.feature_models
 
         print(feature_models)
     else:
-        metadata=DataSetForm()
+        metadata = DataSetForm()
     if request.method == "POST":
 
         dataset = None
@@ -336,7 +331,6 @@ def build_dataset():
         return jsonify({"message": msg}), 200
 
     return render_template("dataset/build_dataset.html", form=form, dataset=metadata, feature_models=feature_models)
-
 
 
 @dataset_bp.route("/dataset/file/upload", methods=["POST"])
@@ -500,7 +494,7 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
 
     print(dataset.to_dict())
-    
+
     return render_template("dataset/view_dataset.html", dataset=dataset)
 
 
