@@ -84,6 +84,20 @@
 
                         </div>
 
+                        <div class="row mb-2">
+                            <div class="col-md-4 col-12">
+                                <span class="text-center">Rating</span>
+                            </div>
+                            <div class="col-md-8 col-12 d-flex align-items-center">
+                                <div id="star-rating-{{ dataset.id }}" class="stars" style="color: gold;">
+                                    {% for i in range(1, 6) %}
+                                        <span data-value="{{ i }}">★</span>
+                                    {% endfor %}
+                                </div>
+                                <span id="average-rating-{{ dataset.id }}" class="ms-2">-</span> <!-- Valor inicial vacío -->
+                            </div>
+                        </div>
+
                         <div class="row  mt-4">
                             <div class="col-12">
                                 <a href="{{ dataset.get_uvlhub_doi() }}" class="btn btn-outline-primary btn-sm"
@@ -282,5 +296,33 @@
 {% endblock %}
 
 {% block scripts %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% for dataset in datasets %}
+                updateAverageRating({{ dataset.id }});
+            {% endfor %}
+        });
+
+        function updateAverageRating(datasetId) {
+            fetch(`/datasets/${datasetId}/average-rating`)
+                .then(response => response.json())
+                .then(data => {
+                    const ratingValue = data.average_rating.toFixed(1);
+                    document.getElementById('average-rating-' + datasetId).innerText = ratingValue;
+
+                    const starContainer = document.getElementById('star-rating-' + datasetId);
+                    highlightStars(starContainer, Math.round(data.average_rating));
+                })
+                .catch(error => console.error('Error fetching average rating:', error));
+        }
+
+        function highlightStars(container, rating) {
+            container.querySelectorAll('span').forEach(star => {
+                const starValue = star.getAttribute('data-value');
+                star.style.color = starValue <= rating ? '#FFD700' : '#ddd'; // Cambia el color de la estrella
+            });
+        }
+    </script>
     <script src="{{ url_for('public.scripts') }}"></script>
 {% endblock %}

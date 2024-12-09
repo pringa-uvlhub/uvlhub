@@ -13,6 +13,9 @@ from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
 
+from flask_mail import Message
+from app import mail
+
 
 class AuthenticationService(BaseService):
     def __init__(self):
@@ -103,3 +106,9 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
+
+
+def send_reset_email(to_email, reset_url):
+    msg = Message("Restablece tu contraseña", recipients=[to_email])
+    msg.body = f"Para restablecer tu contraseña, sigue este enlace: {reset_url}"
+    mail.send(msg)

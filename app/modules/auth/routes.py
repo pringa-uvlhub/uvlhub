@@ -4,9 +4,15 @@ from flask_login import current_user, login_user, logout_user
 from itsdangerous import SignatureExpired
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import SignupForm, LoginForm
-from app.modules.auth.services import AuthenticationService
+from app.modules.auth.services import AuthenticationService, send_reset_email
 from app.modules.profile.services import UserProfileService
+from app.modules.auth.repositories import UserRepository
 
+from datetime import datetime
+
+from app.modules.auth.forms import ForgotPasswordForm, ResetPasswordForm
+from app.modules.auth.models import User
+from app import db
 
 authentication_service = AuthenticationService()
 user_profile_service = UserProfileService()
@@ -87,3 +93,51 @@ def confirm_email(token):
     except Exception as e:
         flash(f"Error creating user: {str(e)}", "error")
         return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('public.index'))
+
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = request.form.get('email')
+        user = UserRepository().get_by_email(email)
+        print(user)
+        if not user:
+            flash("El correo electrónico no existe en el sistema.", "error")
+            return redirect(url_for('auth.forgot_password'))
+
+        if user:
+            token = user.generate_reset_token()
+            # Enviar el correo con el enlace de restablecimiento
+            reset_url = url_for('auth.reset_password', token=token, _external=True)
+            send_reset_email(user.email, reset_url)
+            flash('Se ha enviado un enlace de restablecimiento a tu correo.', 'info')
+        else:
+            flash('Si el correo existe, recibirás un enlace de restablecimiento.', 'info')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/forgot_password.html', form=form)
+
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('public.index'))
+
+    user = User.verify_reset_token(token)
+    if not user or user.reset_token_expiration < datetime.now():
+        flash('El enlace de restablecimiento es inválido o ha expirado.', 'danger')
+        return redirect(url_for('auth.forgot_password'))
+
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        user.reset_token = None
+        user.reset_token_expiration = None
+        db.session.commit()
+        flash('Tu contraseña ha sido actualizada con éxito.', 'success')
+        return redirect(url_for('auth.login'))
+
+    return render_template('auth/reset_password.html', form=form)
