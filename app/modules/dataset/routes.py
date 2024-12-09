@@ -503,11 +503,16 @@ def get_unsynchronized_dataset(dataset_id):
 def rate_dataset(dataset_id):
     user_id = current_user.id
     rating_value = request.json.get('rating')
+
+    if not isinstance(rating_value, (int, float)) or rating_value < 0 or rating_value > 5:
+        return jsonify({'error': 'Invalid rating value. Must be between 0 and 5.'}), 400
+
     rating = ds_rating_service.add_or_update_rating(dataset_id, user_id, rating_value)
     return jsonify({'message': 'Rating added', 'rating': rating.to_dict()}), 200
 
 
 @dataset_bp.route('/datasets/<int:dataset_id>/average-rating', methods=['GET'])
 def get_dataset_average_rating(dataset_id):
-    average_rating = ds_rating_service.get_dataset_average_rating(dataset_id)
+    dataset = dataset_service.get_or_404(dataset_id)
+    average_rating = ds_rating_service.get_dataset_average_rating(dataset.id)
     return jsonify({'average_rating': average_rating}), 200

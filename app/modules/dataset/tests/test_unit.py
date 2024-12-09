@@ -54,7 +54,7 @@ def client():
             dsmetadata = DSMetaData(
                 id=10,
                 title="Sample Dataset 11",
-                rating=1,
+                rating=0,
                 description="Description for dataset 11",
                 publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name,
                 staging_area=False)
@@ -354,6 +354,22 @@ def test_upload_dataset_zenodo_from_staging(client):
     logout(client)
 
 
+def test_get_dataset_average_rating_no_ratings(client):
+    """Prueba obtener el promedio de un dataset sin ratings."""
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Intentar obtener el promedio para un dataset sin calificaciones
+    response = client.get('/datasets/10/average-rating')
+
+    assert response.status_code == 200, "El código de estado debería ser 200 incluso si no hay calificaciones."
+    data = response.get_json()
+    assert 'average_rating' in data, "La respuesta debería contener average_rating."
+    assert data['average_rating'] == 0, "El promedio debería ser 0 si no hay calificaciones."
+
+    logout(client)
+
+
 def test_rate_dataset(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
@@ -373,18 +389,42 @@ def test_rate_dataset(client):
     logout(client)
 
 
-# def test_rate_dataset_invalid_data(client):
-#     login_response = login(client, "user5@example.com", "1234")
-#     assert login_response.status_code == 200, "Login was unsuccessful."
+def test_rate_dataset_invalid_rating(client):
+    """Prueba enviar un rating inválido."""
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
 
-#     response = client.post('/datasets/10/rate', json={})
+    # Enviar una calificación inválida
+    invalid_rating_data = {'rating': 6}  # Asumiendo que el rango válido es de 1 a 5
+    response = client.post('/datasets/10/rate', json=invalid_rating_data)
 
-#     # Verificar que el servidor responde con error al faltar el rating
-#     assert response.status_code == 400
-#     data = response.get_json()
-#     assert 'error' in data
+    assert response.status_code == 400, "El código de estado debería ser 400 para un rating inválido."
+    data = response.get_json()
+    assert 'error' in data, "La respuesta debería contener un mensaje de error."
 
-#     logout(client)
+    logout(client)
+
+
+def test_get_dataset_average_rating_invalid_dataset(client):
+    """Prueba obtener el promedio para un dataset no existente."""
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    response = client.get('/datasets/999/average-rating')
+    print(response.status_code)
+    print(response.get_json())
+
+    assert response.status_code == 404, "El código de estado debería ser 404 para un dataset inexistente."
+
+    logout(client)
+
+
+def test_rate_dataset_unauthorized(client):
+    """Prueba enviar un rating sin estar autenticado."""
+    rating_data = {'rating': 4}
+    response = client.post('/datasets/10/rate', json=rating_data)
+
+    assert response.status_code == 302, "El código de estado debería ser 302 para usuarios no autenticados."
 
 
 def test_get_dataset_average_rating(client):
@@ -397,7 +437,6 @@ def test_get_dataset_average_rating(client):
     assert login_response.status_code == 200, "Login was unsuccessful."
     client.post('/datasets/10/rate', json={'rating': 5})
 
-    # Obtener la calificación promedio
     response = client.get('/datasets/10/average-rating')
     assert response.status_code == 200
     data = response.get_json()
