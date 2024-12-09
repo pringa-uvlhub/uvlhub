@@ -427,7 +427,7 @@ def test_create_empty_dataset(client):
 def test_create_empty_dataset_with_invalid_id(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
-    invalid_feature_model_id = 999  
+    invalid_feature_model_id = 999
     response = client.post(f"/dataset/build_empty/{invalid_feature_model_id}")
     assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
     data = response.get_json()
