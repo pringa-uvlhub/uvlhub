@@ -57,11 +57,7 @@ class FeatureModelService(BaseService):
             db.session.add(new_file)
 
         file_path = current_user.temp_folder()
-        original_file_path=original_file.get_path()
-        print(original_file_path)
-        original_name = os.path.basename(original_file_path)
-        base_name, ext = os.path.splitext(original_name)
-        new_name =f"{base_name}{ext}"
+        original_file_path = original_file.get_path()
         new_file_path = os.path.join(file_path)
 
         if not os.path.exists(new_file_path):
