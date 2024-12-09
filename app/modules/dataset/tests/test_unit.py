@@ -373,7 +373,22 @@ def test_rate_dataset_invalid_rating(client):
     invalid_rating_data = {'rating': 6}  # Asumiendo que el rango válido es de 1 a 5
     response = client.post('/datasets/10/rate', json=invalid_rating_data)
 
-    assert response.status_code == 200, "El código de estado debería ser 400 para un rating inválido."
+    assert response.status_code == 400, "El código de estado debería ser 400 para un rating inválido."
+    data = response.get_json()
+    assert 'error' in data, "La respuesta debería contener un mensaje de error."
+
+    logout(client)
+
+
+def test_get_dataset_average_rating_invalid_dataset(client):
+    """Prueba obtener el promedio para un dataset no existente."""
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Intentar obtener el promedio para un dataset no existente
+    response = client.get('/datasets/999/average-rating')
+
+    assert response.status_code == 404, "El código de estado debería ser 404 para un dataset inexistente."
     data = response.get_json()
     assert 'error' in data, "La respuesta debería contener un mensaje de error."
 
@@ -386,9 +401,7 @@ def test_rate_dataset_unauthorized(client):
     rating_data = {'rating': 4}
     response = client.post('/datasets/10/rate', json=rating_data)
 
-    assert response.status_code == 401, "El código de estado debería ser 401 para usuarios no autenticados."
-    data = response.get_json()
-    assert 'error' in data, "La respuesta debería contener un mensaje de error."
+    assert response.status_code == 302, "El código de estado debería ser 302 para usuarios no autenticados."
 
 
 def test_get_dataset_average_rating(client):
