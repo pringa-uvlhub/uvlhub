@@ -54,7 +54,7 @@ def client():
             dsmetadata = DSMetaData(
                 id=10,
                 title="Sample Dataset 11",
-                rating=1,
+                rating=0,
                 description="Description for dataset 11",
                 publication_type=PublicationType.DATA_MANAGEMENT_PLAN.name,
                 staging_area=False)
@@ -409,7 +409,7 @@ def test_get_dataset_average_rating_invalid_dataset(client):
     """Prueba obtener el promedio para un dataset no existente."""
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
-    
+
     response = client.get('/datasets/999/average-rating')
     print(response.status_code)
     print(response.get_json())
