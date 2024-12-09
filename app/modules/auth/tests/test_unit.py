@@ -89,25 +89,23 @@ def test_signup_user_sends_verification_email(test_client):
         assert response.request.path == url_for("auth.confirmation"), "Signup redirection was incorrect"
 
 
-'''
-def test_unverified_user_cannot_login(test_client):
-    # Crear usuario sin verificar
-    response = test_client.post(
-       "/signup",
-         data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
-         follow_redirects=True,
-     )
-
-    # Intentar iniciar sesión sin verificar
-    response = test_client.post(
-        "/login",
-        data=dict(email="foo@example.com", password="foo1234"),
-        follow_redirects=True,
-     )
-    print(response.data)
-    # Comprobar que la autenticación falla
-    assert b"Please verify your email" in response.data
-'''
+# def test_unverified_user_cannot_login(test_client):
+#     # Crear usuario sin verificar
+#     response = test_client.post(
+#        "/signup",
+#          data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
+#          follow_redirects=True,
+#      )
+#
+#     # Intentar iniciar sesión sin verificar
+#     response = test_client.post(
+#         "/login",
+#         data=dict(email="foo@example.com", password="foo1234"),
+#         follow_redirects=True,
+#      )
+#     print(response.data)
+#     # Comprobar que la autenticación falla
+#     assert b"Please verify your email" in response.data
 
 
 def test_email_verification_token_generation():
