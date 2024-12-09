@@ -1,15 +1,11 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 import time
 from unittest.mock import patch
-from app import mail
 from core.environment.host import get_host_for_selenium_testing
 from core.selenium.common import initialize_driver, close_driver
-from app.modules.auth.services import AuthenticationService
 
 
 def test_login_and_check_element():
@@ -49,7 +45,7 @@ def test_login_and_check_element():
     finally:
 
         # Close the browser
-        close_driver(driver) 
+        close_driver(driver)
 
 
 def test_sign_up_and_email_confirmation():

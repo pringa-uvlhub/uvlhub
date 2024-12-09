@@ -74,8 +74,8 @@ def test_signup_user_successful(test_client):
         follow_redirects=True,
     )
     assert response.request.path == url_for("auth.confirmation"), "Signup was unsuccessful"
-    
-    
+
+
 def test_signup_user_sends_verification_email(test_client):
     with patch('app.modules.auth.services.AuthenticationService.send_verification_email') as mock_send_email:
         response = test_client.post(
@@ -89,23 +89,25 @@ def test_signup_user_sends_verification_email(test_client):
         assert response.request.path == url_for("auth.confirmation"), "Signup redirection was incorrect"
 
 
-#def test_unverified_user_cannot_login(test_client):
+'''
+def test_unverified_user_cannot_login(test_client):
     # Crear usuario sin verificar
-#    response = test_client.post(
-#       "/signup",
-#         data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
-  #       follow_redirects=True,
-    # )
+    response = test_client.post(
+       "/signup",
+         data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
+         follow_redirects=True,
+     )
 
     # Intentar iniciar sesión sin verificar
-    # response = test_client.post(
-      #   "/login",
-        # data=dict(email="foo@example.com", password="foo1234"),
-        # follow_redirects=True,
-    # )
-    # print(response.data)
+    response = test_client.post(
+        "/login",
+        data=dict(email="foo@example.com", password="foo1234"),
+        follow_redirects=True,
+     )
+    print(response.data)
     # Comprobar que la autenticación falla
-    # assert b"Please verify your email" in response.data
+    assert b"Please verify your email" in response.data
+'''
 
 
 def test_email_verification_token_generation():
