@@ -6,6 +6,8 @@ from app import db
 from flask import (
     jsonify
 )
+import os
+import shutil
 
 
 class FeatureModelService(BaseService):
@@ -24,7 +26,7 @@ class FeatureModelService(BaseService):
     def count_feature_models(self):
         return self.repository.count_feature_models()
 
-    def copy_feature_model(self, original_feature_model, dataset_id):
+    def copy_feature_model(self, original_feature_model, dataset_id, current_user):
 
         # Copiar el FMMetaData (si es necesario)
         new_fm_meta_data = self.fmmetadata_repository.create(
@@ -54,6 +56,13 @@ class FeatureModelService(BaseService):
             )
             db.session.add(new_file)
 
+        file_path = current_user.temp_folder()
+        original_file_path = original_file.get_path()
+        new_file_path = os.path.join(file_path)
+
+        if not os.path.exists(new_file_path):
+            os.makedirs(new_file_path)
+        shutil.copy2(original_file_path, new_file_path)
         # Agregar el nuevo FeatureModel a la base de datos
         db.session.add(new_feature_model)
         db.session.commit()

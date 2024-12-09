@@ -123,6 +123,7 @@ def upload_dataset_zenodo_from_staging(dataset_id):
     form = DataSetForm()
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
     dataset.ds_meta_data.staging_area = False
+    dataset.ds_meta_data.build = False
     dataset = dataset_service.update_from_form(dataset, form, current_user)
     dataset_service.move_feature_models(dataset)
     data = {}
