@@ -77,18 +77,26 @@ def test_signup_user_successful(test_client):
     assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
 
 
+<< << << < HEAD
 def test_service_create_with_profile_success(clean_database):
-    data = {
-        "name": "Test",
-        "surname": "Foo",
-        "email": "service_test@example.com",
-        "password": "test1234"
-    }
 
-    AuthenticationService().create_with_profile(**data)
 
-    assert UserRepository().count() == 1
-    assert UserProfileRepository().count() == 1
+== == == =
+def test_service_create_with_profie_success(clean_database):
+
+
+>>>>>> > Test: Invalid token test missing
+data = {
+    "name": "Test",
+    "surname": "Foo",
+    "email": "service_test@example.com",
+    "password": "test1234"
+}
+
+AuthenticationService().create_with_profile(**data)
+
+assert UserRepository().count() == 1
+assert UserProfileRepository().count() == 1
 
 
 def test_service_create_with_profile_fail_no_email(clean_database):
@@ -178,6 +186,22 @@ def test_reset_password_authenticated(test_client):
 
     assert response.status_code == 302
     assert response.location == url_for("public.index", _external=False)
+
+
+def test_reset_password_invalid_or_expired_token(test_client):
+    test_client.get(url_for('auth.logout'))
+
+    invalid_token = "invalid_or_expired_token"
+
+    response = test_client.get(url_for("auth.reset_password", token=invalid_token))
+
+    assert response.status_code == 302
+    assert response.location == url_for("auth.forgot_password", _external=False)
+
+    with test_client.session_transaction() as session:
+        assert '_flashes' in session
+        flashes = session['_flashes']
+        assert any("El enlace de restablecimiento es inválido o ha expirado." in flash[1] for flash in flashes)
 
 
 def test_reset_password_valid_token_invalid_form(test_client):
