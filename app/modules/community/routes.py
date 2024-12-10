@@ -20,6 +20,13 @@ def index():
     return render_template('community/index.html', communities=communities)
 
 
+@community_bp.route('/my_communities', methods=['GET'])
+def index_my_communities():
+    # Filtra las comunidades que han sido creadas por el usuario actual
+    communities = Community.query.filter_by(created_by_id=current_user.id).all()
+    return render_template('community/index_my_communities.html', communities=communities)
+
+
 @community_bp.route('/community/create', methods=["GET", "POST"])
 @login_required
 def create():
