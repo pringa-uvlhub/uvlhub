@@ -4,16 +4,18 @@
 
 {% block content %}
 
-<style>
-    .small-image {
-        width: 50%;
-        height: auto;
-    }
-</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <!-- Incluye el CSS de Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    
+</head>
 
 <div class="col-xl-9 col-lg-12 col-md-12 col-sm-12">
 
-    <div class="row">
+    <div class="row" style="padding: 20px;">
 
         <div class="col-12">
 
@@ -82,20 +84,48 @@
 
 </div>
 
-<div class="card-body" style="margin-block: 10px">
-    <!-- <h1><b>Top 5 Datasets con más descargas</b></h1> -->
-    <img src="data:image/png;base64,{{ plot_url }}" alt="Top 5 Datasets con Más Descargas" class="small-image">
+<div class="col-md-30">
+    <!-- Fila 1 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card" style="margin-bottom: 40px;">
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_url }}" alt="Top 5 Datasets con Más Descargas" class="img-fluid">
+                    <h5>Top 5 Datasets con Más Descargas</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card" style="margin-bottom: 40px;">
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_users }}" alt="Top 5 usuarios con más datasets descargados" class="img-fluid">
+                    <h5>Top 5 Usuarios con Más Descargas</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila 2 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card" style="margin-bottom: 40px;">
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_features_downloads }}" alt="Top 5 Feature Models con Más Descargas" class="img-fluid">
+                    <h5>Top 5 Feature Models con Más Descargas</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card" style="margin-bottom: 40px;">
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_datasets_views }}" alt="Top 5 Datasets con más Visualizaciones" class="img-fluid">
+                    <h5>Top 5 Datasets con Más Visualizaciones</h5>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="card-body" style="margin-block: 10px;">
-    <!-- <h1><b>Top 5 Usuarios con más descargas</b></h1> -->
-    <img src="data:image/png;base64,{{ plot_users }}" alt="Top 5 usuarios con más datasets descargados" class="small-image">
-   
-</div>
-<div class="card-body" style="margin-block: 10px;">
-    <img src="data:image/png;base64,{{ plot_features_downloads }}" alt="Top 5 Feature Models con Más Descargas" style="width: 50%; height: auto;">
-</div>
-<div class="card-body" style="margin-block: 10px;">
-    <img src="data:image/png;base64,{{ plot_datasets_views }}" alt="Top 5 Datasets con más Visualizaciones" style="width: 50%; height: auto;">
+
 </div>
 
 
