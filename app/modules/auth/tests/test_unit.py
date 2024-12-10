@@ -1,12 +1,12 @@
+from flask_login import login_user
 import pytest
 from flask import url_for
-from flask_login import login_user
 
-from app.modules.auth.services import AuthenticationService
 from app.modules.auth.models import User
+from app.modules.auth.services import AuthenticationService
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.repositories import UserProfileRepository
-from datetime import datetime, timezone
+
 
 @pytest.fixture(scope="module")
 def test_client(test_client):
@@ -20,6 +20,7 @@ def test_client(test_client):
 
     yield test_client
 
+
 def test_login_success(test_client):
     response = test_client.post(
         "/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True
@@ -28,6 +29,7 @@ def test_login_success(test_client):
     assert response.request.path != url_for("auth.login"), "Login was unsuccessful"
 
     test_client.get("/logout", follow_redirects=True)
+
 
 def test_login_unsuccessful_bad_email(test_client):
     response = test_client.post(
@@ -38,6 +40,7 @@ def test_login_unsuccessful_bad_email(test_client):
 
     test_client.get("/logout", follow_redirects=True)
 
+
 def test_login_unsuccessful_bad_password(test_client):
     response = test_client.post(
         "/login", data=dict(email="test@example.com", password="basspassword"), follow_redirects=True
@@ -47,12 +50,14 @@ def test_login_unsuccessful_bad_password(test_client):
 
     test_client.get("/logout", follow_redirects=True)
 
+
 def test_signup_user_no_name(test_client):
     response = test_client.post(
         "/signup", data=dict(surname="Foo", email="test@example.com", password="test1234"), follow_redirects=True
     )
     assert response.request.path == url_for("auth.show_signup_form"), "Signup was unsuccessful"
     assert b"This field is required" in response.data, response.data
+
 
 def test_signup_user_unsuccessful(test_client):
     email = "test@example.com"
@@ -62,6 +67,7 @@ def test_signup_user_unsuccessful(test_client):
     assert response.request.path == url_for("auth.show_signup_form"), "Signup was unsuccessful"
     assert f"Email {email} in use".encode("utf-8") in response.data
 
+
 def test_signup_user_successful(test_client):
     response = test_client.post(
         "/signup",
@@ -69,6 +75,7 @@ def test_signup_user_successful(test_client):
         follow_redirects=True,
     )
     assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
+
 
 def test_service_create_with_profile_success(clean_database):
     data = {
@@ -83,6 +90,7 @@ def test_service_create_with_profile_success(clean_database):
     assert UserRepository().count() == 1
     assert UserProfileRepository().count() == 1
 
+
 def test_service_create_with_profile_fail_no_email(clean_database):
     data = {
         "name": "Test",
@@ -96,6 +104,7 @@ def test_service_create_with_profile_fail_no_email(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
+
 
 def test_service_create_with_profile_fail_no_password(clean_database):
     data = {
@@ -158,3 +167,61 @@ def test_forgot_password_post_email_exist(test_client):
 
     assert response.status_code == 302
     assert response.location == url_for('auth.login', _external=False)
+
+
+def test_reset_password_authenticated(test_client):
+    user = User(email="test@example.com")
+    user.set_password("password")
+    login_user(user)
+
+    response = test_client.get(url_for("auth.reset_password", token="some_token"))
+
+    assert response.status_code == 302
+    assert response.location == url_for("public.index", _external=False)
+
+
+def test_reset_password_valid_token_invalid_form(test_client):
+
+    test_client.post(
+        "/signup",
+        data=dict(name="Foo", surname="Example", email="foo2@example.com", password="foo1234"),
+        follow_redirects=True,
+    )
+
+    user = UserRepository().get_by_email("foo2@example.com")
+
+    valid_token = user.generate_reset_token()
+    test_client.get("/logout", follow_redirects=True)
+    response = test_client.get(url_for("auth.reset_password", token=valid_token))
+
+    assert response.status_code == 200
+    response = test_client.post(url_for("auth.reset_password", token=valid_token), data={})
+    assert response.status_code == 200
+
+
+def test_reset_password_valid_token_valid_form(test_client):
+
+    test_client.post(
+        "/signup",
+        data=dict(name="Foo", surname="Example", email="foo2@example.com", password="foo1234"),
+        follow_redirects=True,
+    )
+
+    user = UserRepository().get_by_email("foo2@example.com")
+
+    valid_token = user.generate_reset_token()
+    test_client.get("/logout", follow_redirects=True)
+    user = User.query.filter_by(email="foo2@example.com").first()
+
+    response = test_client.get(url_for("auth.reset_password", token=valid_token))
+    assert response.status_code == 200
+
+    response = test_client.post(
+        url_for("auth.reset_password", token=valid_token),
+        data={"password": "newpassword123", "confirm_password": "newpassword123"}
+    )
+
+    assert response.status_code == 302
+    assert response.location == url_for("auth.login", _external=False)
+    user = User.query.filter_by(email="foo2@example.com").first()
+    assert user.check_password("newpassword123")
