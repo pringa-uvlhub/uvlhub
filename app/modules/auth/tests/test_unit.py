@@ -202,8 +202,7 @@ def test_reset_password_valid_token_invalid_form(test_client):
 
     user = UserRepository().get_by_email("test@example.com")
 
-    valid_token = User.generate_reset_token(user)
-    user.reset_token = valid_token
+    valid_token = user.generate_reset_token()
     test_client.get("/logout", follow_redirects=True)
     response = test_client.get(url_for("auth.reset_password", token=valid_token))
 
@@ -220,7 +219,7 @@ def test_reset_password_valid_token_valid_form(test_client):
 
     user = UserRepository().get_by_email("test@example.com")
 
-    valid_token = User.generate_reset_token(user)
+    valid_token = user.generate_reset_token()
     test_client.get("/logout", follow_redirects=True)
     user = User.query.filter_by(email="test@example.com").first()
 
