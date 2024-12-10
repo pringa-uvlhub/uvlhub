@@ -27,8 +27,11 @@ class DataSetSeeder(BaseSeeder):
             raise Exception("Users not found. Please seed users first.")
 
         # Create DSMetrics instance
-        ds_metrics = DSMetrics(number_of_models='5', number_of_features='50')
-        seeded_ds_metrics = self.seed([ds_metrics])[0]
+        ds_metrics = [
+            DSMetrics(number_of_models='5', number_of_features='50'),
+            DSMetrics(number_of_models='7', number_of_features='40')]
+
+        seeded_ds_metrics = self.seed(ds_metrics)
 
         # Create DSMetaData instances
         ds_meta_data_list = [
@@ -38,11 +41,11 @@ class DataSetSeeder(BaseSeeder):
                 description=f'Description for dataset {i+1}',
                 publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
                 publication_doi=f'10.1234/dataset{i+1}',
-                build= False,
+                build=False,
                 dataset_doi=f'10.1234/dataset{i+1}',
-                tags='tag1, tag2',
+                tags='tag1, tag2' if i == 2 else 'tag3',
                 staging_area=False,
-                ds_metrics_id=seeded_ds_metrics.id
+                ds_metrics_id=seeded_ds_metrics[0].id if i == 1 else seeded_ds_metrics[1].id
             ) for i in range(4)
         ]
         seeded_ds_meta_data = self.seed(ds_meta_data_list)
