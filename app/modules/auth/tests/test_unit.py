@@ -241,4 +241,3 @@ def test_reset_password_valid_token_valid_form(test_client):
     assert response.location == url_for("auth.login", _external=False)
     user = User.query.filter_by(email="foo2@example.com").first()
     assert user.check_password("newpassword123")
-
