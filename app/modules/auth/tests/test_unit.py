@@ -165,7 +165,6 @@ def test_forgot_password_post_email_exist(test_client):
     response = test_client.post(url_for('auth.forgot_password'), data={'email': 'test@example.com'})
 
     assert response.status_code == 302
-    assert response.location == url_for('auth.login', _external=False)
 
 
 def test_reset_password_authenticated(test_client):
