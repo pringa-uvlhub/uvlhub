@@ -1,7 +1,6 @@
 from flask_login import login_user
 import pytest
 from flask import url_for
-
 from app.modules.auth.models import User
 from app.modules.auth.services import AuthenticationService
 from app.modules.auth.repositories import UserRepository
