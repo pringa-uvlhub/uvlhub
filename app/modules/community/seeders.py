@@ -32,7 +32,7 @@ class CommunitySeeder(BaseSeeder):
                 description="A community for developers passionate about open source projects.",
                 created_by_id=user_ids[0],  # Asigna al primer usuario como creador.
                 created_at=datetime.now(timezone.utc),
-                logo=None  # Puedes agregar un logo específico
+                logo=None
             ),
             Community(
                 name="AI Researchers",

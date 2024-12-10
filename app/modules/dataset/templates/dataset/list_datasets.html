@@ -18,6 +18,7 @@
                             <th>Description</th>
                             <th>Publication type</th>
                             <th>Dataset DOI</th>
+                            <th>Rating</th>
                             <th>Options</th>
                         </tr>
                         </thead>
@@ -34,12 +35,21 @@
                                 <td><a href="{{ dataset.get_uvlhub_doi() }}"
                                        target="_blank">{{ dataset.get_uvlhub_doi() }}</a></td>
                                 <td>
+                                    <div id="star-rating-{{ dataset.id }}" style="color: gold; display: inline-block;">
+                                        {% for i in range(1, 6) %}
+                                            <span data-value="{{ i }}" style="font-size: 1.5rem;">★</span>
+                                        {% endfor %}
+                                    </div>
+                                    <span id="average-rating-{{ dataset.id }}" class="ms-2">-</span>/5
+                                </td>
+                                <td>
                                     <a href="{{ dataset.get_uvlhub_doi() }}">
                                         <i data-feather="eye"></i>
                                     </a>
                                     <a href="{{ url_for('dataset.download_dataset', dataset_id=dataset.id) }}">
                                         <i data-feather="download"></i>
                                     </a>
+                                </td>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -60,7 +70,7 @@
                     <p class="card-text">
                         You have not created any dataset synchronized with Zenodo, are you up for it?
                     </p>
-                    <a href="{{ url_for('dataset.create_dataset') }}" class="btn btn-primary">
+                    <a href="{{ url_for('dataset.upload_dataset_zenodo') }}" class="btn btn-primary">
                         Upload dataset</a>
                 </div>
             </div>
@@ -68,6 +78,55 @@
     {% endif %}
 
     <div class="row">
+        <div class="col-12">
+            {% if unprepared_datasets %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-header">
+                        <h5 class="card-title">Staging Area</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Publication type</th>
+                                    <th>Options</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unprepared_dataset in unprepared_datasets %}
+                                <tr>
+                                    <td>
+                                        <a
+                                            href="{{ url_for('dataset.update_staging_area_dataset', dataset_id=unprepared_dataset.id) }}">
+                                            {{ unprepared_dataset.ds_meta_data.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ unprepared_dataset.ds_meta_data.description }}</td>
+                                    <td>{{ unprepared_dataset.ds_meta_data.publication_type.name.replace('_', ' ').title()
+                                        }}
+                                    </td>
+                                    <td>
+                                        <a
+                                            href="{{ url_for('dataset.update_staging_area_dataset', dataset_id=unprepared_dataset.id) }}">
+                                            <i data-feather="eye"></i>
+                                        </a>
+                                        <a
+                                            href="{{ url_for('dataset.download_dataset', dataset_id=unprepared_dataset.id) }}">
+                                            <i data-feather="download"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
 
 
         <div class="col-12">
@@ -115,4 +174,34 @@
             {% endif %}
         </div>
 
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% for dataset in datasets %}
+            updateAverageRating({{ dataset.id }});
+        {% endfor %}
+
+        // Función para actualizar el promedio de calificación en el frontend
+        function updateAverageRating(datasetId) {
+            fetch(`/datasets/${datasetId}/average-rating`)
+            .then(response => response.json())
+            .then(data => {
+                const averageRating = data.average_rating.toFixed(1);
+                document.getElementById('average-rating-' + datasetId).innerText = averageRating;
+
+                // Resaltar estrellas según el promedio de calificación
+                const starRatingContainer = document.getElementById('star-rating-' + datasetId);
+                starRatingContainer.querySelectorAll('span').forEach(star => {
+                    const starValue = parseInt(star.getAttribute('data-value'));
+                    star.style.color = starValue <= Math.round(averageRating) ? '#FFD700' : '#ddd';
+                });
+            })
+            .catch(error => console.error('Error fetching average rating:', error));
+        }
+    });
+</script>
+
+
 {% endblock %}
+
+

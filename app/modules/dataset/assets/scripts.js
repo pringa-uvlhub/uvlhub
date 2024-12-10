@@ -131,9 +131,111 @@ var currentId = 0;
         window.onload = function () {
 
             test_zenodo_connection();
+            if (window.location.pathname.startsWith('/dataset/upload')) {
+                document.getElementById('create_button').addEventListener('click', function () {
+                    // process data form
+                    const formData = {};
+    
+                    ["basic_info_form", "uploaded_models_form"].forEach((formId) => {
+                        const form = document.getElementById(formId);
+                        const inputs = form.querySelectorAll('input, select, textarea');
+                        inputs.forEach(input => {
+                            if (input.name) {
+                                formData[input.name] = formData[input.name] || [];
+                                formData[input.name].push(input.value);
+                            }
+                        });
+                    });
+    
+                    let formDataJson = JSON.stringify(formData);
+                    console.log(formDataJson);
+    
+                    const csrfToken = document.getElementById('csrf_token').value;
+                    const formUploadData = new FormData();
+                    formUploadData.append('csrf_token', csrfToken);
+    
+                    for (let key in formData) {
+                        if (formData.hasOwnProperty(key)) {
+                            formUploadData.set(key, formData[key]);
+                        }
+                    }
+    
+                    let checked_orcid = true;
+                    if (Array.isArray(formData.author_orcid)) {
+                        for (let orcid of formData.author_orcid) {
+                            orcid = orcid.trim();
+                            if (orcid !== '' && !isValidOrcid(orcid)) {
+                                hide_loading();
+                                write_upload_error("ORCID value does not conform to valid format: " + orcid);
+                                checked_orcid = false;
+                                break;
+                            }
+                        }
+                    }
+    
+    
+                    let checked_name = true;
+                    if (Array.isArray(formData.author_name)) {
+                        for (let name of formData.author_name) {
+                            name = name.trim();
+                            if (name === '') {
+                                hide_loading();
+                                write_upload_error("The author's name cannot be empty");
+                                checked_name = false;
+                                break;
+                            }
+                        }
+                    }
+    
+    
+                    if (checked_orcid && checked_name) {
+                        fetch('/dataset/create', {
+                            method: 'POST',
+                            body: formUploadData
+                        })
+                            .then(response => {
+                                if (response.ok) {
+                                    console.log('Dataset enviado con éxito');
+                                    response.json().then(data => {
+                                        console.log(data.message);
+                                        window.location.href = "/dataset/list";
+                                    });
+                                } else {
+                                    // Extraer el mensaje de error desde el objeto JSON
+                                    response.json().then(data => {
+                                        console.error('Error en la solicitud:', data);
+                                        console.log("Mensaje de error: ", data.message || JSON.stringify(data));
+                                        hide_loading();
+                        
+                                        // Asegúrate de que `data.message` exista, o muestra todo el objeto si no
+                                        write_upload_error(data.message || "Error desconocido en el servidor");
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error en la solicitud POST:', error);
+                            });
+                    }
+    
+                        
+                    function write_upload_error(error) {
+                        const errorMessage = typeof error === "string" ? error : JSON.stringify(error);
+                        // Muestra el mensaje de error en el DOM
+                        document.getElementById("error_message").innerText = errorMessage;
+                    }
+    
+                });
+            }
+            
 
             document.getElementById('upload_button').addEventListener('click', function () {
-
+                let url;
+                if (window.location.pathname.startsWith('/dataset/staging-area')) {
+                    const datasetId = window.location.pathname.split('/').pop(); // Extract the dataset ID from the URL
+                    url = `/dataset/upload/${datasetId}`; // Use the new route for staging area updates
+                } else {
+                    url = '/dataset/upload'; // Default to the upload route
+                }
                 clean_upload_errors();
                 show_loading();
 
@@ -197,7 +299,7 @@ var currentId = 0;
 
 
                     if (checked_orcid && checked_name) {
-                        fetch('/dataset/upload', {
+                        fetch(url, {
                             method: 'POST',
                             body: formUploadData
                         })
@@ -231,6 +333,105 @@ var currentId = 0;
 
             });
         };
+        if (window.location.pathname.startsWith('/dataset/staging-area')) {
+            document.getElementById('update_button').addEventListener('click', function () {
+                // process data form
+                clean_upload_errors();
+                show_loading();
+                const formData = {};
+
+                ["basic_info_form", "uploaded_models_form"].forEach((formId) => {
+                    const form = document.getElementById(formId);
+                    const inputs = form.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        if (input.name) {
+                            formData[input.name] = formData[input.name] || [];
+                            formData[input.name].push(input.value);
+                        }
+                    });
+                });
+
+                let formDataJson = JSON.stringify(formData);
+                console.log(formDataJson);
+
+                const csrfToken = document.getElementById('csrf_token').value;
+                const formUploadData = new FormData();
+                formUploadData.append('csrf_token', csrfToken);
+
+                for (let key in formData) {
+                    if (formData.hasOwnProperty(key)) {
+                        formUploadData.set(key, formData[key]);
+                    }
+                }
+
+                let checked_orcid = true;
+                if (Array.isArray(formData.author_orcid)) {
+                    for (let orcid of formData.author_orcid) {
+                        orcid = orcid.trim();
+                        if (orcid !== '' && !isValidOrcid(orcid)) {
+                            hide_loading();
+                            write_upload_error("ORCID value does not conform to valid format: " + orcid);
+                            checked_orcid = false;
+                            break;
+                        }
+                    }
+                }
+
+
+                let checked_name = true;
+                if (Array.isArray(formData.author_name)) {
+                    for (let name of formData.author_name) {
+                        name = name.trim();
+                        if (name === '') {
+                            hide_loading();
+                            write_upload_error("The author's name cannot be empty");
+                            checked_name = false;
+                            break;
+                        }
+                    }
+                }
+
+
+                if (checked_orcid && checked_name) {
+                    fetch(window.location.pathname, {
+                        method: 'POST',
+                        body: formUploadData
+                    })
+                        .then(response => {
+                            console.log(formUploadData);
+                            if (response.ok) {
+                                console.log('Dataset enviado con éxito');
+                                window.location.href = "/dataset/list";
+                                response.json().then(() => {
+                                    window.location.href = "/dataset/list";
+                                        });
+                            } else {
+                                // Extraer el mensaje de error desde el objeto JSON
+                                response.json().then(data => {
+                                    console.error('Error en la solicitud:', data);
+                                    console.log("Mensaje de error: ", data.message || JSON.stringify(data));
+                                    hide_loading();
+                    
+                                    // Asegúrate de que `data.message` exista, o muestra todo el objeto si no
+                                    write_upload_error(data.message || "Error desconocido en el servidor");
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.log(formUploadData);
+                            console.error('Error en la solicitud POST:', error);
+                        });
+                }
+
+                    
+                function write_upload_error(error) {
+                    const errorMessage = typeof error === "string" ? error : JSON.stringify(error);
+                    // Muestra el mensaje de error en el DOM
+                    document.getElementById("error_message").innerText = errorMessage;
+                }
+
+            });
+        }
 
 
         function isValidOrcid(orcid) {

@@ -6,6 +6,19 @@
 
 <h1 class="h2 mb-3"><b>Login</b></h1>
 
+<!-- Bloque para mostrar los mensajes flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="alert-container">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
 <div class="row">
     <div class="col-12">
 
@@ -25,7 +38,6 @@
                         </div>
 
                     </div>
-
 
                     <div class="row">
 
@@ -87,6 +99,14 @@
     </div>
 </div>
 
+<!-- Botón de "Recuperar contraseña" -->
+<div class="row">
+    <div class="mt-3">
+        <div class="col-lg-6 col-12">
+            <a href="{{ url_for('auth.forgot_password') }}">Do you forgot your password?</a>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
