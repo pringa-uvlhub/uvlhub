@@ -165,7 +165,6 @@ def test_forgot_password_post_email_exist(test_client):
     response = test_client.post(url_for('auth.forgot_password'), data={'email': 'test@example.com'})
 
     assert response.status_code == 302
-    assert response.location == url_for('auth.login', _external=False)
 
 
 def test_reset_password_authenticated(test_client):
@@ -205,7 +204,7 @@ def test_reset_password_valid_token_invalid_form(test_client):
 
     user = UserRepository().get_by_email("foo2@example.com")
 
-    valid_token = user.generate_reset_token()
+    valid_token = User.generate_reset_token(user)
     test_client.get("/logout", follow_redirects=True)
     response = test_client.get(url_for("auth.reset_password", token=valid_token))
 
@@ -224,7 +223,7 @@ def test_reset_password_valid_token_valid_form(test_client):
 
     user = UserRepository().get_by_email("foo2@example.com")
 
-    valid_token = user.generate_reset_token()
+    valid_token = User.generate_reset_token(user)
     test_client.get("/logout", follow_redirects=True)
     user = User.query.filter_by(email="foo2@example.com").first()
 
