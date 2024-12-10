@@ -77,8 +77,7 @@ def test_signup_user_successful(test_client):
     assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
 
 
-def test_service_create_with_profile_success(clean_database):
-
+def test_service_create_with_profie_success(clean_database):
     data = {
         "name": "Test",
         "surname": "Foo",
@@ -242,3 +241,4 @@ def test_reset_password_valid_token_valid_form(test_client):
     assert response.location == url_for("auth.login", _external=False)
     user = User.query.filter_by(email="foo2@example.com").first()
     assert user.check_password("newpassword123")
+
