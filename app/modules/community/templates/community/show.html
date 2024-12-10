@@ -19,13 +19,6 @@
     <p><strong>Description:</strong> {{ community.description }}</p>
     <p><strong>Created At:</strong> {{ community.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
     <p><strong>Created By:</strong> {{ user_fullname }}</p>
-    
-    <p><strong>Datasets:</strong> {{ community.datasets | length }}</p>
-    <ul>
-        {% for dataset in community.datasets %}
-            <li>{{ dataset.name }}</li>
-        {% endfor %}
-    </ul>
 
     <a href="{{ url_for('community.index') }}" class="btn btn-primary">Back to Communities</a>
 
