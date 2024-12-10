@@ -1,6 +1,4 @@
-import os
 import logging
-from werkzeug.utils import secure_filename
 from datetime import datetime
 from app.modules.community.models import Community
 from app.modules.community.repositories import CommunityRepository
@@ -18,30 +16,12 @@ class CommunityService(BaseService):
         try:
             logger.info(f"Creating community with name: {form.name.data} by {current_user.id}")
 
-            upload_folder = 'app/static/img/community'
-            if not os.path.exists(upload_folder):
-                os.makedirs(upload_folder)
-
-            logo_filename = None
-            if form.logo.data:
-                logo_file = form.logo.data
-                logo_filename = secure_filename(logo_file.filename)
-                logger.info(f"Saving logo file: {logo_filename}")
-                logo_file.save(os.path.join(upload_folder, logo_filename))
-            name_value = form.name.data
-            description_value = form.description.data
-            created_by_id = current_user.id
-
-            logger.info(
-                f"Valores antes de crear Community: name={name_value}, "
-                f"description={description_value}, created_by_id={created_by_id}"
-            )
             new_community = Community(
                 name=form.name.data,
                 description=form.description.data,
                 created_at=datetime.utcnow(),
                 created_by_id=current_user.id,
-                logo=f'img/community/{logo_filename}' if logo_filename else None
+                logo=None
             )
 
             self.repository.session.add(new_community)
