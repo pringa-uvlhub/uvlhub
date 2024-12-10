@@ -20,8 +20,6 @@
     <p><strong>Created At:</strong> {{ community.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
     <p><strong>Created By:</strong> {{ user_fullname }}</p>
 
-    <a href="{{ url_for('community.index') }}" class="btn btn-primary">Back to Communities</a>
-
     {% if community.created_by_id == current_user.id %}
     <form action="{{ url_for('community.delete_community', community_id=community.id) }}" method="POST" style="display:inline;">
         <button type="submit" class="btn btn-danger">Delete Community</button>

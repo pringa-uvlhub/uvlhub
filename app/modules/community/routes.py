@@ -42,7 +42,7 @@ def create():
                 current_user=current_user
                 )
             flash('Community created successfully!', 'success')
-            return redirect(url_for('community.index'))
+            return redirect(url_for('community.index_my_communities'))
 
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'danger')
@@ -85,4 +85,4 @@ def delete_community(community_id):
     except Exception as e:
         flash(f'Error deleting community: {e}', 'danger')
 
-    return redirect(url_for('community.index'))
+    return redirect(url_for('community.index_my_communities'))
