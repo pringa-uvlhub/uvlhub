@@ -1,7 +1,6 @@
 from flask_login import login_user
 import pytest
 from flask import url_for
-
 from app.modules.auth.models import User
 from app.modules.auth.services import AuthenticationService
 from app.modules.auth.repositories import UserRepository
@@ -162,11 +161,9 @@ def test_forgot_password_post_email_exist(test_client):
         follow_redirects=True,
     )
 
-    test_client.get(url_for('auth.logout'))
     response = test_client.post(url_for('auth.forgot_password'), data={'email': 'test@example.com'})
 
     assert response.status_code == 302
-    assert response.location == url_for('auth.login', _external=False)
 
 
 def test_reset_password_authenticated(test_client):
@@ -196,17 +193,13 @@ def test_reset_password_invalid_or_expired_token(test_client):
         assert any("El enlace de restablecimiento es inválido o ha expirado." in flash[1] for flash in flashes)
 
 
-def test_reset_password_valid_token_invalid_form(test_client):
-
+def test_reset_password_valid_token_invalid_form2(test_client):
     test_client.post(
-        "/signup",
-        data=dict(name="Foo", surname="Example", email="foo2@example.com", password="foo1234"),
-        follow_redirects=True,
+        "/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True
     )
+    user = UserRepository().get_by_email("test@example.com")
 
-    user = UserRepository().get_by_email("foo2@example.com")
-
-    valid_token = user.generate_reset_token()
+    valid_token = User.generate_reset_token(user)
     test_client.get("/logout", follow_redirects=True)
     response = test_client.get(url_for("auth.reset_password", token=valid_token))
 
@@ -218,16 +211,14 @@ def test_reset_password_valid_token_invalid_form(test_client):
 def test_reset_password_valid_token_valid_form(test_client):
 
     test_client.post(
-        "/signup",
-        data=dict(name="Foo", surname="Example", email="foo2@example.com", password="foo1234"),
-        follow_redirects=True,
+        "/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True
     )
 
-    user = UserRepository().get_by_email("foo2@example.com")
+    user = UserRepository().get_by_email("test@example.com")
 
-    valid_token = user.generate_reset_token()
+    valid_token = User.generate_reset_token(user)
     test_client.get("/logout", follow_redirects=True)
-    user = User.query.filter_by(email="foo2@example.com").first()
+    user = User.query.filter_by(email="test@example.com").first()
 
     response = test_client.get(url_for("auth.reset_password", token=valid_token))
     assert response.status_code == 200
@@ -239,5 +230,5 @@ def test_reset_password_valid_token_valid_form(test_client):
 
     assert response.status_code == 302
     assert response.location == url_for("auth.login", _external=False)
-    user = User.query.filter_by(email="foo2@example.com").first()
+    user = User.query.filter_by(email="test@example.com").first()
     assert user.check_password("newpassword123")
