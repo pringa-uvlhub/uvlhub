@@ -44,7 +44,7 @@ def create():
     return render_template('community/create.html', form=form)
 
 
-@community_bp.route('/community/<int:id>', methods=['GET'])
+@community_bp.route('/community/<int:community_id>', methods=['GET'])
 def show_community(community_id):
     community = community_service.get_by_id(community_id)
 
@@ -58,7 +58,7 @@ def show_community(community_id):
     return render_template('community/show.html', community=community, user_fullname=user_fullname)
 
 
-@community_bp.route('/community/<int:id>/delete', methods=['POST'])
+@community_bp.route('/community/<int:community_id>/delete', methods=['POST'])
 @login_required
 def delete_community(community_id):
     community = community_service.get_by_id(community_id)
