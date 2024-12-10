@@ -6,8 +6,6 @@ from app.modules.community.models import Community
 from app.modules.auth.services import AuthenticationService
 from app.modules.community.services import CommunityService
 from app.modules.community import community_bp
-from werkzeug.utils import secure_filename
-import os
 
 community_service = CommunityService()
 auth_service = AuthenticationService()
@@ -31,31 +29,11 @@ def create():
 
         try:
             logger.info("Creating community...")
-
-            logo_filename = None
-            if form.logo.data:
-                logger.info("1111111111")
-                logo_file = form.logo.data
-                logo_filename = secure_filename(logo_file.filename)
-
-                upload_folder = os.path.join('app/static/img/community')
-                if not os.path.exists(upload_folder):
-                    os.makedirs(upload_folder)
-
-                file_path = os.path.join(upload_folder, logo_filename)
-                logo_file.save(file_path)
-
-                community_service = CommunityService()
-                community_service.create_from_form(
-                    form=form,
-                    current_user=current_user,
-                    )
-            else:
-                community_service = CommunityService()
-                community_service.create_from_form(
-                    form=form,
-                    current_user=current_user
-                    )
+            community_service = CommunityService()
+            community_service.create_from_form(
+                form=form,
+                current_user=current_user
+                )
             flash('Community created successfully!', 'success')
             return redirect(url_for('community.index'))
 
@@ -66,7 +44,7 @@ def create():
     return render_template('community/create.html', form=form)
 
 
-@community_bp.route('/community/<int:id>', methods=['GET'])
+@community_bp.route('/community/<int:community_id>', methods=['GET'])
 def show_community(community_id):
     community = community_service.get_by_id(community_id)
 
@@ -80,7 +58,7 @@ def show_community(community_id):
     return render_template('community/show.html', community=community, user_fullname=user_fullname)
 
 
-@community_bp.route('/community/<int:id>/delete', methods=['POST'])
+@community_bp.route('/community/<int:community_id>/delete', methods=['POST'])
 @login_required
 def delete_community(community_id):
     community = community_service.get_by_id(community_id)

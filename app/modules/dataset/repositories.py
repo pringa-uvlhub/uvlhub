@@ -40,7 +40,6 @@ class DSMetaDataRepository(BaseRepository):
     def filter_by_doi(self, doi: str) -> Optional[DSMetaData]:
         return self.model.query.filter_by(dataset_doi=doi).first()
 
-    
     def filter_by_build(self) -> Optional[DSMetaData]:
         return self.model.query.filter_by(build=True).first()
 
@@ -136,8 +135,9 @@ class DataSetRepository(BaseRepository):
             .limit(5)
             .all()
         )
+
     def get_dataset_by_metadata_id(self, metadata_id):
-        
+
         dataset = self.model.query.join(DSMetaData).filter(DSMetaData.id == metadata_id).first()
         return dataset
 
@@ -158,7 +158,8 @@ class DSRatingRepository(BaseRepository):
         return self.model.query.filter(DSRating.ds_meta_data_id == ds_meta_data_id, DSRating.user_id == user_id).first()
 
     def get_average_rating(self, ds_meta_data_id: int) -> float:
-        average = self.model.query.filter(DSRating.ds_meta_data_id == ds_meta_data_id).with_entities(func.avg(DSRating.rating)).scalar()
+        average = self.model.query.filter(DSRating.ds_meta_data_id == ds_meta_data_id) \
+            .with_entities(func.avg(DSRating.rating)).scalar()
         return average if average else 0.0
 
     def count_ratings(self, ds_meta_data_id: int) -> int:
