@@ -65,7 +65,7 @@ def user_profile(user_id):
     user = db.session.query(User).filter_by(id=user_id).first()
 
     if not user:
-        return redirect(url_for('team.index'))
+        return render_template('404.html'), 404
 
     page = request.args.get('page', 1, type=int)
     per_page = 5
