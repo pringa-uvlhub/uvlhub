@@ -9,19 +9,6 @@ def test_connection_fakenodo():
     return jsonify(response)
 
 
-# Simulación de creación de depósito (POST /fakenodo/api/deposit/depositions)
-@fakenodo_bp.route('/deposit/depositions', methods=['POST'])
-def create_deposition():
-    # Aquí simulamos la creación de un depósito con una respuesta 201 (Created)
-    return jsonify({
-        "id": 123456,
-        "links": {
-            "files": "/fakenodo/api/deposit/depositions/123456/files",
-            "publish": "/fakenodo/api/deposit/depositions/123456/actions/publish"
-        }
-    }), 201
-
-
 # Ruta para eliminar un depósito (DELETE /fakenodo/api/deposit/depositions/<depositionId>)
 @fakenodo_bp.route('/deposit/depositions/<depositionId>', methods=["DELETE"])
 def delete_deposition_fakenodo(depositionId):
