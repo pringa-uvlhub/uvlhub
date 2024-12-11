@@ -114,16 +114,6 @@ class AuthenticationService(BaseService):
         return self.dsviewrecord_repostory.total_views()
 
 
-    def count_total_users(self):
-        return self.repository.count_total_users()
-
-    def count_total_admin_users(self):
-        return self.repository.count_total_admin_users()
-
-    def total_views(self):
-        return self.dsviewrecord_repostory.total_views()
-
-
 def send_reset_email(to_email, reset_url):
     msg = Message("Restablece tu contraseña", recipients=[to_email])
     msg.body = f"Para restablecer tu contraseña, sigue este enlace: {reset_url}"
