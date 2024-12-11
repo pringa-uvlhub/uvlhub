@@ -19,6 +19,7 @@ def index():
 
 
 @community_bp.route('/my_communities', methods=['GET'])
+@login_required
 def index_my_communities():
     # Filtra las comunidades que han sido creadas por el usuario actual
     communities = Community.query.filter_by(created_by_id=current_user.id).all()
