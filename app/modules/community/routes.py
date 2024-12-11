@@ -148,4 +148,3 @@ def leave_community(community_id):
 
     # Redirigir al show de la comunidad
     return redirect(url_for('community.show_community', community_id=community_id))
-
