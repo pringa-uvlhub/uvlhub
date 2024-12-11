@@ -168,16 +168,34 @@ class DataSetRepository(BaseRepository):
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)
-            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.isnot(None))
+            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.isnot(None),
+                    DSMetaData.dataset_fakenodo_doi.is_(None))
             .order_by(self.model.created_at.desc())
             .all()
+        )
+
+    def get_fakenodo_synchronized(self, current_user_id: int) -> DataSet:
+        return (
+            self.model.query.join(DSMetaData)
+            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_fakenodo_doi.isnot(None),
+                    DSMetaData.dataset_doi.is_(None))
+            .order_by(self.model.created_at.desc())
+            .all()
+        )
+
+    def get_fakenodo_synchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
+        return (
+            self.model.query.join(DSMetaData)
+            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None), DataSet.id == dataset_id,
+                    DSMetaData.staging_area.is_(False), DSMetaData.dataset_fakenodo_doi.isnot(None))
+            .first()
         )
 
     def get_unsynchronized(self, current_user_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)
             .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None),
-                    DSMetaData.staging_area.is_(False))
+                    DSMetaData.staging_area.is_(False), DSMetaData.dataset_fakenodo_doi.is_(None))
             .order_by(self.model.created_at.desc())
             .all()
         )
@@ -186,7 +204,7 @@ class DataSetRepository(BaseRepository):
         return (
             self.model.query.join(DSMetaData)
             .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None), DataSet.id == dataset_id,
-                    DSMetaData.staging_area.is_(False))
+                    DSMetaData.staging_area.is_(False), DSMetaData.dataset_fakenodo_doi.is_(None))
             .first()
         )
 
@@ -216,7 +234,7 @@ class DataSetRepository(BaseRepository):
     def count_unsynchronized_datasets(self):
         return (
             self.model.query.join(DSMetaData)
-            .filter(DSMetaData.dataset_doi.is_(None))
+            .filter(DSMetaData.dataset_doi.is_(None), DSMetaData.dataset_fakenodo_doi.is_(None))
             .count()
         )
 
