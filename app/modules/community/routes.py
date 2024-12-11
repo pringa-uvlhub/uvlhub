@@ -25,6 +25,14 @@ def index_my_communities():
     return render_template('community/index_my_communities.html', communities=communities)
 
 
+@community_bp.route('/my_joined_communities', methods=['GET'])
+@login_required
+def index_joined_communities():
+    # Filtra las comunidades a las que el usuario está unido
+    communities = current_user.communities  # Suponiendo que tienes una relación Many-to-Many entre User y Community
+    return render_template('community/index_joined_communities.html', communities=communities)
+
+
 @community_bp.route('/community/create', methods=["GET", "POST"])
 @login_required
 def create():
@@ -37,10 +45,11 @@ def create():
         try:
             logger.info("Creating community...")
             community_service = CommunityService()
-            community_service.create_from_form(
+            community = community_service.create_from_form(
                 form=form,
                 current_user=current_user
                 )
+            community_service.join_community(community.id, current_user)
             flash('Community created successfully!', 'success')
             return redirect(url_for('community.index'))
 
@@ -86,3 +95,55 @@ def delete_community(community_id):
         flash(f'Error deleting community: {e}', 'danger')
 
     return redirect(url_for('community.index'))
+
+
+@community_bp.route('/community/<int:community_id>/join', methods=['POST'])
+@login_required
+def join_community(community_id):
+    try:
+        success = community_service.join_community(community_id, current_user)
+
+        if success:
+            flash('You have successfully joined the community!', 'success')
+        else:
+            flash('You are already a member of this community.', 'info')
+
+    except ValueError as e:
+        flash(str(e), 'danger')
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        flash('An error occurred while joining the community.', 'danger')
+
+    return redirect(url_for('community.show_community', community_id=community_id))
+
+
+@community_bp.route('/community/<int:community_id>/members', methods=['GET'])
+def list_members(community_id):
+    community = community_service.get_by_id(community_id)
+    if not community:
+        flash('Community not found!', 'danger')
+        return redirect(url_for('community.index'))
+
+    members = community.users
+    return render_template('community/members.html', community=community, members=members)
+
+
+@community_bp.route('/community/<int:community_id>/leave', methods=['POST'])
+@login_required
+def leave_community(community_id):
+    try:
+        success = community_service.leave_community(community_id, current_user)
+
+        if success:
+            flash('You have successfully left the community.', 'success')
+        else:
+            flash('You are not a member of this community.', 'info')
+
+    except ValueError as e:
+        flash(str(e), 'danger')
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        flash('An error occurred while leaving the community.', 'danger')
+
+    # Redirigir al show de la comunidad
+    return redirect(url_for('community.show_community', community_id=community_id))
