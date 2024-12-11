@@ -19,6 +19,7 @@ def index():
 
 
 @community_bp.route('/my_communities', methods=['GET'])
+@login_required
 def index_my_communities():
     # Filtra las comunidades que han sido creadas por el usuario actual
     communities = Community.query.filter_by(created_by_id=current_user.id).all()
@@ -51,7 +52,7 @@ def create():
                 )
             community_service.join_community(community.id, current_user)
             flash('Community created successfully!', 'success')
-            return redirect(url_for('community.index'))
+            return redirect(url_for('community.index_my_communities'))
 
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'danger')
@@ -147,3 +148,4 @@ def leave_community(community_id):
 
     # Redirigir al show de la comunidad
     return redirect(url_for('community.show_community', community_id=community_id))
+
