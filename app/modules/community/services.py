@@ -36,6 +36,39 @@ class CommunityService(BaseService):
             self.repository.session.rollback()
             raise exc
 
+    def join_community(self, community_id, current_user):
+        try:
+            community = self.repository.get_by_id(community_id)
+            if not community:
+                raise ValueError(f"Community with ID {community_id} not found.")
+
+            if community not in current_user.communities:
+                current_user.communities.append(community)
+                self.repository.session.commit()
+                return True
+            else:
+                logger.info(f"User {current_user.id} is already a member of community {community_id}")
+                return False
+
+        except Exception as exc:
+            logger.error(f"Error joining community: {exc}")
+            self.repository.session.rollback()
+            raise exc
+
+    def leave_community(self, community_id: int, user) -> bool:
+        community = self.repository.get_by_id(community_id)
+        if not community:
+            raise ValueError(f"Community with ID {community_id} not found.")
+
+        # Aquí verificamos si el usuario es miembro de la comunidad
+        if user not in community.users:
+            raise ValueError("You are not a member of this community.")
+
+        # Eliminar la relación entre el usuario y la comunidad
+        community.users.remove(user)
+        self.repository.session.commit()
+        return True
+
     def get_all_communities(self):
         return self.repository.get_all()
 
