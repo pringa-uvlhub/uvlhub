@@ -28,7 +28,7 @@ def index_my_communities():
 @community_bp.route('/my_joined_communities', methods=['GET'])
 @login_required
 def index_joined_communities():
-    # Filtra las comunidades a las que el usuario está unido
+
     communities = current_user.communities  # Suponiendo que tienes una relación Many-to-Many entre User y Community
     return render_template('community/index_joined_communities.html', communities=communities)
 
