@@ -118,6 +118,7 @@ def upload_dataset_zenodo():
 
     return render_template("dataset/upload_dataset.html", form=form)
 
+
 @dataset_bp.route("/dataset/upload-fakenodo", methods=["POST"])
 @login_required
 def upload_dataset_fakenodo():
