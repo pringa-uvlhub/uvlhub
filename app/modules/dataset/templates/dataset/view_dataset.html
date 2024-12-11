@@ -110,6 +110,21 @@
                 </div>
                 {% endif %}
 
+                {% if dataset.ds_meta_data.dataset_fakenodo_doi %}
+                <div class="row mb-2">
+                    <div class="col-md-4 col-12">
+                        <span class="text-secondary">
+                            Fakenodo Publication DOI
+                        </span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        <a href="{{ dataset.ds_meta_data.dataset_fakenodo_doi }}">
+                            {{ dataset.ds_meta_data.dataset_fakenodo_doi }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
                 {% if dataset.ds_meta_data.dataset_doi %}
                 <div class="row mb-2">
                     

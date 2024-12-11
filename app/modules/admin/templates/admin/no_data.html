@@ -1,0 +1,23 @@
+{% extends "base_template.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h1>No Data Available</h1>
+                <p>There are no downloads or views recorded yet. Please check back later.</p>
+                <a href="{{ url_for('public.index') }}" class="btn btn-primary">Go Back to Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+{% endblock %}
