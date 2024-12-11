@@ -1,6 +1,7 @@
+from flask_login import login_user
 import pytest
 from flask import url_for
-
+from app.modules.auth.models import User
 from app.modules.auth.services import AuthenticationService
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.repositories import UserProfileRepository
@@ -173,3 +174,117 @@ def test_service_create_with_profile_fail_no_password(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
+
+
+def test_forgot_password_authenticated(test_client):
+    user = User(email='test@example.com')
+    user.set_password('password')
+    login_user(user)
+
+    response = test_client.get(url_for('auth.forgot_password'))
+
+    assert response.status_code == 302
+    assert response.location == url_for('public.index', _external=False)
+
+
+def test_forgot_password_get(test_client):
+    test_client.get(url_for('auth.logout'))
+
+    response = test_client.get(url_for('auth.forgot_password'))
+    assert response.status_code == 200
+
+
+def test_forgot_password_post_invalid_form(test_client):
+    test_client.get(url_for('auth.logout'))
+    response = test_client.post(url_for('auth.forgot_password'), data={})
+
+    assert response.status_code == 200
+
+
+def test_forgot_password_post_email_not_exist(test_client):
+    test_client.get(url_for('auth.logout'))
+
+    response = test_client.post(url_for('auth.forgot_password'), data={'email': 'nonexistent@example.com'})
+
+    assert response.status_code == 302
+    assert response.location == url_for('auth.forgot_password')
+
+
+def test_forgot_password_post_email_exist(test_client):
+    test_client.post(
+        "/signup",
+        data=dict(name="Foo", surname="Example", email="test@example.com", password="foo1234"),
+        follow_redirects=True,
+    )
+
+    response = test_client.post(url_for('auth.forgot_password'), data={'email': 'test@example.com'})
+
+    assert response.status_code == 302
+
+
+def test_reset_password_authenticated(test_client):
+    user = User(email="test@example.com")
+    user.set_password("password")
+    login_user(user)
+
+    response = test_client.get(url_for("auth.reset_password", token="some_token"))
+
+    assert response.status_code == 302
+    assert response.location == url_for("public.index", _external=False)
+
+
+def test_reset_password_invalid_or_expired_token(test_client):
+    test_client.get(url_for('auth.logout'))
+
+    invalid_token = "invalid_or_expired_token"
+
+    response = test_client.get(url_for("auth.reset_password", token=invalid_token))
+
+    assert response.status_code == 302
+    assert response.location == url_for("auth.forgot_password", _external=False)
+
+    with test_client.session_transaction() as session:
+        assert '_flashes' in session
+        flashes = session['_flashes']
+        assert any("El enlace de restablecimiento es inválido o ha expirado." in flash[1] for flash in flashes)
+
+
+def test_reset_password_valid_token_invalid_form2(test_client):
+    test_client.post(
+        "/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True
+    )
+    user = UserRepository().get_by_email("test@example.com")
+
+    valid_token = User.generate_reset_token(user)
+    test_client.get("/logout", follow_redirects=True)
+    response = test_client.get(url_for("auth.reset_password", token=valid_token))
+
+    assert response.status_code == 200
+    response = test_client.post(url_for("auth.reset_password", token=valid_token), data={})
+    assert response.status_code == 200
+
+
+def test_reset_password_valid_token_valid_form(test_client):
+
+    test_client.post(
+        "/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True
+    )
+
+    user = UserRepository().get_by_email("test@example.com")
+
+    valid_token = User.generate_reset_token(user)
+    test_client.get("/logout", follow_redirects=True)
+    user = User.query.filter_by(email="test@example.com").first()
+
+    response = test_client.get(url_for("auth.reset_password", token=valid_token))
+    assert response.status_code == 200
+
+    response = test_client.post(
+        url_for("auth.reset_password", token=valid_token),
+        data={"password": "newpassword123", "confirm_password": "newpassword123"}
+    )
+
+    assert response.status_code == 302
+    assert response.location == url_for("auth.login", _external=False)
+    user = User.query.filter_by(email="test@example.com").first()
+    assert user.check_password("newpassword123")
