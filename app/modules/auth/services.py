@@ -103,7 +103,7 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
-    
+
     def count_total_users(self):
         return self.repository.count_total_users()
 
@@ -128,5 +128,3 @@ def send_reset_email(to_email, reset_url):
     msg = Message("Restablece tu contraseña", recipients=[to_email])
     msg.body = f"Para restablecer tu contraseña, sigue este enlace: {reset_url}"
     mail.send(msg)
-
-    

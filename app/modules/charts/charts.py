@@ -1,8 +1,9 @@
 import matplotlib
-matplotlib.use('Agg')  # Usa el backend 'Agg' para evitar problemas con tkinter
 import matplotlib.pyplot as plt
 import io
 import base64
+matplotlib.use('Agg')  # Usa el backend 'Agg' para evitar problemas con tkinter
+
 
 class ChartGenerator:
 

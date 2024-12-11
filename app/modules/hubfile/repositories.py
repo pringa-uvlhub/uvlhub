@@ -63,15 +63,15 @@ class HubfileDownloadRecordRepository(BaseRepository):
                 download_count[feature_model_id] += 1
             else:
                 download_count[feature_model_id] = 1
-    
+
         most_downloaded_feature_models = sorted(download_count.items(), key=lambda x: x[1], reverse=True)[:5]
         feature_model_names = []
         download_counts = []
-    
+
         for feature_model_id, count in most_downloaded_feature_models:
             feature_model_repo = FeatureModelRepository()
             feature_model = feature_model_repo.get_feature_model_by_id(feature_model_id)
-            feature_model_names.append(feature_model.fm_meta_data.title)  # Asegúrate de que `feature_model` tenga un atributo `fm_meta_data` con `title`
+            feature_model_names.append(feature_model.fm_meta_data.title)
             download_counts.append(count)
-    
+
         return feature_model_names, download_counts
