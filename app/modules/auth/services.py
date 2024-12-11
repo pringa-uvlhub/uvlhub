@@ -104,6 +104,15 @@ class AuthenticationService(BaseService):
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
 
+    def count_total_users(self):
+        return self.repository.count_total_users()
+
+    def count_total_admin_users(self):
+        return self.repository.count_total_admin_users()
+
+    def total_views(self):
+        return self.dsviewrecord_repostory.total_views()
+
 
 def send_reset_email(to_email, reset_url):
     msg = Message("Restablece tu contraseña", recipients=[to_email])
