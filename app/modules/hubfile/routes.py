@@ -55,8 +55,8 @@ def download_file(file_id):
 def download_file_name(file_name):
     file = HubfileRepository.get_hubfile_by_name(file_name)
     filename = file.name
-    file_id=file.id
-    
+    file_id = file.id
+
     directory_path = f"uploads/user_{file.feature_model.data_set.user_id}/dataset_{file.feature_model.data_set_id}/"
     parent_directory_path = os.path.dirname(current_app.root_path)
     file_path = os.path.join(parent_directory_path, directory_path)
@@ -89,7 +89,6 @@ def download_file_name(file_name):
     resp.set_cookie("file_download_cookie", user_cookie)
 
     return resp
-
 
 
 @hubfile_bp.route('/file/view/<int:file_id>', methods=['GET'])
@@ -141,11 +140,10 @@ def view_file(file_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-
 @hubfile_bp.route('/file/view/name/<string:file_name>', methods=['GET'])
 def view_file_name(file_name):
     file = HubfileRepository.get_hubfile_by_name(file_name)
-    file_id=file.id
+    file_id = file.id
     print(file)
     directory_path = f"uploads/user_{file.feature_model.data_set.user_id}/dataset_{file.feature_model.data_set_id}/"
     parent_directory_path = os.path.dirname(current_app.root_path)
@@ -197,12 +195,9 @@ def get_hubfile(file_name):
     try:
         # Llamamos al método del repositorio para obtener el hubfile por su nombre
         hubfile = HubfileRepository.get_hubfile_by_name(file_name)
-        
-        
+
         # Devolver el objeto como un diccionario serializado en formato JSON
         return jsonify(hubfile.to_dict())
     except Exception as e:
         # Si ocurre un error, Flask se encargará de enviar una respuesta 404 automáticamente
         return jsonify({'error': str(e)}), 404
-
-

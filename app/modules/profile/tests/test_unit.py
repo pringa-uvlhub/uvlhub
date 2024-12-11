@@ -72,6 +72,7 @@ def test_user_profile_nonexistent_user(test_client):
     # Intentar acceder a un perfil con un ID que no existe (por ejemplo, ID 9999)
     response = test_client.get("/profile/9999")
     assert response.status_code == 302, "Redirection did not occur for nonexistent user profile."
-    #assert response.location.endswith("/team.index"), "Redirected URL is incorrect for nonexistent user profile." #FIXME
+    # assert response.location.endswith("/team.index"),
+    # "Redirected URL is incorrect for nonexistent user profile." #FIXME
 
     logout(test_client)

@@ -40,6 +40,7 @@ def create_app(config_name='development'):
     # Inicializar SQLAlchemy y Migrate con la app
     db.init_app(app)
     migrate.init_app(app, db)
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
     # Registrar módulos
     module_manager = ModuleManager(app)

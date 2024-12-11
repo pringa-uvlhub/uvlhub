@@ -42,7 +42,7 @@ chico sundermann">
         <div class="sidebar-content js-simplebar">
             <a class="sidebar-brand" href="{{ url_for('public.index') }}">
                 <img src="{{ url_for("static", filename="img/logos/logo-dark.svg") }}" class="d-block"
-                     style="max-width: 100%; height: auto;">
+                    style="max-width: 100%; height: auto;">
             </a>
 
 
@@ -70,14 +70,40 @@ chico sundermann">
                             class="align-middle">Team</span>
                     </a>
                 </li>
-
+                <li class="sidebar-header">
+                    Communities
+                </li>
+                
+                <!-- Todas las comunidades -->
                 <li class="sidebar-item {{ 'active' if request.endpoint == 'community.index' else '' }}">
                     <a class="sidebar-link" href="{{ url_for('community.index') }}">
-                        <i class="align-middle" data-feather="layers"></i> <span class="align-middle">Communities</span>
+                        <i class="align-middle" data-feather="layers"></i> <span class="align-middle">All Communities</span>
+                    </a>
+                </li>
+                
+                <!-- Comunidades que he creado -->
+                <li class="sidebar-item {{ 'active' if request.endpoint == 'community.index_my_communities' else '' }}">
+                    <a class="sidebar-link" href="{{ url_for('community.index_my_communities') }}">
+                        <i class="align-middle" data-feather="list"></i> <span class="align-middle">My Created Communities</span>
+                    </a>
+                </li>
+                
+                <!-- Comunidades a las que estoy unido -->
+                <li class="sidebar-item {{ 'active' if request.endpoint == 'community.index_joined_communities' else '' }}">
+                    <a class="sidebar-link" href="{{ url_for('community.index_joined_communities') }}">
+                        <i class="align-middle" data-feather="user-check"></i> <span class="align-middle">My Joined Communities</span>
                     </a>
                 </li>
                 
 
+
+                {% if current_user.is_admin %}
+                <li class="sidebar-item {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}">
+                    <a class="sidebar-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard</span>
+                    </a>
+                </li>
+                {% endif %}
 
                 {% if current_user.is_anonymous %}
 
@@ -118,13 +144,7 @@ chico sundermann">
                         </a>
                     </li>
 
-                    <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.build_dataset' else '' }}">
-                        <a class="sidebar-link" href="{{ url_for('dataset.build_dataset') }}">
-                            <i class="align-middle" data-feather="upload"></i> <span
-                                class="align-middle">Build dataset</span>
-                        </a>
-                    </li>
-
+                    
 
                     <li class="sidebar-header">
                         Options
@@ -194,6 +214,10 @@ chico sundermann">
                         <div class="dropdown-menu dropdown-menu-end">
                             <a class="dropdown-item" href="{{ url_for('profile.my_profile') }}">
                                 <i class="align-middle me-1" data-feather="user"></i> My profile</a>
+                            {% if current_user.is_admin %}
+                                <a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">
+                                    <i class="align-middle me-1" data-feather="user"></i> Admin Dashboard</a>
+                            {% endif %}
                             <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
                                 <i class="align-middle me-1" data-feather="log-out"></i> Log out</a>
                         </div>
