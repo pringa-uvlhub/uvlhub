@@ -21,6 +21,7 @@ class CommunityService(BaseService):
                 description=form.description.data,
                 created_at=datetime.utcnow(),
                 created_by_id=current_user.id,
+                admin_by_id=current_user.id,
                 logo=None
             )
 
@@ -83,3 +84,28 @@ class CommunityService(BaseService):
         if not community:
             raise ValueError(f"Community with ID {community_id} not found.")
         return self.repository.delete_community(community_id)
+
+    def grant_admin_role(self, community_id, user, current_user):
+        # Obtener la comunidad
+        community = Community.query.get(community_id)
+        if not community:
+            raise ValueError("Community not found!")
+
+        # Verificar si el usuario es miembro de la comunidad
+        if not user:
+            raise ValueError("User not found!")
+
+        if user not in community.users:
+            raise ValueError("User is not a member of the community!")
+
+        # Comprobar si el usuario actual es el creador (y administrador) de la comunidad
+        if community.admin_by_id != current_user.id:
+            raise ValueError("You are not authorized to assign an admin role!")
+
+        # Asignar el rol de administrador
+        community.admin_by_id = user.id  # Se asigna el admin en el campo 'admin_by_id'
+
+        # Guardar cambios en la base de datos
+        self.repository.session.commit()
+
+        return True

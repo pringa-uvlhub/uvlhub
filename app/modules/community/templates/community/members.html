@@ -19,9 +19,27 @@
                         <h5 class="mb-1">{{ member.profile.name }} {{ member.profile.surname }}</h5>
                         <small class="text-muted">{{ member.email }}</small>
                     </div>
+
+                    <!-- Marca para el creador -->
                     {% if member.id == community.created_by_id %}
                         <span class="badge bg-primary">Creator</span>
                     {% endif %}
+
+                    <!-- Marca para el administrador -->
+                    {% if member.id == community.admin_by_id %}
+                        <span class="badge bg-success">Admin</span>
+                    {% endif %}
+
+                    {%if member.id != community.admin_by_id %}
+                    {% if current_user.id == community.admin_by_id %}
+                        <!-- Botón para conceder el rol de administrador -->
+                        <form action="{{ url_for('community.grant_admin', community_id=community.id, user_id=member.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-warning btn-sm">
+                                Grant Admin
+                            </button>
+                        </form>
+                    {% endif %}
+                {% endif %}
                 </div>
             {% endfor %}
         </div>

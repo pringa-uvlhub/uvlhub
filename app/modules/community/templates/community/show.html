@@ -19,7 +19,22 @@
     <p><strong>Description:</strong> {{ community.description }}</p>
     <p><strong>Created At:</strong> {{ community.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
     <p><strong>Created By:</strong> {{ user_fullname }}</p>
+    <p><strong>Managed By:</strong> {{ admin_fullname }}</p>
 
+    <!-- Mostrar solo los mensajes flash de tipo 'danger' -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-danger">
+                <ul>
+                    {% for category, message in messages %}
+                        {% if category == 'danger' %}
+                            <li>{{ message }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endwith %}
 
     <!-- Apartado de Members -->
     <div class="d-flex align-items-center my-3">
@@ -30,7 +45,7 @@
     <!-- Si el usuario es miembro -->
     {% if current_user in community.users %}
         <div class="alert alert-info mt-3">
-            Eres miembro de esta comunidad.
+            You are a member of this community
         </div>
         <!-- Botón para abandonar la comunidad -->
         <form action="{{ url_for('community.leave_community', community_id=community.id) }}" method="POST" style="display:inline;">
@@ -43,7 +58,7 @@
         </form>
     {% endif %}
     
-    {% if community.created_by_id == current_user.id %}
+    {% if community.admin_by_id == current_user.id %}
     <form action="{{ url_for('community.delete_community', community_id=community.id) }}" method="POST" style="display:inline;">
         <button type="submit" class="btn btn-danger">Delete Community</button>
     </form>

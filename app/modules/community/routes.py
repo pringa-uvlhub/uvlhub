@@ -67,12 +67,17 @@ def show_community(community_id):
 
     user = auth_service.get_by_id(community.created_by_id)
 
+    user_admin = auth_service.get_by_id(community.admin_by_id)
+
     user_fullname = f"{user.profile.name} {user.profile.surname}" if user.profile else "Unknown"
+
+    admin_fullname = f"{user_admin.profile.name} {user_admin.profile.surname}" if user.profile else "Unknown"
 
     if not community:
         flash('Community not found!', 'danger')
         return redirect(url_for('community.index'))
-    return render_template('community/show.html', community=community, user_fullname=user_fullname)
+    return render_template('community/show.html', community=community, user_fullname=user_fullname,
+                           admin_fullname=admin_fullname)
 
 
 @community_bp.route('/community/<int:community_id>/delete', methods=['POST'])
@@ -83,7 +88,7 @@ def delete_community(community_id):
         flash('Community not found!', 'danger')
         return redirect(url_for('community.index'))
 
-    if community.created_by_id != current_user.id:
+    if community.admin_by_id != current_user.id:
         flash('You are not authorized to delete this community.', 'danger')
         return redirect(url_for('community.index'))
 
@@ -133,6 +138,28 @@ def list_members(community_id):
 @login_required
 def leave_community(community_id):
     try:
+        # Obtén la comunidad por ID
+        community = community_service.get_by_id(community_id)
+
+        if not community:
+            flash('Community not found!', 'danger')
+            return redirect(url_for('community.index'))
+
+        if community.admin_by_id == current_user.id and len(community.users.all()) == 1:
+            flash(
+                'You are the only member left in the community. Please delete the community instead of leaving.',
+                'danger')
+            return redirect(url_for('community.show_community', community_id=community_id))
+
+        # Comprobar si el usuario es el admin y hay otros miembros
+        if community.admin_by_id == current_user.id:
+            flash(
+                'You cannot leave the community because you are the admin. '
+                'Please transfer the admin role to someone else first.',
+                'danger')
+            return redirect(url_for('community.show_community', community_id=community_id))
+
+        # Si no es el administrador, procedemos con la salida
         success = community_service.leave_community(community_id, current_user)
 
         if success:
@@ -148,3 +175,27 @@ def leave_community(community_id):
 
     # Redirigir al show de la comunidad
     return redirect(url_for('community.show_community', community_id=community_id))
+
+
+@community_bp.route('/community/<int:community_id>/grant_admin/<int:user_id>', methods=['POST'])
+@login_required
+def grant_admin(community_id, user_id):
+    try:
+        community = community_service.get_community_by_id(community_id)
+        members = community.users
+        user = auth_service.get_by_id(user_id)
+
+        success = community_service.grant_admin_role(community_id, user, current_user)
+
+        if success:
+            flash('The user has been granted admin rights successfully.', 'success')
+        else:
+            flash('An error occurred while granting admin rights.', 'danger')
+
+    except ValueError as e:
+        flash(str(e), 'danger')
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        flash('An error occurred while granting admin rights.', 'danger')
+
+    return render_template('community/members.html', community=community, members=members)
