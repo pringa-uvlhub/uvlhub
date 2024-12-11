@@ -27,6 +27,8 @@ class HubfileService(BaseService):
         hubfile_user = self.get_owner_user_by_hubfile(hubfile)
         hubfile_dataset = self.get_dataset_by_hubfile(hubfile)
         working_dir = os.getenv('WORKING_DIR')
+        if working_dir is None:
+            working_dir = ""
 
         path = os.path.join(working_dir,
                             'uploads',
@@ -47,3 +49,6 @@ class HubfileService(BaseService):
 class HubfileDownloadRecordService(BaseService):
     def __init__(self):
         super().__init__(HubfileDownloadRecordRepository())
+
+    def features_models_with_most_downloads(self):
+        return self.repository.feature_models_with_most_downloads()

@@ -20,7 +20,7 @@ from flask import (
 from flask_login import login_required, current_user
 
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.forms import AuthorForm, FeatureModelForm
+from app.modules.dataset.forms import FeatureModelForm
 from app.modules.dataset.models import (
     DSDownloadRecord
 )
@@ -35,32 +35,22 @@ from app.modules.dataset.services import (
     DSRatingService
 )
 from app.modules.zenodo.services import ZenodoService
-from app.modules.hubfile.repositories import (
-    HubfileDownloadRecordRepository,
-    HubfileRepository,
-    HubfileViewRecordRepository
-)
-from app.modules.hubfile.services import(
-    HubfileService
-)
+from app.modules.fakenodo.services import FakenodoService
 from app.modules.dataset.repositories import (
-    AuthorRepository,
-    DOIMappingRepository,
-    DSDownloadRecordRepository,
     DSMetaDataRepository,
-    DSViewRecordRepository,
     DataSetRepository
 )
 
 
 logger = logging.getLogger(__name__)
 
-metadata_repository=DSMetaDataRepository()
-dataset_repository=DataSetRepository()
+metadata_repository = DSMetaDataRepository()
+dataset_repository = DataSetRepository()
 dataset_service = DataSetService()
 author_service = AuthorService()
 dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
+fakenodo_service = FakenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 ds_rating_service = DSRatingService()
@@ -129,13 +119,83 @@ def upload_dataset_zenodo():
     return render_template("dataset/upload_dataset.html", form=form)
 
 
+@dataset_bp.route("/dataset/upload-fakenodo", methods=["POST"])
+@login_required
+def upload_dataset_fakenodo():
+    form = DataSetForm()
+    if request.method == "POST":
+
+        dataset = None
+
+        if not form.validate_on_submit():
+            return jsonify({"message": form.errors}), 400
+
+        try:
+            logger.info("Creating dataset...")
+            dataset = dataset_service.create_from_form(form=form, current_user=current_user, staging_area=False)
+            logger.info(f"Created dataset: {dataset}")
+            dataset_service.move_feature_models(dataset)
+        except Exception as exc:
+            logger.exception(f"Exception while create dataset data in local {exc}")
+            return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+
+        try:
+            fakenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+            fakenodo_ds_doi = fakenodo_response_json.get("fakenodo_doi")
+        except Exception as exc:
+            fakenodo_response_json = {}
+            logger.exception(f"Exception while create dataset data in Fakenodo {exc}")
+
+        # update dataset with new fakenodo doi
+        dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_fakenodo_doi=fakenodo_ds_doi)
+
+        # Delete temp folder
+        file_path = current_user.temp_folder()
+        if os.path.exists(file_path) and os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+
+        msg = "Everything works!"
+        return jsonify({"message": msg}), 200
+
+
+@dataset_bp.route("/dataset/upload-fakenodo/<int:dataset_id>", methods=["POST"])
+@login_required
+def upload_dataset_fakenodo_from_staging(dataset_id):
+    form = DataSetForm()
+    dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+    dataset.ds_meta_data.staging_area = False
+    dataset.ds_meta_data.build = False
+    dataset = dataset_service.update_from_form(dataset, form, current_user)
+    dataset_service.move_feature_models(dataset)
+
+    try:
+        fakenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+        fakenodo_ds_doi = fakenodo_response_json.get("fakenodo_doi")
+    except Exception as exc:
+        fakenodo_response_json = {}
+        logger.exception(f"Exception while create dataset data in Fakenodo {exc}")
+
+    # update dataset with new fakenodo doi
+    dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_fakenodo_doi=fakenodo_ds_doi)
+
+    # Delete temp folder
+    file_path = current_user.temp_folder()
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    msg = "Everything works!"
+    return jsonify({"message": msg}), 200
+
+
 @dataset_bp.route("/dataset/upload/<int:dataset_id>", methods=["POST"])
 @login_required
 def upload_dataset_zenodo_from_staging(dataset_id):
     form = DataSetForm()
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
     dataset.ds_meta_data.staging_area = False
+    dataset.ds_meta_data.build = False
     dataset = dataset_service.update_from_form(dataset, form, current_user)
+    dataset_service.move_feature_models(dataset)
     data = {}
     try:
         zenodo_response_json = zenodo_service.create_new_deposition(dataset)
@@ -214,13 +274,14 @@ def update_staging_area_dataset(dataset_id):
         if form.validate_on_submit():
             try:
                 dataset_service.update_from_form(dataset, form, current_user)
+                dataset_service.move_feature_models(dataset)
                 return redirect(url_for('dataset.update_staging_area_dataset', dataset_id=dataset_id))
             except Exception as exc:
                 print(dataset.feature_models)
                 logger.exception(f"Exception while updating dataset: {exc}")
                 return jsonify({"Exception while updating dataset: ": str(exc)}), 400
         else:
-            print(dataset.feature_models[0].fm_meta_data.title)
+            print("Form errors:", form.errors)
             return jsonify({"message": form.errors}), 400
 
     if request.method == 'GET':
@@ -230,7 +291,6 @@ def update_staging_area_dataset(dataset_id):
         form.publication_doi.data = dataset.ds_meta_data.publication_doi
         form.dataset_doi.data = dataset.ds_meta_data.dataset_doi
         form.tags.data = dataset.ds_meta_data.tags
-        form.authors.entries = [AuthorForm(obj=author) for author in dataset.ds_meta_data.authors]
         form.feature_models.entries = [FeatureModelForm(obj=fm.fm_meta_data) for fm
                                        in dataset.feature_models]
         feature_models = dataset.feature_models
@@ -251,9 +311,11 @@ def list_dataset():
     return render_template(
         "dataset/list_datasets.html",
         datasets=dataset_service.get_synchronized(current_user.id),
+        fakenodo_datasets=dataset_service.get_fakenodo_synchronized(current_user.id),
         local_datasets=dataset_service.get_unsynchronized(current_user.id),
         unprepared_datasets=dataset_service.get_staging_area(current_user.id),
     )
+
 
 @dataset_bp.route("/dataset/build_empty/<int:feature_model_id>", methods=["POST"])
 @login_required
@@ -262,12 +324,16 @@ def create_empty_dataset(feature_model_id):
     try:
         dataset = dataset_service.create_empty_dataset(current_user=current_user, feature_model_id=feature_model_id)
         logger.info(f"Created empty dataset: {dataset}")
-            
-        return jsonify({"message": "Empty dataset created successfully and UVL file added.", "dataset_id": dataset.id}), 200
+
+        return jsonify({
+            "message": "Empty dataset created successfully and UVL file added.",
+            "dataset_id": dataset.id
+        }), 200
     except Exception as exc:
         # En caso de error, capturamos la excepción y respondemos con un mensaje adecuado
         logger.exception(f"Exception while processing dataset: {exc}")
         return jsonify({"error": "Exception while processing dataset", "details": str(exc)}), 400
+
 
 @dataset_bp.route("/dataset/build", methods=["GET", "POST"])
 @login_required
@@ -275,12 +341,12 @@ def build_dataset():
     form = DataSetForm()
     metadata = metadata_repository.filter_by_build()
     if metadata:
-        dataset= dataset_repository.get_dataset_by_metadata_id(metadata.id)
-        feature_models=dataset.feature_models
+        dataset = dataset_repository.get_dataset_by_metadata_id(metadata.id)
+        feature_models = dataset.feature_models
 
         print(feature_models)
     else:
-        metadata=DataSetForm()
+        metadata = DataSetForm()
     if request.method == "POST":
 
         dataset = None
@@ -337,7 +403,6 @@ def build_dataset():
         return jsonify({"message": msg}), 200
 
     return render_template("dataset/build_dataset.html", form=form, dataset=metadata, feature_models=feature_models)
-
 
 
 @dataset_bp.route("/dataset/file/upload", methods=["POST"])
@@ -500,6 +565,23 @@ def get_unsynchronized_dataset(dataset_id):
     if not dataset:
         abort(404)
 
+    print(dataset.to_dict())
+
+    return render_template("dataset/view_dataset.html", dataset=dataset)
+
+
+@dataset_bp.route("/dataset/fakenodo-synchronized/<int:dataset_id>/", methods=["GET"])
+@login_required
+def get_fakenodo_synchronized_dataset(dataset_id):
+
+    # Get dataset
+    dataset = dataset_service.get_fakenodo_synchronized_dataset(current_user.id, dataset_id)
+
+    if not dataset:
+        abort(404)
+
+    print(dataset.to_dict())
+
     return render_template("dataset/view_dataset.html", dataset=dataset)
 
 
@@ -507,12 +589,22 @@ def get_unsynchronized_dataset(dataset_id):
 @login_required
 def rate_dataset(dataset_id):
     user_id = current_user.id
-    rating_value = request.json.get('rating')
+
+    try:
+        rating_value = float(request.json.get('rating'))
+
+        if not (0 <= rating_value <= 5) or rating_value != rating_value \
+                or not float('-inf') < rating_value < float('inf'):
+            raise ValueError
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid rating value. Must be a finite number between 0 and 5.'}), 400
+
     rating = ds_rating_service.add_or_update_rating(dataset_id, user_id, rating_value)
     return jsonify({'message': 'Rating added', 'rating': rating.to_dict()}), 200
 
 
 @dataset_bp.route('/datasets/<int:dataset_id>/average-rating', methods=['GET'])
 def get_dataset_average_rating(dataset_id):
-    average_rating = ds_rating_service.get_dataset_average_rating(dataset_id)
+    dataset = dataset_service.get_or_404(dataset_id)
+    average_rating = ds_rating_service.get_dataset_average_rating(dataset.id)
     return jsonify({'average_rating': average_rating}), 200
