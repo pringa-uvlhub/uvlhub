@@ -1,5 +1,6 @@
 from locust import HttpUser, TaskSet, task, between
 
+
 class UserProfileTasks(TaskSet):
     @task
     def view_user_profile(self):
@@ -10,6 +11,7 @@ class UserProfileTasks(TaskSet):
             else:
                 response.failure(f"Failed to load user profile for user_id={user_id}")
 
+
 class WebsiteUser(HttpUser):
     tasks = [UserProfileTasks]
-    wait_time = between(1, 5)  
+    wait_time = between(1, 5)
