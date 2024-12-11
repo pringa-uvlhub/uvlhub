@@ -19,6 +19,10 @@ function send_query() {
             const searchCriteria = {
                 csrf_token: csrfToken,
                 query: document.querySelector('#query').value,
+                queryAuthor: document.querySelector('#queryAuthor').value,
+                queryTag: document.querySelector('#queryTag').value,
+                queryFeatures: document.querySelector('#queryFeatures').value,
+                queryModels: document.querySelector('#queryModels').value,
                 publication_type: document.querySelector('#publication_type').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
             };
@@ -186,6 +190,18 @@ function clearFilters() {
     let publicationTypeSelect = document.querySelector('#publication_type');
     publicationTypeSelect.value = "any"; // replace "any" with whatever your default value is
     // publicationTypeSelect.dispatchEvent(new Event('input', {bubbles: true}));
+
+    let queryInputAuthor = document.querySelector('#queryAuthor');
+    queryInputAuthor.value = "";
+
+    let queryInputTag = document.querySelector('#queryTag');
+    queryInputTag.value = "";
+
+    let queryInputModels = document.querySelector('#queryModels');
+    queryInputModels.value = "";
+
+    let queryInputFeatures = document.querySelector('#queryFeatures');
+    queryInputFeatures.value = "";
 
     // Reset the sorting option
     let sortingOptions = document.querySelectorAll('[name="sorting"]');

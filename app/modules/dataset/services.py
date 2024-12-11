@@ -102,6 +102,21 @@ class DataSetService(BaseService):
     def total_dataset_downloads(self) -> int:
         return self.dsdownloadrecord_repository.total_dataset_downloads()
 
+    def max_downloads(self):
+        return self.dsdownloadrecord_repository.max_downloads()
+
+    def datasets_with_most_downloads(self):
+        return self.dsdownloadrecord_repository.datasets_with_most_downloads()
+
+    def users_with_most_downloads(self):
+        return self.dsdownloadrecord_repository.users_with_most_downloads()
+
+    def datasets_with_most_views(self):
+        return self.dsviewrecord_repostory.datasets_with_most_views()
+
+    def user_max_downloads(self):
+        return self.dsdownloadrecord_repository.user_max_downloads()
+
     def total_dataset_views(self) -> int:
         return self.dsviewrecord_repostory.total_dataset_views()
 

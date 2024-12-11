@@ -20,6 +20,7 @@
     <p><strong>Created At:</strong> {{ community.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
     <p><strong>Created By:</strong> {{ user_fullname }}</p>
 
+
     <!-- Apartado de Members -->
     <div class="d-flex align-items-center my-3">
         <p class="me-3 mb-0"><strong>Members:</strong> {{ community.users.all()|length }}</p>

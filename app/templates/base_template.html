@@ -97,6 +97,14 @@ chico sundermann">
                 
 
 
+                {% if current_user.is_admin %}
+                <li class="sidebar-item {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}">
+                    <a class="sidebar-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard</span>
+                    </a>
+                </li>
+                {% endif %}
+
                 {% if current_user.is_anonymous %}
 
                     <li class="sidebar-header">
@@ -206,6 +214,10 @@ chico sundermann">
                         <div class="dropdown-menu dropdown-menu-end">
                             <a class="dropdown-item" href="{{ url_for('profile.my_profile') }}">
                                 <i class="align-middle me-1" data-feather="user"></i> My profile</a>
+                            {% if current_user.is_admin %}
+                                <a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">
+                                    <i class="align-middle me-1" data-feather="user"></i> Admin Dashboard</a>
+                            {% endif %}
                             <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
                                 <i class="align-middle me-1" data-feather="log-out"></i> Log out</a>
                         </div>
