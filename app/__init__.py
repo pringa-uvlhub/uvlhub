@@ -1,4 +1,7 @@
 import os
+import threading
+
+from app.discord.pringa_bot import start_bot
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
@@ -20,6 +23,9 @@ migrate = Migrate()
 
 # Configurar Mail
 mail = Mail()
+
+# Evento para controlar si el bot ya está iniciado
+bot_event = threading.Event()
 
 
 def create_app(config_name='development'):
@@ -74,6 +80,12 @@ def create_app(config_name='development'):
             'APP_VERSION': get_app_version()
         }
 
+    @app.before_request
+    def start_discord_bot():
+        if not bot_event.is_set():
+            bot_event.set()  # Marca el evento como iniciado
+            threading.Thread(target=start_bot, daemon=True).start()  # Inicia el bot en un hilo separado
+
     return app
 
 
@@ -86,3 +98,20 @@ def send_reset_email(to_email, reset_url):
 
 # Crear la app
 app = create_app()
+
+# discord_thread = threading.Thread(target=start_bot, args=(1,))
+# discord_thread.daemon = True  # Esto permitirá que el hilo termine cuando la aplicación Flask termine
+# discord_thread.start()
+'''
+# Función para iniciar Flask y Discord simultáneamente
+async def start_flask_and_discord():
+    # Iniciar el bot de Discord
+    discord_task = asyncio.create_task(start_bot())
+    # Iniciar Flask en un hilo de ejecución
+    from werkzeug.serving import run_simple
+    run_simple('0.0.0.0', 5000, app, use_reloader=False, use_debugger=True)
+    # Esperar que el bot termine de ejecutarse
+    await discord_task
+if __name__ == "__main__":
+    asyncio.run(start_flask_and_discord())
+'''
