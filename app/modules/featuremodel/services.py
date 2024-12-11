@@ -26,10 +26,10 @@ class FeatureModelService(BaseService):
 
     def count_feature_models(self):
         return self.repository.count_feature_models()
-    
+
     def get_feature_model_by_id(self, feature_model_id: int):
         return self.repository.get_feature_model_by_id(feature_model_id)
-    
+
     def feature_models_with_most_downloads(self):
         return self.repository.feature_models_with_most_downloads()
 

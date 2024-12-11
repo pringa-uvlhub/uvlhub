@@ -54,7 +54,6 @@ class DSDownloadRecordRepository(BaseRepository):
                 download_count[download.dataset_id] += 1
             else:
                 download_count[download.dataset_id] = 1
-
         most_downloaded_datasets = sorted(download_count.items(), key=lambda x: x[1], reverse=True)[:5]
         datasets = []
         dataset_names = []

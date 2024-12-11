@@ -52,7 +52,7 @@ class HubfileDownloadRecordRepository(BaseRepository):
     def total_hubfile_downloads(self) -> int:
         max_id = self.model.query.with_entities(func.max(self.model.id)).scalar()
         return max_id if max_id is not None else 0
-    
+
     def feature_models_with_most_downloads(self):
         download_count = {}
         for download in self.model.query.all():
