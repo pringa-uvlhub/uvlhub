@@ -1,5 +1,6 @@
 import logging
 from app.modules.hubfile.services import HubfileService
+from app.modules.hubfile.repositories import HubfileRepository
 from flask import send_file, jsonify
 from app.modules.flamapy import flamapy_bp
 from flamapy.metamodels.fm_metamodel.transformations import UVLReader, GlencoeWriter, SPLOTWriter
@@ -15,8 +16,8 @@ from antlr4.error.ErrorListener import ErrorListener
 logger = logging.getLogger(__name__)
 
 
-@flamapy_bp.route('/flamapy/check_uvl/<int:file_id>', methods=['GET'])
-def check_uvl(file_id):
+@flamapy_bp.route('/flamapy/check_uvl/<string:file_name>', methods=['GET'])
+def check_uvl(file_name):
     class CustomErrorListener(ErrorListener):
         def __init__(self):
             self.errors = []
@@ -37,7 +38,7 @@ def check_uvl(file_id):
                 self.errors.append(error_message)
 
     try:
-        hubfile = HubfileService().get_by_id(file_id)
+        hubfile = HubfileRepository.get_hubfile_by_name(file_name)
         input_stream = FileStream(hubfile.get_path())
         lexer = UVLCustomLexer(input_stream)
 
@@ -86,6 +87,21 @@ def to_glencoe(file_id):
         os.remove(temp_file.name)
 
 
+@flamapy_bp.route('/flamapy/to_glencoe/<string:file_name>', methods=['GET'])
+def to_glencoe_name(file_name):
+    temp_file = tempfile.NamedTemporaryFile(suffix='.json', delete=False)
+    try:
+        hubfile = HubfileRepository.get_hubfile_by_name(file_name)
+        fm = UVLReader(hubfile.get_path()).transform()
+        GlencoeWriter(temp_file.name, fm).transform()
+
+        # Return the file in the response
+        return send_file(temp_file.name, as_attachment=True, download_name=f'{hubfile.name}_glencoe.txt')
+    finally:
+        # Clean up the temporary file
+        os.remove(temp_file.name)
+
+
 @flamapy_bp.route('/flamapy/to_splot/<int:file_id>', methods=['GET'])
 def to_splot(file_id):
     temp_file = tempfile.NamedTemporaryFile(suffix='.splx', delete=False)
@@ -101,11 +117,42 @@ def to_splot(file_id):
         os.remove(temp_file.name)
 
 
+@flamapy_bp.route('/flamapy/to_splot/<string:file_name>', methods=['GET'])
+def to_splot_name(file_name):
+    temp_file = tempfile.NamedTemporaryFile(suffix='.splx', delete=False)
+    try:
+        hubfile = HubfileRepository.get_hubfile_by_name(file_name)
+        fm = UVLReader(hubfile.get_path()).transform()
+        SPLOTWriter(temp_file.name, fm).transform()
+
+        # Return the file in the response
+        return send_file(temp_file.name, as_attachment=True, download_name=f'{hubfile.name}_splot.txt')
+    finally:
+        # Clean up the temporary file
+        os.remove(temp_file.name)
+
+
 @flamapy_bp.route('/flamapy/to_cnf/<int:file_id>', methods=['GET'])
 def to_cnf(file_id):
     temp_file = tempfile.NamedTemporaryFile(suffix='.cnf', delete=False)
     try:
         hubfile = HubfileService().get_by_id(file_id)
+        fm = UVLReader(hubfile.get_path()).transform()
+        sat = FmToPysat(fm).transform()
+        DimacsWriter(temp_file.name, sat).transform()
+
+        # Return the file in the response
+        return send_file(temp_file.name, as_attachment=True, download_name=f'{hubfile.name}_cnf.txt')
+    finally:
+        # Clean up the temporary file
+        os.remove(temp_file.name)
+
+
+@flamapy_bp.route('/flamapy/to_cnf/<string:file_name>', methods=['GET'])
+def to_cnf_name(file_name):
+    temp_file = tempfile.NamedTemporaryFile(suffix='.cnf', delete=False)
+    try:
+        hubfile = HubfileRepository.get_hubfile_by_name(file_name)
         fm = UVLReader(hubfile.get_path()).transform()
         sat = FmToPysat(fm).transform()
         DimacsWriter(temp_file.name, sat).transform()
