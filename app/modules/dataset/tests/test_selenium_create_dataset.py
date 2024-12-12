@@ -17,12 +17,14 @@ class TestCreateds():
         self.driver.get("http://localhost:5000/")
         self.driver.set_window_size(1854, 1048)
         # Procede con la prueba
+        self.driver.find_element(By.CSS_SELECTOR, ".sidebar-toggle").click()
         self.driver.find_element(By.LINK_TEXT, "Login").click()
         self.driver.find_element(By.ID, "email").click()
         self.driver.find_element(By.ID, "email").send_keys("user1@example.com")
         self.driver.find_element(By.ID, "password").click()
         self.driver.find_element(By.ID, "password").send_keys("1234")
         self.driver.find_element(By.ID, "submit").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".sidebar-toggle").click()
         self.driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(10) .align-middle:nth-child(2)").click()
         self.driver.find_element(By.ID, "title").click()
         self.driver.find_element(By.ID, "title").send_keys("test")
@@ -37,6 +39,5 @@ class TestCreateds():
         file_input.send_keys(file_path)
         self.driver.execute_script("document.body.style.zoom='50%'")
         # Esperar a que el archivo se cargue completamente
-        time.sleep(2)  # Ajusta el tiempo de espera según sea necesario
-        # Continuar con el resto del test si es necesario
+        time.sleep(0.5)
         self.driver.find_element(By.ID, "create_button").click()
