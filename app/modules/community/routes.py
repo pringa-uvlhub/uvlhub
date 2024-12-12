@@ -199,3 +199,37 @@ def grant_admin(community_id, user_id):
         flash('An error occurred while granting admin rights.', 'danger')
 
     return render_template('community/members.html', community=community, members=members)
+
+
+@community_bp.route('/community/<int:community_id>/edit', methods=["GET", "POST"])
+@login_required
+def edit_community(community_id):
+    community = community_service.get_community_by_id(community_id)
+
+    if not community:
+        flash('Community not found!', 'danger')
+        return redirect(url_for('community.index'))
+
+    # Verificar que el usuario actual es el administrador
+    if community.admin_by_id != current_user.id:
+        flash('You are not authorized to edit this community.', 'danger')
+        return redirect(url_for('community.show_community', community_id=community_id))
+
+    form = CommunityForm(obj=community)
+
+    if request.method == 'POST':
+        if not form.validate_on_submit():
+            return jsonify({"message": form.errors}), 400
+
+        try:
+            community_service.edit_community(community_id, form, current_user)
+            flash('Community updated successfully!', 'success')
+            return redirect(url_for('community.show_community', community_id=community_id))
+
+        except ValueError as e:
+            flash(str(e), 'danger')
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            flash('An error occurred while updating the community.', 'danger')
+
+    return render_template('community/edit.html', form=form, community=community)

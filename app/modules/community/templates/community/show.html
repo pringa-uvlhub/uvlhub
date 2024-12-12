@@ -42,6 +42,7 @@
         <a href="{{ url_for('community.list_members', community_id=community.id) }}" class="btn btn-info">View Members</a>
     </div>
 
+
     <!-- Si el usuario es miembro -->
     {% if current_user in community.users %}
         <div class="alert alert-info mt-3">
@@ -62,6 +63,13 @@
     <form action="{{ url_for('community.delete_community', community_id=community.id) }}" method="POST" style="display:inline;">
         <button type="submit" class="btn btn-danger">Delete Community</button>
     </form>
+    {% endif %}
+    {% if community.admin_by_id == current_user.id %}
+    <div class="my-3">
+        <a href="{{ url_for('community.edit_community', community_id=community.id) }}" class="btn btn-secondary">
+            Edit Community
+        </a>
+    </div>
     {% endif %}
 </div>
 

@@ -109,3 +109,26 @@ class CommunityService(BaseService):
         self.repository.session.commit()
 
         return True
+
+    def edit_community(self, community_id, form, current_user) -> Community:
+        try:
+            community = self.repository.get_by_id(community_id)
+            if not community:
+                raise ValueError(f"Community with ID {community_id} not found.")
+
+            if community.admin_by_id != current_user.id:
+                raise ValueError("You are not authorized to edit this community.")
+
+            logger.info(f"Editing community with ID: {community_id} by user {current_user.id}")
+
+            # Actualizar los campos permitidos desde el formulario
+            community.name = form.name.data
+            community.description = form.description.data
+
+            self.repository.session.commit()
+            return community
+
+        except Exception as exc:
+            logger.error(f"Error editing community: {exc}")
+            self.repository.session.rollback()
+            raise exc
