@@ -559,14 +559,12 @@
     }
 
 
-    // Variables globales para almacenar las calificaciones seleccionadas
     const selectedRatings = {};
 
-    // Definir submitRating en el ámbito global
     function submitRating(datasetId) {
-        const ratingValue = selectedRatings[datasetId]; // Obtiene la calificación seleccionada del dataset
+        const ratingValue = selectedRatings[datasetId] || 0;
 
-        if (ratingValue > 0) { // Verifica que haya una calificación seleccionada
+        if (ratingValue >= 0) {
             fetch(`/datasets/${datasetId}/rate`, {
                 method: 'POST',
                 headers: {
@@ -577,7 +575,9 @@
             .then(response => response.json())
             .then(data => {
                 console.log('Rating submitted:', data);
-                updateAverageRating(datasetId); // Actualiza el promedio de calificación después de enviar
+                updateAverageRating(datasetId);
+                alert('Your rating has been submitted.');
+                showMessage(`Your rating of ${ratingValue} has been submitted.`, "success");
             })
             .catch(error => console.error('Error submitting rating:', error));
         } else {
@@ -585,7 +585,6 @@
         }
     }
 
-    // Definir updateAverageRating en el ámbito global
     function updateAverageRating(datasetId) {
         fetch(`/datasets/${datasetId}/average-rating`)
         .then(response => response.json())
@@ -595,31 +594,36 @@
         .catch(error => console.error('Error fetching average rating:', error));
     }
 
-    // Escuchar el evento DOMContentLoaded
     document.addEventListener('DOMContentLoaded', function () {
         const datasetId = {{ dataset.id }};
         const starRatingContainer = document.getElementById('star-rating-' + datasetId);
 
-        // Agregar evento a cada estrella para seleccionar la calificación
         starRatingContainer.querySelectorAll('span').forEach(star => {
-            star.addEventListener('click', function () {
-                const ratingValue = this.getAttribute('data-value'); // Obtiene el valor de la estrella seleccionada
-                selectedRatings[datasetId] = ratingValue; // Almacena la calificación seleccionada en la variable global
-                highlightStars(starRatingContainer, ratingValue); // Resaltar estrellas
-            });
-        });
+        star.addEventListener('click', function () {
+            const ratingValue = this.getAttribute('data-value');
+            const currentRating = selectedRatings[datasetId];
 
-        // Actualizar el promedio de calificación inicial
+            if (currentRating === ratingValue) {
+                delete selectedRatings[datasetId];
+                highlightStars(starRatingContainer, 0);
+            } else {
+                selectedRatings[datasetId] = ratingValue;
+                highlightStars(starRatingContainer, ratingValue);
+            }
+        });
+    });
+
         updateAverageRating(datasetId);
 
-        // Función para resaltar las estrellas según la calificación seleccionada
         function highlightStars(container, rating) {
             container.querySelectorAll('span').forEach(star => {
                 const starValue = star.getAttribute('data-value');
-                star.style.color = starValue <= rating ? '#FFD700' : '#ddd'; // Cambia el color de la estrella
+                star.style.color = starValue <= rating ? '#FFD700' : '#ddd';
             });
         }
     });
+
+
 </script>
 
 {% endblock %}
