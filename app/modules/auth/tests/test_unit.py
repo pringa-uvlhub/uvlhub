@@ -251,9 +251,9 @@ def test_reset_password_invalid_or_expired_token(test_client):
     test_client.get(url_for('auth.logout'))
 
 #   codacy-disable-line hardcoded-credentials
-    invalid_token = "invalid_or_expired_token"
+    ERROR_MESSAGE_INVALID_TOKEN = "invalid_or_expired_token"
 
-    response = test_client.get(url_for("auth.reset_password", token=invalid_token))
+    response = test_client.get(url_for("auth.reset_password", token=ERROR_MESSAGE_INVALID_TOKEN))
 
     assert response.status_code == 302
     assert response.location == url_for("auth.forgot_password", _external=False)
