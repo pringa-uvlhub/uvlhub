@@ -202,7 +202,7 @@
                                 <span data-value="{{ i }}" style="font-size: 1.5rem;">☆</span>
                             {% endfor %}
                         </div>
-                        <button onclick="submitRating('{{ dataset.id }}')" style="display: inline-block; margin-left: 10px; font-size: 0.9rem;">
+                        <button onclick="submitRating('{{ dataset.id }}')" style="display: inline-block; margin-left: 10px; font-size: 0.9rem; {% if not current_user.is_authenticated %}display: none;{% endif %}">
                             Rate
                         </button>
                         </div>
