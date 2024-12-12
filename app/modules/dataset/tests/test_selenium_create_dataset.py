@@ -39,5 +39,5 @@ class TestCreateds():
         file_input.send_keys(file_path)
         self.driver.execute_script("document.body.style.zoom='50%'")
         # Esperar a que el archivo se cargue completamente
-        time.sleep(0.5) 
+        time.sleep(0.5)
         self.driver.find_element(By.ID, "create_button").click()
