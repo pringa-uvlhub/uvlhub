@@ -318,6 +318,27 @@ def update_staging_area_dataset(dataset_id):
                                feature_models=feature_models_data)
 
 
+@dataset_bp.route("/dataset/delete/<int:dataset_id>", methods=["DELETE"])
+@login_required
+def delete_dataset(dataset_id):
+    dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+    if not dataset:
+        abort(404, description="Dataset not found")
+
+    if dataset.user_id != current_user.id:
+        abort(403, description="You do not have permission to delete this dataset")
+
+    try:
+        dataset_service.delete(dataset_id)
+        temp_folder = os.path.join('uploads', f'user_{current_user.id}', f'dataset_{dataset_id}')
+        if os.path.exists(temp_folder) and os.path.isdir(temp_folder):
+            shutil.rmtree(temp_folder)
+
+        return jsonify({"message": "Dataset deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"message": f"An error occurred while deleting the dataset: {str(e)}"}), 500
+
+
 @dataset_bp.route("/dataset/list", methods=["GET", "POST"])
 @login_required
 def list_dataset():
