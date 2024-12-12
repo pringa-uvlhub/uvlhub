@@ -233,3 +233,43 @@ def edit_community(community_id):
             flash('An error occurred while updating the community.', 'danger')
 
     return render_template('community/edit.html', form=form, community=community)
+
+
+@community_bp.route('/community/<int:community_id>/remove_user/<int:user_id>', methods=['POST'])
+@login_required
+def remove_user(community_id, user_id):
+    try:
+        # Obtener la comunidad y el usuario a expulsar
+        community = community_service.get_by_id(community_id)
+        user = auth_service.get_by_id(user_id)
+
+        # Verificar si la comunidad existe
+        if not community:
+            flash('Community not found!', 'danger')
+            return redirect(url_for('community.index'))
+
+        # Verificar si el usuario es el administrador de la comunidad
+        if community.admin_by_id != current_user.id:
+            flash('You do not have permission to remove users from this community.', 'danger')
+            return redirect(url_for('community.show_community', community_id=community_id))
+
+        # Verificar si el usuario a expulsar es miembro de la comunidad
+        if user not in community.users:
+            flash('The user is not a member of this community.', 'info')
+            return redirect(url_for('community.show_community', community_id=community_id))
+
+        # Expulsar al usuario
+        success = community_service.remove_user_from_community(community_id, user)
+
+        if success:
+            flash('The user has been removed from the community.', 'success')
+        else:
+            flash('An error occurred while removing the user.', 'danger')
+
+    except ValueError as e:
+        flash(str(e), 'danger')
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        flash('An error occurred while removing the user.', 'danger')
+
+    return redirect(url_for('community.show_community', community_id=community_id))

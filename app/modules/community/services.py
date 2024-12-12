@@ -132,3 +132,21 @@ class CommunityService(BaseService):
             logger.error(f"Error editing community: {exc}")
             self.repository.session.rollback()
             raise exc
+
+    def remove_user_from_community(self, community_id: int, user) -> bool:
+        community = self.repository.get_by_id(community_id)
+
+        if not community:
+            raise ValueError(f"Community with ID {community_id} not found.")
+
+        # Verificar si el usuario es miembro de la comunidad
+        if user not in community.users:
+            raise ValueError("User is not a member of this community.")
+
+        # Eliminar al usuario de la comunidad
+        community.users.remove(user)
+
+        # Guardar los cambios en la base de datos
+        self.repository.session.commit()
+
+        return True
