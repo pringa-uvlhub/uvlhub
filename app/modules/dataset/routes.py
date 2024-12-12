@@ -163,6 +163,13 @@ def upload_dataset_fakenodo():
 def upload_dataset_fakenodo_from_staging(dataset_id):
     form = DataSetForm()
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+    if not dataset:
+        abort(404)
+
+    if not form.validate_on_submit():
+        print("Form errors:", form.errors)
+        return jsonify({"message": form.errors}), 400
+
     dataset.ds_meta_data.staging_area = False
     dataset.ds_meta_data.build = False
     dataset = dataset_service.update_from_form(dataset, form, current_user)
