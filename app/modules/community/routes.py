@@ -30,7 +30,7 @@ def index_my_communities():
 @login_required
 def index_joined_communities():
 
-    communities = current_user.communities  # Suponiendo que tienes una relación Many-to-Many entre User y Community
+    communities = current_user.communities
     return render_template('community/index_joined_communities.html', communities=communities)
 
 
@@ -273,3 +273,13 @@ def remove_user(community_id, user_id):
         flash('An error occurred while removing the user.', 'danger')
 
     return redirect(url_for('community.show_community', community_id=community_id))
+
+
+@community_bp.route('/communities', methods=['GET'])
+def view_communities():
+    search_term = request.args.get('search', '')
+    if search_term:
+        communities = Community.query.filter(Community.name.ilike(f'%{search_term}%')).all()
+    else:
+        communities = Community.query.all()
+    return render_template('community/index.html', communities=communities)
