@@ -10,7 +10,10 @@ def index():
     if request.method == 'GET':
         query = request.args.get('query', '')
         form = ExploreForm()
-        return render_template('explore/index.html', form=form, query=query)
+
+        # Fetch datasets
+        datasets = ExploreService().filter(query=query)
+        return render_template('explore/index.html', form=form, query=query, datasets=datasets)
 
     if request.method == 'POST':
         criteria = request.get_json()
