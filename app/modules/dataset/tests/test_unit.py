@@ -497,3 +497,11 @@ def test_create_empty_dataset_with_invalid_id(client):
     assert data["error"] == "Exception while processing dataset"
 
     logout(client)
+
+
+def test_create_empty_dataset_unauthosied(client):
+    feature_model_id = 1
+    response = client.post(f"/dataset/build_empty/{feature_model_id}")
+
+    assert response.status_code == 302, "El código de estado debería ser 302 para usuarios no autenticados."
+
