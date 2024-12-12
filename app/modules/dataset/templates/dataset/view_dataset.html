@@ -346,9 +346,11 @@
                                     </ul>
                                 </div>
 
-                                <button onclick="addToDataset('{{ feature_model.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
+                                <button onclick="addToDataset('{{ feature_model.id }}')" 
+                                    class="btn btn-outline-secondary btn-sm" 
+                                    style="border-radius: 5px;{% if not current_user.is_authenticated %}display: none;{% endif %}">
                                     <i data-feather="eye"></i>
-                                     Add to build dataset
+                                    Add to build dataset
                                 </button>
 
                             </div>
