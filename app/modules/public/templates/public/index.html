@@ -14,7 +14,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <h2 class="h3 mb-1">
-                            <a href="{{ dataset.get_uvlhub_doi() }}" class="text-decoration-none text-dark">
+                            <a href="{{ url_for('dataset.subdomain_index', doi=dataset.ds_meta_data.dataset_doi) }}" class="text-decoration-none text-dark">
                                 {{ dataset.ds_meta_data.title }}
                             </a>
                         </h2>
