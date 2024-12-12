@@ -19,6 +19,14 @@ class DatasetBehavior(TaskSet):
         dest_file = os.path.join(temp_folder, "file1.uvl")
         shutil.copyfile(source_file, dest_file)
 
+    @task(12)
+    def delete_dataset(self):
+        response = self.client.delete("/dataset/delete/5")
+        if response.status_code == 200:
+            print("Dataset deleted successfully")
+        else:
+            print(f"Failed to delete dataset: {response.status_code}")
+
     @task(11)
     def upload_dataset_fakenodo_from_staging(self):
         random_number = random.randint(1000, 9999)
