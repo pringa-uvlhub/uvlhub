@@ -19,6 +19,66 @@ class DatasetBehavior(TaskSet):
         dest_file = os.path.join(temp_folder, "file1.uvl")
         shutil.copyfile(source_file, dest_file)
 
+    @task(11)
+    def upload_dataset_fakenodo_from_staging(self):
+        random_number = random.randint(1000, 9999)
+        form_data = {
+            "title": f"uploaded fakenodo dataset {random_number}",
+            "desc": "uploaded fakenodo dataset",
+            "publication_type": "none",
+            "publication_doi": "",
+            "dataset_doi": "",
+            "tags": "",
+            "authors-0-name": "Updated Author Name",
+            "authors-0-affiliation": "Updated Author Affiliation",
+            "authors-0-orcid": "0000-0001-2345-6789",
+            "feature_models-0-uvl_filename": "file1.uvl",
+            "feature_models-0-title": "Updated Feature Model Title",
+            "feature_models-0-desc": "Updated Feature Model Description",
+            "feature_models-0-publication_type": "none",
+            "feature_models-0-publication_doi": "",
+            "feature_models-0-tags": "",
+            "feature_models-0-version": "1.0",
+            "feature_models-0-authors-0-name": "Updated FM Author Name",
+            "feature_models-0-authors-0-affiliation": "Updated FM Author Affiliation",
+            "feature_models-0-authors-0-orcid": "0000-0002-3456-7890"
+        }
+        response = self.client.post("/dataset/upload-fakenodo/5", data=form_data)
+        if response.status_code == 200:
+            print("Staging dataset uploaded to fakenodo successfully")
+        else:
+            print(f"Failed to upload to fakenodo staging dataset: {response.status_code}")
+
+    @task(10)
+    def upload_dataset_fakenodo(self):
+        random_number = random.randint(1000, 9999)
+        form_data = {
+            "title": f"uploaded fakenodo dataset {random_number}",
+            "desc": "uploaded fakenodo dataset",
+            "publication_type": "none",
+            "publication_doi": "",
+            "dataset_doi": "",
+            "tags": "",
+            "authors-0-name": "Updated Author Name",
+            "authors-0-affiliation": "Updated Author Affiliation",
+            "authors-0-orcid": "0000-0001-2345-6789",
+            "feature_models-0-uvl_filename": "file1.uvl",
+            "feature_models-0-title": "Updated Feature Model Title",
+            "feature_models-0-desc": "Updated Feature Model Description",
+            "feature_models-0-publication_type": "none",
+            "feature_models-0-publication_doi": "",
+            "feature_models-0-tags": "",
+            "feature_models-0-version": "1.0",
+            "feature_models-0-authors-0-name": "Updated FM Author Name",
+            "feature_models-0-authors-0-affiliation": "Updated FM Author Affiliation",
+            "feature_models-0-authors-0-orcid": "0000-0002-3456-7890"
+        }
+        response = self.client.post("/dataset/upload-fakenodo", data=form_data)
+        if response.status_code == 200:
+            print("Dataset uploaded to Fakenodo successfully")
+        else:
+            print(f"Failed to upload dataset to Fakenodo: {response.status_code}")
+
     @task(9)
     def upload_dataset_zenodo(self):
         random_number = random.randint(1000, 9999)
