@@ -222,6 +222,32 @@
 
 </div>
 
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% for dataset in datasets %}
+            updateAverageRating({{ dataset.id }});
+        {% endfor %}
+
+        // Función para actualizar el promedio de calificación en el frontend
+        function updateAverageRating(datasetId) {
+            fetch(`/datasets/${datasetId}/average-rating`)
+            .then(response => response.json())
+            .then(data => {
+                const averageRating = data.average_rating.toFixed(1);
+                document.getElementById('average-rating-' + datasetId).innerText = averageRating;
+
+                // Resaltar estrellas según el promedio de calificación
+                const starRatingContainer = document.getElementById('star-rating-' + datasetId);
+                starRatingContainer.querySelectorAll('span').forEach(star => {
+                    const starValue = parseInt(star.getAttribute('data-value'));
+                    star.style.color = starValue <= Math.round(averageRating) ? '#FFD700' : '#ddd';
+                });
+            })
+            .catch(error => console.error('Error fetching average rating:', error));
+        }
+    });
+</script>
 {% endblock %}
 
 {% block scripts %}
