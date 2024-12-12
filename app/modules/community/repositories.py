@@ -25,6 +25,7 @@ class CommunityRepository(BaseRepository):
             name=name,
             description=description,
             created_by=user_id,
+            admin_by=user_id,
             created_at=datetime.now(timezone.utc)
         )
 
