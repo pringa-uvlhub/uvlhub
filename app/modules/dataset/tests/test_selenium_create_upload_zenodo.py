@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 import os
 
 
-class TestCreateds():
+class TestUploadzenodo():
     def setup_method(self, method):
         self.driver = webdriver.Chrome()
         self.vars = {}
@@ -13,10 +13,9 @@ class TestCreateds():
     def teardown_method(self, method):
         self.driver.quit()
 
-    def test_createds(self):
+    def test_uploadzenodo(self):
         self.driver.get("http://localhost:5000/")
         self.driver.set_window_size(1854, 1048)
-        # Procede con la prueba
         self.driver.find_element(By.LINK_TEXT, "Login").click()
         self.driver.find_element(By.ID, "email").click()
         self.driver.find_element(By.ID, "email").send_keys("user1@example.com")
@@ -25,7 +24,7 @@ class TestCreateds():
         self.driver.find_element(By.ID, "submit").click()
         self.driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(10) .align-middle:nth-child(2)").click()
         self.driver.find_element(By.ID, "title").click()
-        self.driver.find_element(By.ID, "title").send_keys("test")
+        self.driver.find_element(By.ID, "title").send_keys("test_ds_upload_zenodo")
         self.driver.find_element(By.ID, "desc").click()
         self.driver.find_element(By.ID, "desc").send_keys("test")
         self.driver.find_element(By.CSS_SELECTOR, ".col-xl-6:nth-child(2)").click()
@@ -40,3 +39,9 @@ class TestCreateds():
         time.sleep(2)  # Ajusta el tiempo de espera según sea necesario
         # Continuar con el resto del test si es necesario
         self.driver.find_element(By.ID, "create_button").click()
+        time.sleep(1)
+        self.driver.find_element(By.LINK_TEXT, "My datasets").click()
+        self.driver.find_element(By.LINK_TEXT, "test_ds_upload_zenodo").click()
+        self.driver.execute_script("document.body.style.zoom='50%'")
+        self.driver.find_element(By.ID, "agreeCheckbox").click()
+        self.driver.find_element(By.CSS_SELECTOR, "#upload_button > .feather").click()
