@@ -121,12 +121,19 @@ def client():
             with open(os.path.join(temp_folder, 'file9.uvl'), 'w') as f:
                 f.write('Temporary file content')
 
-            # Crear el archivo temporal en la ruta esperada
-            temp_folder2 = os.path.join('uploads', 'user_'+str(user.id), 'dataset_10')
+            # Crear las carpetas temporales asociadas a los datasets
+            temp_folder2 = os.path.join('uploads', f'user_{user.id}', 'dataset_10')
             os.makedirs(temp_folder2, exist_ok=True)
+
             with open(os.path.join(temp_folder2, 'file9.uvl'), 'w') as f:
                 f.write('Temporary file content')
-            print(temp_folder2)
+
+            temp_folder3 = os.path.join('uploads', f'user_{user.id}', 'dataset_11')
+            os.makedirs(temp_folder3, exist_ok=True)
+
+            with open(os.path.join(temp_folder3, 'file9.uvl'), 'w') as f:
+                f.write('Temporary file content')
+
             yield client
             # Limpiar el archivo temporal después de la prueba
             if os.path.exists(os.path.join(temp_folder, 'file9.uvl')):
@@ -490,6 +497,47 @@ def test_update_staging_area_dataset(client):
     assert updated_dataset.ds_meta_data.authors[1].name == "Updated Author Name", \
         f"Expected author name 'Updated Author Name', but got {updated_dataset.ds_meta_data.authors[0].name}"
 
+    logout(client)
+
+
+def test_delete_dataset(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Obtener el ID del dataset creado en la fixture
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Staging area Dataset").first()
+    assert dataset is not None, "Dataset with title 'Staging area Dataset' not found"
+    dataset_id = dataset.id
+    temp_folder3 = os.path.join('uploads', 'user_5', 'dataset_11')
+
+    assert os.path.exists(temp_folder3) and os.path.isdir(temp_folder3), "Temporary folder 3 does not exist"
+
+    # Enviar la solicitud DELETE para eliminar el dataset con ID 10
+    response = client.delete(f'/dataset/delete/{dataset_id}')
+
+    # Verificar la respuesta
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert not os.path.exists(temp_folder3), "Temporary folder 2 was not deleted"
+    data = response.get_json()
+    assert data["message"] == "Dataset deleted successfully", \
+        f"Expected message 'Dataset deleted successfully', but got {data['message']}"
+    logout(client)
+
+
+def test_delete_dataset_not_in_staging_area(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Obtener el ID del dataset creado en la fixture
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Sample Dataset 11").first()
+    assert dataset is not None, "Dataset with title 'Sample Dataset 11' not found"
+    dataset_id = dataset.id
+
+    # Enviar la solicitud DELETE para eliminar el dataset
+    response = client.delete(f'/dataset/delete/{dataset_id}')
+
+    # Verificar la respuesta
+    assert response.status_code == 404, f"Expected status code 404, but got {response.status_code}"
     logout(client)
 
 
