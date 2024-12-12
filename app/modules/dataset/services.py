@@ -196,6 +196,7 @@ class DataSetService(BaseService):
             source_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
             uvl_filename = feature_model.fm_meta_data.uvl_filename
             dest_dir = current_user.temp_folder()
+            os.makedirs(dest_dir, exist_ok=True)
             source_path = os.path.join(source_dir, uvl_filename)
             dest_path = os.path.join(dest_dir, uvl_filename)
             if os.path.exists(source_path):

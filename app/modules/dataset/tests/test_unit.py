@@ -178,6 +178,24 @@ def test_create_dataset(client):
     logout(client)
 
 
+def test_create_dataset_empty_form(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post('/dataset/create', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+    data = response.get_json()
+    assert "message" in data, "Expected 'message' in response"
+    assert isinstance(data["message"], dict), f"Expected 'message' to be a dict, but got {type(data['message'])}"
+    assert len(data["message"]) > 0, "Expected 'message' to contain errors"
+    logout(client)
+
+
 def test_upload_dataset_zenodo(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
@@ -222,6 +240,24 @@ def test_upload_dataset_zenodo(client):
     html_data = response.data.decode('utf-8')
     assert "test dataset in zenodo" in html_data, "The created dataset is not in the list of datasets"
 
+    logout(client)
+
+
+def test_upload_dataset_zenodo_empty_form(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post('/dataset/upload', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+    data = response.get_json()
+    assert "message" in data, "Expected 'message' in response"
+    assert isinstance(data["message"], dict), f"Expected 'message' to be a dict, but got {type(data['message'])}"
+    assert len(data["message"]) > 0, "Expected 'message' to contain errors"
     logout(client)
 
 
