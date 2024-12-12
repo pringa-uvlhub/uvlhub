@@ -546,6 +546,43 @@ def test_upload_dataset_zenodo_from_staging(client):
     logout(client)
 
 
+def test_upload_dataset_zendo_from_staging_empty_form(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Staging area Dataset").first()
+    assert dataset is not None, "Dataset with title 'Staging area Dataset' not found"
+    dataset_id = dataset.id
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post(f'/dataset/upload/{dataset_id}', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+    data = response.get_json()
+    assert "message" in data, "Expected 'message' in response"
+    assert isinstance(data["message"], dict), f"Expected 'message' to be a dict, but got {type(data['message'])}"
+    assert len(data["message"]) > 0, "Expected 'message' to contain errors"
+    logout(client)
+
+
+def test_upload_dataset_zenodo_from_staging_invalid_dataset(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+    dataset_id = 50
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post(f'/dataset/upload/{dataset_id}', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 404, f"Expected status code 404, but got {response.status_code}"
+    logout(client)
+
+
 def test_get_dataset_average_rating_no_ratings(client):
     """Prueba obtener el promedio de un dataset sin ratings."""
     login_response = login(client, "user5@example.com", "1234")
