@@ -1,17 +1,148 @@
 import pytest
-from app import create_app
+from app import create_app, db
+from app.modules.dataset.models import DSMetrics, DSMetaData, PublicationType, Author, DataSet
+from app.modules.featuremodel.models import FMMetaData, FeatureModel
+from app.modules.auth.models import User
+from datetime import datetime, timezone, timedelta
 
 
 @pytest.fixture
 def client():
-    app = create_app()
-    app.config['TESTING'] = True
+    app = create_app('testing')
     with app.test_client() as client:
-        yield client
+        with app.app_context():
+            # Configuración de la base de datos en modo de prueba
+            db.drop_all()
+            db.create_all()
+
+            ds_metrics = [
+                DSMetrics(id=1, number_of_models='5', number_of_features='50'),
+                DSMetrics(id=2, number_of_models='7', number_of_features='40')
+            ]
+
+            for metric in ds_metrics:
+                db.session.add(metric)
+                db.session.commit()
+
+            ds_meta_data_list = [
+                DSMetaData(
+                    id=i+1,
+                    deposition_id=1 + i,
+                    title=f'Sample dataset {i+1}',
+                    description=f'Description for dataset {i+1}',
+                    publication_type=PublicationType.BOOK if i == 1 else PublicationType.DATA_MANAGEMENT_PLAN,
+                    publication_doi=f'10.1234/dataset{i+1}',
+                    build=False,
+                    dataset_doi=f'10.1234/dataset{i+1}',
+                    tags='tag1, tag2' if i == 2 else 'tag3',
+                    staging_area=False,
+                    ds_metrics_id=ds_metrics[0].id if i == 1 else ds_metrics[1].id
+                ) for i in range(4)
+            ]
+
+            for meta_data in ds_meta_data_list:
+                db.session.add(meta_data)
+                db.session.commit()
+
+            authors = [
+                Author(
+                    id=i+1,
+                    name=f'Author {i+1}',
+                    affiliation=f'Affiliation {i+1}',
+                    orcid=f'0000-0000-0000-000{i}',
+                    ds_meta_data_id=ds_meta_data_list[i % 4].id
+                ) for i in range(4)
+            ]
+
+            for author in authors:
+                db.session.add(author)
+                db.session.commit()
+
+            users = [
+                User(
+                    id=1,
+                    email="user1@example.com",
+                    password="scrypt:32768:8:1$3MJHBrH1F2YxJSos$1465633477bd4b3af03f5e7cd8b46dd984ff8a36dcac2f2f" +
+                             "884130a7660faff964c206699cb07d5fffa9821b67f5ed4cc8dd532ed838b6c0d442a8d1772c5f21",
+                    created_at=datetime.now(timezone.utc)
+                ),
+                User(
+                    id=2,
+                    email="user2@example.com",
+                    password=(
+                        "scrypt:32768:8:1$OxiU6qWqrIbVJvFY$79b92bf223fd3d97f442c021f1f7dc3e6f403c855c3290498976e" +
+                        "f4d8ea3c60677befb91755a0d7ff87b78060943424b0b80afb35499b563133e96e6e43516f6"
+                    ),
+                    created_at=datetime.now(timezone.utc)
+                )
+            ]
+
+            for user in users:
+                db.session.add(user)
+                db.session.commit()
+
+            datasets = [
+                DataSet(
+                    id=i+1,
+                    user_id=users[0].id if i % 2 == 0 else users[1].id,
+                    ds_meta_data_id=ds_meta_data_list[i].id,
+                    created_at=datetime.now(timezone.utc) - timedelta(days=i)
+                ) for i in range(4)
+            ]
+
+            for dataset in datasets:
+                db.session.add(dataset)
+                db.session.commit()
+
+            fm_meta_data_list = [
+                FMMetaData(
+                    id=i+1,
+                    uvl_filename=f'file{i+1}.uvl',
+                    title=f'Feature Model {i+1}',
+                    description=f'Description for feature model {i+1}',
+                    publication_type=PublicationType.SOFTWARE_DOCUMENTATION,
+                    publication_doi=f'10.1234/fm{i+1}',
+                    tags='tag1, tag2',
+                    uvl_version='1.0'
+                ) for i in range(12)
+            ]
+
+            for fm_meta_data in fm_meta_data_list:
+                db.session.add(fm_meta_data)
+                db.session.commit()
+
+            fm_authors = [
+                Author(
+                    id=i+5,
+                    name=f'Author {i+5}',
+                    affiliation=f'Affiliation {i+5}',
+                    orcid=f'0000-0000-0000-000{i+5}',
+                    fm_meta_data_id=fm_meta_data_list[i].id
+                ) for i in range(12)
+            ]
+
+            for fm_author in fm_authors:
+                db.session.add(fm_author)
+                db.session.commit()
+
+            feature_models = [
+                FeatureModel(
+                    data_set_id=datasets[i // 3].id,
+                    fm_meta_data_id=fm_meta_data_list[i].id
+                ) for i in range(12)
+            ]
+
+            for feature_model in feature_models:
+                db.session.add(feature_model)
+                db.session.commit()
+
+            yield client
+            db.session.remove()
+            db.drop_all()
 
 
-def test_get_explore(test_client):
-    response = test_client.get('/explore')
+def test_get_explore(client):
+    response = client.get('/explore')
     assert response.status_code == 200
     assert b'<form' in response.data
     assert b'name="query"' in response.data
