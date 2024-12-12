@@ -10,7 +10,7 @@ from app.modules.dataset.models import (
     PublicationType,
     DSMetrics,
     Author)
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 
 
@@ -39,7 +39,7 @@ class DataSetSeeder(BaseSeeder):
                 deposition_id=1 + i,
                 title=f'Sample dataset {i+1}',
                 description=f'Description for dataset {i+1}',
-                publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
+                publication_type=PublicationType.BOOK if i == 1 else PublicationType.DATA_MANAGEMENT_PLAN,
                 publication_doi=f'10.1234/dataset{i+1}',
                 build=False,
                 dataset_doi=f'10.1234/dataset{i+1}',
@@ -66,7 +66,7 @@ class DataSetSeeder(BaseSeeder):
             DataSet(
                 user_id=user1.id if i % 2 == 0 else user2.id,
                 ds_meta_data_id=seeded_ds_meta_data[i].id,
-                created_at=datetime.now(timezone.utc)
+                created_at=datetime.now(timezone.utc) - timedelta(days=i)
             ) for i in range(4)
         ]
         seeded_datasets = self.seed(datasets)

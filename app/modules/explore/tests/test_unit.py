@@ -217,3 +217,76 @@ def test_filter_combination(client):
 
     # Verifica que se devuelven 2 datasets.
     assert len(data) == 2
+
+
+def test_filter_publication_type(client):
+    # Simula el envío del filtro "publication_type" con el valor "book".
+    response = client.post('/explore', json={
+        'csrf_token': 'dummy_token',
+        'query': '',
+        'queryAuthor': '',
+        'queryTag': '',
+        'queryFeatures': '',
+        'queryModels': '',
+        'publication_type': 'book',
+        'sorting': 'newest',
+    })
+
+    # Verifica que la respuesta sea exitosa.
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    # Verifica que solo se devuelve un dataset y es el "Sample dataset 2".
+    assert len(data) == 1
+    assert data[0]['title'] == "Sample dataset 2"
+
+
+def test_sorting(client):
+    # Simula el envío del filtro "sorting" con el valor "newest".
+    response = client.post('/explore', json={
+        'csrf_token': 'dummy_token',
+        'query': '',
+        'queryAuthor': '',
+        'queryTag': '',
+        'queryFeatures': '',
+        'queryModels': '',
+        'publication_type': '',
+        'sorting': 'newest',
+    })
+
+    # Verifica que la respuesta sea exitosa.
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    # Verifica que se devuelven 4 datasets.
+    assert len(data) == 4
+
+    # Verifica el orden de los datasets.
+    for i in range(len(data) - 1):
+        assert data[i]['title'] == "Sample dataset " + str(i+1)
+
+    # Simula el envío del filtro "sorting" con el valor "oldest".
+    response = client.post('/explore', json={
+        'csrf_token': 'dummy_token',
+        'query': '',
+        'queryAuthor': '',
+        'queryTag': '',
+        'queryFeatures': '',
+        'queryModels': '',
+        'publication_type': '',
+        'sorting': 'oldest',
+    })
+
+    # Verifica que la respuesta sea exitosa.
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    # Verifica que se devuelven 4 datasets.
+    assert len(data) == 4
+
+    # Verifica el orden de los datasets.
+    for i in range(3, -1, -1):
+        assert data[3 - i]['title'] == "Sample dataset " + str(i+1)
