@@ -46,32 +46,7 @@
                     {% endfor %}
                 </div>
 
-                <!-- Campo de logo -->
-                <div class="mb-3">
-                    {{ form.logo.label(class="form-label") }}
-                    <div class="d-flex align-items-center">
-                        {{ form.logo(class="form-control", id="logo") }}
-                        <button type="button" class="btn btn-danger ms-2" id="removeLogoBtn">
-                            <i class="bi bi-x-circle"></i> Remove
-                        </button>
-                    </div>
-                    {% for error in form.logo.errors %}
-                        <span class="text-danger small">{{ error }}</span>
-                    {% endfor %}
-                </div>
 
-                <!-- Script para el botón de limpiar logo -->
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const removeLogoBtn = document.getElementById('removeLogoBtn');
-                        const logoInput = document.getElementById('logo');
-                        if (removeLogoBtn && logoInput) {
-                            removeLogoBtn.addEventListener('click', function() {
-                                logoInput.value = ""; // Limpia el campo de entrada
-                            });
-                        }
-                    });
-                </script>
 
                 <!-- Botón para enviar el formulario -->
                 <div class="mt-4">

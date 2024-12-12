@@ -48,6 +48,21 @@ class DataSetSeeder(BaseSeeder):
                 ds_metrics_id=seeded_ds_metrics[0].id if i == 1 else seeded_ds_metrics[1].id
             ) for i in range(4)
         ]
+        # Add an additional DSMetaData for the staging area
+        ds_meta_data_list.append(
+            DSMetaData(
+                deposition_id=None,
+                title='Staging area dataset',
+                description='Description for staging area dataset',
+                publication_type=PublicationType.NONE,
+                publication_doi=None,
+                build=False,
+                dataset_doi=None,
+                tags='tag1, tag2',
+                staging_area=True,
+                ds_metrics_id=seeded_ds_metrics.id
+            )
+        )
         seeded_ds_meta_data = self.seed(ds_meta_data_list)
 
         # Create Author instances and associate with DSMetaData
@@ -69,6 +84,14 @@ class DataSetSeeder(BaseSeeder):
                 created_at=datetime.now(timezone.utc) - timedelta(days=i)
             ) for i in range(4)
         ]
+        # Add an additional DataSet for the staging area
+        staging_dataset = DataSet(
+            user_id=user1.id,
+            ds_meta_data_id=seeded_ds_meta_data[-1].id,  # The last DSMetaData is for the staging area
+            created_at=datetime.now(timezone.utc)
+        )
+        datasets.append(staging_dataset)
+
         seeded_datasets = self.seed(datasets)
 
         # Assume there are 12 UVL files, create corresponding FMMetaData and FeatureModel
@@ -81,8 +104,20 @@ class DataSetSeeder(BaseSeeder):
                 publication_doi=f'10.1234/fm{i+1}',
                 tags='tag1, tag2',
                 uvl_version='1.0'
-            ) for i in range(12)
+            ) for i in range(11)
         ]
+        # Add an additional FMMetaData with publication_doi and tags set to None
+        fm_meta_data_list.append(
+            FMMetaData(
+                uvl_filename='file12.uvl',
+                title='Feature Model 12',
+                description='Description for feature model 12',
+                publication_type=PublicationType.NONE,
+                publication_doi=None,
+                tags=None,
+                uvl_version='1.0'
+            )
+        )
         seeded_fm_meta_data = self.seed(fm_meta_data_list)
 
         # Create Author instances and associate with FMMetaData
@@ -100,8 +135,15 @@ class DataSetSeeder(BaseSeeder):
             FeatureModel(
                 data_set_id=seeded_datasets[i // 3].id,
                 fm_meta_data_id=seeded_fm_meta_data[i].id
-            ) for i in range(12)
+            ) for i in range(11)
         ]
+        # Add a FeatureModel for the staging dataset
+        feature_models.append(
+            FeatureModel(
+                data_set_id=staging_dataset.id,
+                fm_meta_data_id=seeded_fm_meta_data[-1].id  # The last FMMetaData is for the staging dataset
+            )
+        )
         seeded_feature_models = self.seed(feature_models)
 
         # Create files, associate them with FeatureModels and copy files
