@@ -504,4 +504,3 @@ def test_create_empty_dataset_unauthosied(client):
     response = client.post(f"/dataset/build_empty/{feature_model_id}")
 
     assert response.status_code == 302, "El código de estado debería ser 302 para usuarios no autenticados."
-
