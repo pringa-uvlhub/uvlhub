@@ -23,16 +23,18 @@
 
     <!-- Mostrar solo los mensajes flash de tipo 'danger' -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="alert alert-danger">
-                <ul>
+        {% if messages%}
+
                     {% for category, message in messages %}
                         {% if category == 'danger' %}
+                        <div class="alert alert-danger">
+                            <ul>
                             <li>{{ message }}</li>
+                            </ul>
+                        </div>
                         {% endif %}
                     {% endfor %}
-                </ul>
-            </div>
+
         {% endif %}
     {% endwith %}
 
