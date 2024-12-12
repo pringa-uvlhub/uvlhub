@@ -4,7 +4,15 @@
 
 {% block content %}
 
-    <h1 class="h3 mb-3"><b>Communities</b></h1>
+    <h1 class="h3 mb-3"><b>All Communities</b></h1>
+
+    <!-- Formulario de búsqueda -->
+    <form method="GET" action="{{ url_for('community.view_communities') }}" class="mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" name="search" placeholder="Search by name" value="{{ request.args.get('search', '') }}">
+            <button class="btn btn-secondary" type="submit">Search</button>
+        </div>
+    </form>
 
     <a href="{{ url_for('community.create') }}" class="btn btn-primary mb-4">Create Community</a>
 
@@ -12,11 +20,11 @@
         {% for community in communities %}
         <div class="col">
             <!-- Envolver todo el div con un enlace para hacerlo clicable -->
-            <a href="{{ url_for('community.show_community', id=community.id) }}" class="text-decoration-none">
+            <a href="{{ url_for('community.show_community', community_id=community.id) }}" class="text-decoration-none">
                 <div class="card h-100">
                     <!-- Renderiza el logo dinámico o el predeterminado -->
                     <img src="{{ url_for('static', filename=community.logo) }}" 
-                         class="card-img-top custom-img" alt="{{ community.name }}">
+                        class="card-img-top custom-img" alt="{{ community.name }}">
                     <div class="card-body custom-card-body">
                         <h5 class="card-title">{{ community.name }}</h5>
                         <p class="card-text">

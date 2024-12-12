@@ -1,6 +1,4 @@
-import os
 import logging
-from werkzeug.utils import secure_filename
 from datetime import datetime
 from app.modules.community.models import Community
 from app.modules.community.repositories import CommunityRepository
@@ -18,30 +16,13 @@ class CommunityService(BaseService):
         try:
             logger.info(f"Creating community with name: {form.name.data} by {current_user.id}")
 
-            upload_folder = 'app/static/img/community'
-            if not os.path.exists(upload_folder):
-                os.makedirs(upload_folder)
-
-            logo_filename = None
-            if form.logo.data:
-                logo_file = form.logo.data
-                logo_filename = secure_filename(logo_file.filename)
-                logger.info(f"Saving logo file: {logo_filename}")
-                logo_file.save(os.path.join(upload_folder, logo_filename))
-            name_value = form.name.data
-            description_value = form.description.data
-            created_by_id = current_user.id
-
-            logger.info(
-                f"Valores antes de crear Community: name={name_value}, "
-                f"description={description_value}, created_by_id={created_by_id}"
-            )
             new_community = Community(
                 name=form.name.data,
                 description=form.description.data,
                 created_at=datetime.utcnow(),
                 created_by_id=current_user.id,
-                logo=f'img/community/{logo_filename}' if logo_filename else None
+                admin_by_id=current_user.id,
+                logo=None
             )
 
             self.repository.session.add(new_community)
@@ -55,6 +36,39 @@ class CommunityService(BaseService):
             logger.error(f"Error creating community: {exc}")
             self.repository.session.rollback()
             raise exc
+
+    def join_community(self, community_id, current_user):
+        try:
+            community = self.repository.get_by_id(community_id)
+            if not community:
+                raise ValueError(f"Community with ID {community_id} not found.")
+
+            if community not in current_user.communities:
+                current_user.communities.append(community)
+                self.repository.session.commit()
+                return True
+            else:
+                logger.info(f"User {current_user.id} is already a member of community {community_id}")
+                return False
+
+        except Exception as exc:
+            logger.error(f"Error joining community: {exc}")
+            self.repository.session.rollback()
+            raise exc
+
+    def leave_community(self, community_id: int, user) -> bool:
+        community = self.repository.get_by_id(community_id)
+        if not community:
+            raise ValueError(f"Community with ID {community_id} not found.")
+
+        # Aquí verificamos si el usuario es miembro de la comunidad
+        if user not in community.users:
+            raise ValueError("You are not a member of this community.")
+
+        # Eliminar la relación entre el usuario y la comunidad
+        community.users.remove(user)
+        self.repository.session.commit()
+        return True
 
     def get_all_communities(self):
         return self.repository.get_all()
@@ -70,3 +84,69 @@ class CommunityService(BaseService):
         if not community:
             raise ValueError(f"Community with ID {community_id} not found.")
         return self.repository.delete_community(community_id)
+
+    def grant_admin_role(self, community_id, user, current_user):
+        # Obtener la comunidad
+        community = Community.query.get(community_id)
+        if not community:
+            raise ValueError("Community not found!")
+
+        # Verificar si el usuario es miembro de la comunidad
+        if not user:
+            raise ValueError("User not found!")
+
+        if user not in community.users:
+            raise ValueError("User is not a member of the community!")
+
+        # Comprobar si el usuario actual es el creador (y administrador) de la comunidad
+        if community.admin_by_id != current_user.id:
+            raise ValueError("You are not authorized to assign an admin role!")
+
+        # Asignar el rol de administrador
+        community.admin_by_id = user.id  # Se asigna el admin en el campo 'admin_by_id'
+
+        # Guardar cambios en la base de datos
+        self.repository.session.commit()
+
+        return True
+
+    def edit_community(self, community_id, form, current_user) -> Community:
+        try:
+            community = self.repository.get_by_id(community_id)
+            if not community:
+                raise ValueError(f"Community with ID {community_id} not found.")
+
+            if community.admin_by_id != current_user.id:
+                raise ValueError("You are not authorized to edit this community.")
+
+            logger.info(f"Editing community with ID: {community_id} by user {current_user.id}")
+
+            # Actualizar los campos permitidos desde el formulario
+            community.name = form.name.data
+            community.description = form.description.data
+
+            self.repository.session.commit()
+            return community
+
+        except Exception as exc:
+            logger.error(f"Error editing community: {exc}")
+            self.repository.session.rollback()
+            raise exc
+
+    def remove_user_from_community(self, community_id: int, user) -> bool:
+        community = self.repository.get_by_id(community_id)
+
+        if not community:
+            raise ValueError(f"Community with ID {community_id} not found.")
+
+        # Verificar si el usuario es miembro de la comunidad
+        if user not in community.users:
+            raise ValueError("User is not a member of this community.")
+
+        # Eliminar al usuario de la comunidad
+        community.users.remove(user)
+
+        # Guardar los cambios en la base de datos
+        self.repository.session.commit()
+
+        return True

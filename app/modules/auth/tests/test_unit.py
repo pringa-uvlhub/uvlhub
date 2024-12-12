@@ -8,6 +8,7 @@ from app.modules.auth.repositories import UserRepository
 from app.modules.profile.repositories import UserProfileRepository
 from app import create_app, db
 from datetime import datetime
+from unittest.mock import patch
 
 
 @pytest.fixture
@@ -86,7 +87,62 @@ def test_signup_user_successful(test_client):
         data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
         follow_redirects=True,
     )
-    assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
+    assert response.request.path == url_for("auth.confirmation"), "Signup was unsuccessful"
+
+
+def test_signup_user_sends_verification_email(test_client):
+    with patch('app.modules.auth.services.AuthenticationService.send_verification_email') as mock_send_email:
+        response = test_client.post(
+            "/signup",
+            data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
+            follow_redirects=True,
+        )
+        # Verificar que el envío de correo fue llamado
+        mock_send_email.assert_called_once()
+        # Verificar que se redirige correctamente después del registro
+        assert response.request.path == url_for("auth.confirmation"), "Signup redirection was incorrect"
+
+
+# def test_unverified_user_cannot_login(test_client):
+#     # Crear usuario sin verificar
+#     response = test_client.post(
+#        "/signup",
+#          data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
+#          follow_redirects=True,
+#      )
+#
+#     # Intentar iniciar sesión sin verificar
+#     response = test_client.post(
+#         "/login",
+#         data=dict(email="foo@example.com", password="foo1234"),
+#         follow_redirects=True,
+#      )
+#     print(response.data)
+#     # Comprobar que la autenticación falla
+#     assert b"Please verify your email" in response.data
+
+
+def test_email_verification_token_generation():
+    auth_service = AuthenticationService()
+    user_data = {
+        "name": "Test",
+        "email": "test@example.com",
+        "password": "test1234"
+    }
+    token = auth_service.serializer.dumps(user_data, salt='email-confirmation-salt')
+    assert token is not None, "Token was not generated successfully"
+
+
+def test_email_verification_token_confirmation():
+    auth_service = AuthenticationService()
+    user_data = {
+        "name": "Test",
+        "email": "test@example.com",
+        "password": "test1234"
+    }
+    token = auth_service.serializer.dumps(user_data['email'], salt='email-confirmation-salt')
+    email = auth_service.confirm_token(token)
+    assert email == user_data['email'], "Token confirmation failed"
 
 
 def test_service_create_with_profie_success(clean_database):
