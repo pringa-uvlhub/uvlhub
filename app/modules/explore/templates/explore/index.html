@@ -14,8 +14,9 @@
 
     <div class="col-lg-7 scrollable-column">
 
-
             <div class="row">
+                <div id="results"></div>
+
                 {% if not datasets %}
                 <div class="col text-center" id="results_not_found">
                     <img src="{{ url_for('static', filename='img/items/not_found.svg') }}"

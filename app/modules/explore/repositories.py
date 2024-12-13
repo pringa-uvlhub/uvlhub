@@ -1,5 +1,5 @@
 import re
-from sqlalchemy import any_, or_
+from sqlalchemy import or_
 import unidecode
 from app.modules.dataset.models import Author, DSMetaData, DataSet, PublicationType, DSMetrics
 from app.modules.featuremodel.models import FMMetaData, FeatureModel
@@ -82,9 +82,6 @@ class ExploreRepository(BaseRepository):
 
             if matching_type is not None:
                 datasets = datasets.filter(DSMetaData.publication_type == matching_type.name)
-
-        if tags:
-            datasets = datasets.filter(DSMetaData.tags.ilike(any_(f"%{tag}%" for tag in tags)))
 
         # Order by created_at
         if sorting == "oldest":
