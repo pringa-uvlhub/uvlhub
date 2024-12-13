@@ -234,6 +234,41 @@ def start_bot():
                 await interaction.response.send_message(f"Error filtering datasets: {str(e)}")
             else:
                 await interaction.followup.send(f"Error filtering datasets: {str(e)}")
+                
+    @bot.tree.command(name="filter_communities", description="Filter communities by name or description.")
+    async def filter_communities(interaction: discord.Interaction, query: str):
+        try:
+            with app_create.app_context():
+                community_service = CommunityService()
+                communities = community_service.filter_communities(query)
+
+                if not communities:
+                    await interaction.response.send_message(f"No communities found for query: '{query}'.")
+                    return
+
+                # Crear una lista de embeds para mostrar los resultados
+                embeds = []
+                for community in communities:
+                    embed = discord.Embed(
+                        title=f"Community: {community.name}",
+                        description=f"{community.description}",
+                        color=discord.Color.purple()
+                    )
+                    embed.add_field(name="Created at:",
+                                    value=community.created_at.strftime('%B %d, %Y at %I:%M %p'), inline=False)
+                    embed.add_field(name="Created by:", value=str(community.created_by_id), inline=False)
+                    embed.add_field(name="Admin ID:", value=str(community.admin_by_id), inline=False)
+                    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+                    embeds.append(embed)
+
+                # Llamar a la función de paginación para mostrar los resultados
+                await paginate(interaction, embeds)
+
+        except Exception as e:
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"Error filtering communities: {str(e)}")
+            else:
+                await interaction.followup.send(f"Error filtering communities: {str(e)}")
 
     # Función para correr el bot
     def run_discord_bot():
