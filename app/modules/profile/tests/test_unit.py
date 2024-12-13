@@ -61,7 +61,7 @@ def test_user_profile_nonexistent_user(test_client):
     """
     Verifica que al intentar acceder a un perfil inexistente se redirija a la página principal.
     """
-    login(test_client, "user@example.com", "test1234")  
+    login(test_client, "user@example.com", "test1234")
     response = test_client.get("/profile/9999")
     assert response.status_code == 404, "Expected 404 for nonexistent user profile."
 
