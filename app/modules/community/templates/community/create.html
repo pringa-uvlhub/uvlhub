@@ -23,32 +23,25 @@
 <div class="row">
     <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
         <div id="community_form">
-
-            <!-- Añadido enctype para permitir subida de archivos -->
             <form method="POST" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
-
-                <!-- Campo de nombre -->
+                
                 <div class="mb-3">
                     {{ form.name.label(class="form-label") }} *
                     {{ form.name(class="form-control", id="name") }}
                     {% for error in form.name.errors %}
-                        <span class="text-danger small">{{ error }}</span>
+                        <div class="text-danger small">{{ error }}</div>
                     {% endfor %}
                 </div>
 
-                <!-- Campo de descripción -->
                 <div class="mb-3">
                     {{ form.description.label(class="form-label") }} *
                     {{ form.description(class="form-control", rows=4, id="description") }}
                     {% for error in form.description.errors %}
-                        <span class="text-danger small">{{ error }}</span>
+                        <div class="text-danger small">{{ error }}</div>
                     {% endfor %}
                 </div>
 
-
-
-                <!-- Botón para enviar el formulario -->
                 <div class="mt-4">
                     {{ form.submit(class="btn btn-primary") }}
                 </div>
