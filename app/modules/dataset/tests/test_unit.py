@@ -121,12 +121,19 @@ def client():
             with open(os.path.join(temp_folder, 'file9.uvl'), 'w') as f:
                 f.write('Temporary file content')
 
-            # Crear el archivo temporal en la ruta esperada
-            temp_folder2 = os.path.join('uploads', 'user_'+str(user.id), 'dataset_10')
+            # Crear las carpetas temporales asociadas a los datasets
+            temp_folder2 = os.path.join('uploads', f'user_{user.id}', 'dataset_10')
             os.makedirs(temp_folder2, exist_ok=True)
+
             with open(os.path.join(temp_folder2, 'file9.uvl'), 'w') as f:
                 f.write('Temporary file content')
-            print(temp_folder2)
+
+            temp_folder3 = os.path.join('uploads', f'user_{user.id}', 'dataset_11')
+            os.makedirs(temp_folder3, exist_ok=True)
+
+            with open(os.path.join(temp_folder3, 'file9.uvl'), 'w') as f:
+                f.write('Temporary file content')
+
             yield client
             # Limpiar el archivo temporal después de la prueba
             if os.path.exists(os.path.join(temp_folder, 'file9.uvl')):
@@ -178,6 +185,24 @@ def test_create_dataset(client):
     logout(client)
 
 
+def test_create_dataset_empty_form(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post('/dataset/create', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+    data = response.get_json()
+    assert "message" in data, "Expected 'message' in response"
+    assert isinstance(data["message"], dict), f"Expected 'message' to be a dict, but got {type(data['message'])}"
+    assert len(data["message"]) > 0, "Expected 'message' to contain errors"
+    logout(client)
+
+
 def test_upload_dataset_zenodo(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
@@ -222,6 +247,157 @@ def test_upload_dataset_zenodo(client):
     html_data = response.data.decode('utf-8')
     assert "test dataset in zenodo" in html_data, "The created dataset is not in the list of datasets"
 
+    logout(client)
+
+
+def test_upload_dataset_zenodo_empty_form(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post('/dataset/upload', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+    data = response.get_json()
+    assert "message" in data, "Expected 'message' in response"
+    assert isinstance(data["message"], dict), f"Expected 'message' to be a dict, but got {type(data['message'])}"
+    assert len(data["message"]) > 0, "Expected 'message' to contain errors"
+    logout(client)
+
+
+def test_upload_dataset_fakenodo(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Datos de ejemplo para el formulario
+    form_data = {
+        "title": "test",
+        "desc": "test",
+        "publication_type": "none",
+        "publication_doi": "",
+        "dataset_doi": "",
+        "tags": "",
+        "authors-0-name": "Author Name",
+        "authors-0-affiliation": "Author Affiliation",
+        "authors-0-orcid": "0000-0001-2345-6789",
+        "feature_models-0-uvl_filename": "file9.uvl",
+        "feature_models-0-title": "Feature Model Title",
+        "feature_models-0-desc": "Feature Model Description",
+        "feature_models-0-publication_type": "none",
+        "feature_models-0-publication_doi": "",
+        "feature_models-0-tags": "",
+        "feature_models-0-version": "1.0",
+        "feature_models-0-authors-0-name": "FM Author Name",
+        "feature_models-0-authors-0-affiliation": "FM Author Affiliation",
+        "feature_models-0-authors-0-orcid": "0000-0002-3456-7890"
+    }
+
+    # Enviar la solicitud POST con los datos del formulario
+    response = client.post('/dataset/upload-fakenodo', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    data = response.get_json()
+    assert data["message"] == "Everything works!", f"Expected message 'Everything works!', but got {data['message']}"
+    logout(client)
+
+
+def test_upload_dataset_fakenodo_empty_form(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post('/dataset/upload-fakenodo', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+    data = response.get_json()
+    assert "message" in data, "Expected 'message' in response"
+    assert isinstance(data["message"], dict), f"Expected 'message' to be a dict, but got {type(data['message'])}"
+    assert len(data["message"]) > 0, "Expected 'message' to contain errors"
+    logout(client)
+
+
+def test_upload_dataset_fakenodo_from_staging(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Staging area Dataset").first()
+    assert dataset is not None, "Dataset with title 'Staging area Dataset' not found"
+    dataset_id = dataset.id
+
+    # Datos de ejemplo para el formulario
+    form_data = {
+        "title": "test",
+        "desc": "test",
+        "publication_type": "none",
+        "publication_doi": "",
+        "dataset_doi": "",
+        "tags": "",
+        "authors-0-name": "Author Name",
+        "authors-0-affiliation": "Author Affiliation",
+        "authors-0-orcid": "0000-0001-2345-6789",
+        "feature_models-0-uvl_filename": "file9.uvl",
+        "feature_models-0-title": "Feature Model Title",
+        "feature_models-0-desc": "Feature Model Description",
+        "feature_models-0-publication_type": "none",
+        "feature_models-0-publication_doi": "",
+        "feature_models-0-tags": "",
+        "feature_models-0-version": "1.0",
+        "feature_models-0-authors-0-name": "FM Author Name",
+        "feature_models-0-authors-0-affiliation": "FM Author Affiliation",
+        "feature_models-0-authors-0-orcid": "0000-0002-3456-7890"
+    }
+
+    # Enviar la solicitud POST con los datos del formulario
+    response = client.post(f'/dataset/upload-fakenodo/{dataset_id}', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    data = response.get_json()
+    assert data["message"] == "Everything works!", f"Expected message 'Everything works!', but got {data['message']}"
+    logout(client)
+
+
+def test_upload_dataset_fakenodo_from_staging_empty_form(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Staging area Dataset").first()
+    assert dataset is not None, "Dataset with title 'Staging area Dataset' not found"
+    dataset_id = dataset.id
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post(f'/dataset/upload-fakenodo/{dataset_id}', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+    data = response.get_json()
+    assert "message" in data, "Expected 'message' in response"
+    assert isinstance(data["message"], dict), f"Expected 'message' to be a dict, but got {type(data['message'])}"
+    assert len(data["message"]) > 0, "Expected 'message' to contain errors"
+    logout(client)
+
+
+def test_upload_dataset_fakenodo_from_staging_invalid_dataset(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+    dataset_id = 50
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post(f'/dataset/upload-fakenodo/{dataset_id}', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 404, f"Expected status code 404, but got {response.status_code}"
     logout(client)
 
 
@@ -324,6 +500,47 @@ def test_update_staging_area_dataset(client):
     logout(client)
 
 
+def test_delete_dataset(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Obtener el ID del dataset creado en la fixture
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Staging area Dataset").first()
+    assert dataset is not None, "Dataset with title 'Staging area Dataset' not found"
+    dataset_id = dataset.id
+    temp_folder3 = os.path.join('uploads', 'user_5', 'dataset_11')
+
+    assert os.path.exists(temp_folder3) and os.path.isdir(temp_folder3), "Temporary folder 3 does not exist"
+
+    # Enviar la solicitud DELETE para eliminar el dataset con ID 10
+    response = client.delete(f'/dataset/delete/{dataset_id}')
+
+    # Verificar la respuesta
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+    assert not os.path.exists(temp_folder3), "Temporary folder 2 was not deleted"
+    data = response.get_json()
+    assert data["message"] == "Dataset deleted successfully", \
+        f"Expected message 'Dataset deleted successfully', but got {data['message']}"
+    logout(client)
+
+
+def test_delete_dataset_not_in_staging_area(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Obtener el ID del dataset creado en la fixture
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Sample Dataset 11").first()
+    assert dataset is not None, "Dataset with title 'Sample Dataset 11' not found"
+    dataset_id = dataset.id
+
+    # Enviar la solicitud DELETE para eliminar el dataset
+    response = client.delete(f'/dataset/delete/{dataset_id}')
+
+    # Verificar la respuesta
+    assert response.status_code == 404, f"Expected status code 404, but got {response.status_code}"
+    logout(client)
+
+
 def test_upload_dataset_zenodo_from_staging(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."
@@ -374,6 +591,43 @@ def test_upload_dataset_zenodo_from_staging(client):
     html_data = response.data.decode('utf-8')
     assert "updated unique dataset" in html_data, "The updated dataset is not in the local_datasets"
 
+    logout(client)
+
+
+def test_upload_dataset_zendo_from_staging_empty_form(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Staging area Dataset").first()
+    assert dataset is not None, "Dataset with title 'Staging area Dataset' not found"
+    dataset_id = dataset.id
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post(f'/dataset/upload/{dataset_id}', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+    data = response.get_json()
+    assert "message" in data, "Expected 'message' in response"
+    assert isinstance(data["message"], dict), f"Expected 'message' to be a dict, but got {type(data['message'])}"
+    assert len(data["message"]) > 0, "Expected 'message' to contain errors"
+    logout(client)
+
+
+def test_upload_dataset_zenodo_from_staging_invalid_dataset(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+    dataset_id = 50
+
+    # Enviar la solicitud POST con un formulario vacío
+    form_data = {}
+
+    response = client.post(f'/dataset/upload/{dataset_id}', data=form_data)
+
+    # Verificar la respuesta
+    assert response.status_code == 404, f"Expected status code 404, but got {response.status_code}"
     logout(client)
 
 
@@ -497,3 +751,10 @@ def test_create_empty_dataset_with_invalid_id(client):
     assert data["error"] == "Exception while processing dataset"
 
     logout(client)
+
+
+def test_create_empty_dataset_unauthosied(client):
+    feature_model_id = 1
+    response = client.post(f"/dataset/build_empty/{feature_model_id}")
+
+    assert response.status_code == 302, "El código de estado debería ser 302 para usuarios no autenticados."

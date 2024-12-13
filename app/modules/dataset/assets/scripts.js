@@ -535,6 +535,38 @@ var currentId = 0;
                 }
 
             });
+            document.getElementById('delete_button').addEventListener('click', function () {
+                const datasetId = window.location.pathname.split('/').pop();
+                // process data form
+                clean_upload_errors();
+                show_loading();
+                
+                fetch(`/dataset/delete/${datasetId}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('Dataset eliminado con éxito');
+                            response.json().then(() => {
+                                window.location.href = "/dataset/list";
+                            });
+                        } else {
+                            // Extraer el mensaje de error desde el objeto JSON
+                            response.json().then(data => {
+                                console.error('Error en la solicitud:', data);
+                                console.log("Mensaje de error: ", data.message || JSON.stringify(data));
+                                hide_loading();
+                
+                                // Asegúrate de que `data.message` exista, o muestra todo el objeto si no
+                                write_upload_error(data.message || "Error desconocido en el servidor");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error en la solicitud DELETE:', error);
+                    });
+
+            });
         }
 
 

@@ -14,23 +14,68 @@
 
     <div class="col-lg-7 scrollable-column">
 
+            <div class="row">
+                <div id="results"></div>
 
-        <div class="row">
-
-            <div id="results"></div>
-
-            <div class="col text-center" id="results_not_found">
-                <img src="{{ url_for('static', filename='img/items/not_found.svg') }}"
-                    style="width: 50%; max-width: 100px; height: auto; margin-top: 30px" />
-                <p style="margin-top: 20px">
-                    We have not found any datasets that meet your search criteria. <br>How about trying some others?
-                </p>
-            </div>
+                {% if not datasets %}
+                <div class="col text-center" id="results_not_found">
+                    <img src="{{ url_for('static', filename='img/items/not_found.svg') }}"
+                         style="width: 50%; max-width: 100px; height: auto; margin-top: 30px"/>
+                    <p style="margin-top: 20px">
+                        We have not found any datasets that meet your search criteria. <br>How about trying some others?
+                    </p>
+                </div>
 
             <div id="results_not_found" style="text-align: center;">
 
-            </div>
+                </div>
+                {% else %}                
+                    {% for dataset in datasets %}
+                    <div class="card mb-3" style="border: 1px solid #d3d3d3;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h2 class="h3 mb-1">
+                                    <a href="{{ dataset.get_uvlhub_doi() }}" class="text-decoration-none text-dark">
+                                        {{ dataset.ds_meta_data.title }}
+                                    </a>
+                                </h2>
+                                <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
+                            </div>
+                            
+                            <p class="mb-2 text-secondary fs-4">{{ dataset.ds_meta_data.description }}</p>
 
+                            <div class="d-flex flex-wrap mb-2">
+                                {% for tag in dataset.ds_meta_data.tags.split(',') %}
+                                    <span class="badge me-2 fs-7" style="background-color: lightSkyBlue; color: rgb(0, 119, 255);">{{ tag.strip() }}</span>
+                                {% endfor %}
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-md-12 col-12 d-flex align-items-center">
+                                    <span class="me-2">Rating:</span>
+                                        <div id="star-rating-{{ dataset.id }}" class="stars d-flex" style="color: gold;">
+                                            {% for i in range(1, 6) %}
+                                                <span data-value="{{ i }}" class="me-1">★</span>
+                                            {% endfor %}
+                                        </div>
+                                    <span id="average-rating-{{ dataset.id }}" class="ms-2">-</span> <!-- Valor inicial vacío -->
+                                    <span class="ms-2">·</span>
+                                    <span class="ms-2">Created on {{ dataset.created_at.strftime('%d %b %Y') }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex">
+                                <a href="{{ dataset.get_uvlhub_doi() }}" class="btn btn-sm btn-outline-primary me-2">
+                                    <i data-feather="eye"></i> View Dataset
+                                </a>
+                                <a href="/dataset/download/{{ dataset.id }}" class="btn btn-sm btn-outline-success">
+                                    <i data-feather="download"></i> Download ({{ dataset.get_file_total_size_for_human() }})
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
 
         </div>
     </div>
@@ -178,6 +223,32 @@
 
 </div>
 
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% for dataset in datasets %}
+            updateAverageRating({{ dataset.id }});
+        {% endfor %}
+
+        // Función para actualizar el promedio de calificación en el frontend
+        function updateAverageRating(datasetId) {
+            fetch(`/datasets/${datasetId}/average-rating`)
+            .then(response => response.json())
+            .then(data => {
+                const averageRating = data.average_rating.toFixed(1);
+                document.getElementById('average-rating-' + datasetId).innerText = averageRating;
+
+                // Resaltar estrellas según el promedio de calificación
+                const starRatingContainer = document.getElementById('star-rating-' + datasetId);
+                starRatingContainer.querySelectorAll('span').forEach(star => {
+                    const starValue = parseInt(star.getAttribute('data-value'));
+                    star.style.color = starValue <= Math.round(averageRating) ? '#FFD700' : '#ddd';
+                });
+            })
+            .catch(error => console.error('Error fetching average rating:', error));
+        }
+    });
+</script>
 {% endblock %}
 
 {% block scripts %}

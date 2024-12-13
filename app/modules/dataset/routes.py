@@ -163,6 +163,13 @@ def upload_dataset_fakenodo():
 def upload_dataset_fakenodo_from_staging(dataset_id):
     form = DataSetForm()
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+    if not dataset:
+        abort(404)
+
+    if not form.validate_on_submit():
+        print("Form errors:", form.errors)
+        return jsonify({"message": form.errors}), 400
+
     dataset.ds_meta_data.staging_area = False
     dataset.ds_meta_data.build = False
     dataset = dataset_service.update_from_form(dataset, form, current_user)
@@ -192,6 +199,12 @@ def upload_dataset_fakenodo_from_staging(dataset_id):
 def upload_dataset_zenodo_from_staging(dataset_id):
     form = DataSetForm()
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+    if not dataset:
+        abort(404)
+
+    if not form.validate_on_submit():
+        print("Form errors:", form.errors)
+        return jsonify({"message": form.errors}), 400
     dataset.ds_meta_data.staging_area = False
     dataset.ds_meta_data.build = False
     dataset = dataset_service.update_from_form(dataset, form, current_user)
@@ -303,6 +316,27 @@ def update_staging_area_dataset(dataset_id):
         ]
         return render_template("dataset/upload_dataset.html", dataset=dataset, form=form,
                                feature_models=feature_models_data)
+
+
+@dataset_bp.route("/dataset/delete/<int:dataset_id>", methods=["DELETE"])
+@login_required
+def delete_dataset(dataset_id):
+    dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+    if not dataset:
+        abort(404, description="Dataset not found")
+
+    if dataset.user_id != current_user.id:
+        abort(403, description="You do not have permission to delete this dataset")
+
+    try:
+        dataset_service.delete(dataset_id)
+        temp_folder = os.path.join('uploads', f'user_{current_user.id}', f'dataset_{dataset_id}')
+        if os.path.exists(temp_folder) and os.path.isdir(temp_folder):
+            shutil.rmtree(temp_folder)
+
+        return jsonify({"message": "Dataset deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"message": f"An error occurred while deleting the dataset: {str(e)}"}), 500
 
 
 @dataset_bp.route("/dataset/list", methods=["GET", "POST"])

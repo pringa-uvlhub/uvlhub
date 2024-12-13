@@ -5,7 +5,7 @@ from app.modules.featuremodel.services import FeatureModelService
 from app.modules.dataset.services import DataSetService
 from app.modules.hubfile.services import HubfileDownloadRecordService
 from app.modules.auth.services import AuthenticationService
-from app.modules.charts.charts import ChartGenerator
+from app.modules.admin.charts import ChartGenerator
 
 
 @admin_bp.route('/admin', methods=['GET'])
