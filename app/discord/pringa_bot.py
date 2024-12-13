@@ -100,7 +100,7 @@ def start_bot():
                 datasets = dataset_repository.model.query.options(joinedload(DataSet.ds_meta_data)).all()
 
             if not datasets:
-                await interaction.response.send_message("No se encontraron datasets disponibles.")
+                await interaction.response.send_message("No datasets found.")
                 return
 
             # Crear una lista de datasets por páginas
@@ -109,10 +109,24 @@ def start_bot():
             # Crear un embed para cada página
             def create_embed(page):
                 dataset = page[0]
+                metadata = dataset.ds_meta_data
+
                 embed = discord.Embed(
                     title=f"Dataset: {dataset.name()}",
+                    description=f"{metadata.description}",
                     color=discord.Color.green()
                 )
+                # Embed for more information
+                embed.add_field(name="Publication type:", value=dataset.get_cleaned_publication_type(), inline=False)
+                embed.add_field(name="Created at: ", value=dataset.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                                inline=False)
+                embed.add_field(name="Publication DOI: ", value=dataset.get_uvlhub_doi(), inline=False)
+
+                tags = (', '.join(tag.strip() for tag in metadata.tags.split(','))
+                        if metadata.tags else 'No tags available')
+                embed.add_field(name="Tags: ", value=tags, inline=False)
+
+                embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
                 return embed
 
             # Llamar a la función de paginación
@@ -120,9 +134,9 @@ def start_bot():
 
         except Exception as e:
             if not interaction.response.is_done():
-                await interaction.response.send_message(f"Hubo un error al intentar listar los datasets: {str(e)}")
+                await interaction.response.send_message(f"Error listing datasets: {str(e)}")
             else:
-                await interaction.followup.send(f"Hubo un error al intentar listar los datasets: {str(e)}")
+                await interaction.followup.send(f"Error listing datasets: {str(e)}")
 
     # Función para correr el bot
     def run_discord_bot():
