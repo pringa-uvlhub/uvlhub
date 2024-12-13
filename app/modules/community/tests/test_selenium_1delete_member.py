@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 import time
 
 
-class TestA():
+class TestDeleteMember():
     def setup_method(self, method):
         self.driver = webdriver.Chrome()
         self.vars = {}
@@ -12,7 +12,7 @@ class TestA():
     def teardown_method(self, method):
         self.driver.quit()
 
-    def test_a(self):
+    def test_deletemember(self):
         self.driver.get("http://127.0.0.1:5000/")
         self.driver.set_window_size(1854, 1048)
         self.driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
@@ -24,8 +24,8 @@ class TestA():
         self.driver.find_element(By.CSS_SELECTOR, ".navbar").click()
         self.driver.find_element(By.CSS_SELECTOR, ".sidebar-toggle").click()
         self.driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(7) .align-middle:nth-child(2)").click()
-        time.sleep(2)
+        time.sleep(0.2)
         self.driver.find_element(By.CSS_SELECTOR, ".col:nth-child(3) .card-body").click()
         self.driver.find_element(By.LINK_TEXT, "View Members").click()
-        time.sleep(2)
+        time.sleep(0.2)
         self.driver.find_element(By.CSS_SELECTOR, ".btn-danger").click()

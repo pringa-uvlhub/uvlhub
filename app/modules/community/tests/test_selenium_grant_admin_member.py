@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 import time
 
 
-class Test123():
+class TestGrantAdmin():
     def setup_method(self, method):
         self.driver = webdriver.Chrome()
         self.vars = {}
@@ -12,7 +12,7 @@ class Test123():
     def teardown_method(self, method):
         self.driver.quit()
     
-    def test_123(self):
+    def test_grantadmin(self):
         self.driver.get("http://127.0.0.1:5000/")
         self.driver.set_window_size(1854, 1048)
         self.driver.find_element(By.CSS_SELECTOR, ".nav-link:nth-child(1)").click()
@@ -27,5 +27,5 @@ class Test123():
         self.driver.find_element(By.LINK_TEXT, "My Created Communities").click()
         self.driver.find_element(By.CSS_SELECTOR, ".col:nth-child(3) .card-img-top").click()
         self.driver.find_element(By.LINK_TEXT, "View Members").click()
-        time.sleep(2)
+        time.sleep(0.2)
         self.driver.find_element(By.CSS_SELECTOR, ".btn-warning").click()
