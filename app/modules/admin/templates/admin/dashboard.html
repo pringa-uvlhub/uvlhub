@@ -1,0 +1,135 @@
+{% extends "base_template.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+
+<div class="col-xl-9 col-lg-12 col-md-12 col-sm-12">
+
+    <div class="row" style="padding: 20px;">
+
+        <div class="col-12">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <h2> <b>Admin Dashboard</b> </h2>
+
+                <h1 class="h2 mb-3">
+
+                    <h4 class="h4 mb-3" class="stats-color">
+                        <i data-feather="database" class="align-middle mr-2 stats-color"></i>&nbsp;Total datasets: {{ datasets_counter }} datasets
+                    </h4>
+
+                    <h4 class="h4 mb-3" class="stats-color">
+                        <i data-feather="eye" class="align-middle mr-2 stats-color"></i>&nbsp;Total datasets viewed: {{ total_dataset_views }} datasets viewed
+                    </h4>
+
+                    <h4 class="h4 mb-3" class="stats-color">
+                        <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;Total datasets downloaded: {{ total_dataset_downloads }} datasets downloaded
+                    </h4>
+                    
+                    <h4 class="h4 mb-3" class="stats-color">
+                        <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;Most downloaded dataset : {{ max_downloads_dataset }} ({{  max_downloads }} downloads)
+                    </h4>
+
+
+                    <hr>
+
+                    <h4 class="h4 mb-3" class="stats-color">
+                        <i data-feather="file" class="align-middle mr-2 stats-color"></i>&nbsp;Total feature models: {{ feature_models_counter }} feature models
+                    </h4>                    
+
+                    <h4 class="h4 mb-3" class="stats-color">
+                        <i data-feather="eye" class="align-middle mr-2 stats-color"></i>&nbsp;Total feature models viewed: {{ total_feature_model_views }} feature models viewed
+                    </h4>
+
+                    <h4 class="h4" class="stats-color">
+                        <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;Total feature models downloaded: {{ total_feature_model_downloads }} feature models downloaded
+                    </h4>
+
+                    <hr>
+
+                    <h4 class="h4 mb-3" class="stats-color">
+                        <i data-feather="users" class="align-middle mr-2 stats-color"></i>&nbsp;Total users: {{ users_counter }} users
+                    </h4>
+
+                    <h4 class="h4 mb-3" class="stats-color">
+                        <i data-feather="users" class="align-middle mr-2 stats-color"></i>&nbsp;Total admin users: {{ admin_user_counter }} administrators
+                    </h4>
+
+                    <h4 class="h4 mb-3" class="stats-color">
+                        <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;User with the most downloads: {{ user_downloads }} ({{  number_downloads_user }} downloads)
+                    </h4>
+
+                </h1>
+
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="col-md-30">
+    <!-- Fila 1 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card" style="margin-bottom: 40px;">
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_url }}" alt="Top 5 Datasets con Más Descargas" class="img-fluid">
+                    <h5>Top 5 Datasets con Más Descargas</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card" style="margin-bottom: 40px;">
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_users }}" alt="Top 5 usuarios con más datasets descargados" class="img-fluid">
+                    <h5>Top 5 Usuarios con Más Descargas</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila 2 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card" style="margin-bottom: 40px;">
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_features_downloads }}" alt="Top 5 Feature Models con Más Descargas" class="img-fluid">
+                    <h5>Top 5 Feature Models con Más Descargas</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card" style="margin-bottom: 40px;">
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_datasets_views }}" alt="Top 5 Datasets con más Visualizaciones" class="img-fluid">
+                    <h5>Top 5 Datasets con Más Visualizaciones</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('admin.scripts') }}"></script>
+{% endblock %}

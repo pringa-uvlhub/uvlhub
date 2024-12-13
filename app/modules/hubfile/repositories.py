@@ -3,6 +3,7 @@ from sqlalchemy import func
 from app.modules.auth.models import User
 from app.modules.dataset.models import DataSet
 from app.modules.featuremodel.models import FeatureModel
+from app.modules.featuremodel.repositories import FeatureModelRepository
 from app.modules.hubfile.models import Hubfile, HubfileDownloadRecord, HubfileViewRecord
 from core.repositories.BaseRepository import BaseRepository
 from app import db
@@ -51,3 +52,26 @@ class HubfileDownloadRecordRepository(BaseRepository):
     def total_hubfile_downloads(self) -> int:
         max_id = self.model.query.with_entities(func.max(self.model.id)).scalar()
         return max_id if max_id is not None else 0
+
+    def feature_models_with_most_downloads(self):
+        download_count = {}
+        for download in self.model.query.all():
+            file_id = download.file_id
+            hubfile = Hubfile.query.get(file_id)
+            feature_model_id = hubfile.feature_model_id
+            if feature_model_id in download_count:
+                download_count[feature_model_id] += 1
+            else:
+                download_count[feature_model_id] = 1
+
+        most_downloaded_feature_models = sorted(download_count.items(), key=lambda x: x[1], reverse=True)[:5]
+        feature_model_names = []
+        download_counts = []
+
+        for feature_model_id, count in most_downloaded_feature_models:
+            feature_model_repo = FeatureModelRepository()
+            feature_model = feature_model_repo.get_feature_model_by_id(feature_model_id)
+            feature_model_names.append(feature_model.fm_meta_data.title)
+            download_counts.append(count)
+
+        return feature_model_names, download_counts

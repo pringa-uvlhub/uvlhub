@@ -49,3 +49,6 @@ class HubfileService(BaseService):
 class HubfileDownloadRecordService(BaseService):
     def __init__(self):
         super().__init__(HubfileDownloadRecordRepository())
+
+    def features_models_with_most_downloads(self):
+        return self.repository.feature_models_with_most_downloads()

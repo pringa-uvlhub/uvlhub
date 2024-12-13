@@ -77,6 +77,51 @@
         </div>
     {% endif %}
 
+    <div class="col-12">
+            {% if fakenodo_datasets %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card-header">
+                            <h5 class="card-title">Fakenodo synchronized datasets</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Publication type</th>
+                                    <th>Options</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for fakenodo_dataset in fakenodo_datasets %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('dataset.get_fakenodo_synchronized_dataset', dataset_id=fakenodo_dataset.id) }}">
+                                                {{ fakenodo_dataset.ds_meta_data.title }}
+                                            </a>
+                                        </td>
+                                        <td>{{ fakenodo_dataset.ds_meta_data.description }}</td>
+                                        <td>{{ fakenodo_dataset.ds_meta_data.publication_type.name.replace('_', ' ').title() }}</td>
+                                        <td>
+                                            <a href="{{ url_for('dataset.get_fakenodo_synchronized_dataset', dataset_id=fakenodo_dataset.id) }}">
+                                                <i data-feather="eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('dataset.download_dataset', dataset_id=fakenodo_dataset.id) }}">
+                                                <i data-feather="download"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
     <div class="row">
         <div class="col-12">
             {% if unprepared_datasets %}
