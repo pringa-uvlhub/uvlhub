@@ -238,6 +238,14 @@ class DataSetRepository(BaseRepository):
             .count()
         )
 
+    def all_synchronized(self):
+        return (
+            self.model.query.join(DSMetaData)
+            .filter(DSMetaData.dataset_doi.isnot(None))
+            .order_by(self.model.created_at.desc())
+            .all()
+        )
+
     def latest_synchronized(self):
         return (
             self.model.query.join(DSMetaData)

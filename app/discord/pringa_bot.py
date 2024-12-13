@@ -3,37 +3,32 @@ import app
 import os
 
 from discord.ext import commands
-from sqlalchemy.orm import joinedload
 from app.discord.embeds import get_introduction_embed
 from discord.ui import View
 
 
-async def paginate(interaction, pages, create_embed, timeout=60):
+async def paginate(interaction, embeds, timeout=60):
     """
     Función para paginar contenido con botones.
     - interaction: La interacción del comando de Discord.
-    - pages: Lista de páginas (objetos) a paginar.
-    - create_embed: Función que crea un embed para cada página.
+    - embeds: Lista de embeds a paginar.
     - timeout: Tiempo en segundos para esperar por la respuesta (por defecto 60s).
     """
-
     current_page = 0
-    embed = create_embed(pages[current_page])
+    embed = embeds[current_page]
 
     # Crear el mensaje inicial con un embed
-    await interaction.response.send_message(embed=embed, view=PaginatorView(pages, create_embed, current_page))
+    await interaction.response.send_message(embed=embed, view=PaginatorView(embeds, current_page))
 
 
 class PaginatorView(View):
-    def __init__(self, pages, create_embed, current_page):
+    def __init__(self, embeds, current_page):
         super().__init__(timeout=60)
-        self.pages = pages
-        self.create_embed = create_embed
+        self.embeds = embeds
         self.current_page = current_page
 
     async def update_page(self, interaction: discord.Interaction):
-        # Editamos el mensaje almacenado en lugar de interaction.message
-        embed = self.create_embed(self.pages[self.current_page])
+        embed = self.embeds[self.current_page]
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="◀️ Previous", style=discord.ButtonStyle.primary)
@@ -44,7 +39,7 @@ class PaginatorView(View):
 
     @discord.ui.button(label="▶️ Next", style=discord.ButtonStyle.primary)
     async def next_page(self, interaction: discord.Interaction, button: discord.Button):
-        if self.current_page < len(self.pages) - 1:
+        if self.current_page < len(self.embeds) - 1:
             self.current_page += 1
             await self.update_page(interaction)
 
@@ -57,8 +52,7 @@ class PaginatorView(View):
 
 
 def start_bot():
-    from app.modules.dataset.repositories import DataSetRepository
-    from app.modules.dataset.models import DataSet
+    from app.modules.dataset.services import DataSetService
     app_create = app.create_app()
 
     token = os.getenv("DISCORD_TOKEN")
@@ -90,47 +84,41 @@ def start_bot():
         # Enviar el embed en la respuesta al slash command
         await interaction.response.send_message(embed=embed)
 
-    @bot.tree.command(name="list_datasets", description="List all datasets.")
+    @bot.tree.command(name="list_datasets", description="List all synchronized datasets.")
     async def list_datasets(interaction: discord.Interaction):
-        DATASETS_PER_PAGE = 1
-        dataset_repository = DataSetRepository()
-
         try:
             with app_create.app_context():
-                datasets = dataset_repository.model.query.options(joinedload(DataSet.ds_meta_data)).all()
+                dataset_service = DataSetService()
+                datasets = dataset_service.all_synchronized()
 
-            if not datasets:
-                await interaction.response.send_message("No datasets found.")
-                return
+                if not datasets:
+                    await interaction.response.send_message("No datasets found.")
+                    return
 
-            # Crear una lista de datasets por páginas
-            pages = [datasets[i:i + DATASETS_PER_PAGE] for i in range(0, len(datasets), DATASETS_PER_PAGE)]
+                # Crear una lista de embeds
+                embeds = []
+                for dataset in datasets:
+                    metadata = dataset.ds_meta_data
+                    embed = discord.Embed(
+                        title=f"Dataset: {dataset.name()}",
+                        description=f"{metadata.description}",
+                        color=discord.Color.green()
+                    )
+                    embed.add_field(name="Publication type:",
+                                    value=dataset.get_cleaned_publication_type(), inline=False)
+                    embed.add_field(name="Created at: ",
+                                    value=dataset.created_at.strftime('%B %d, %Y at %I:%M %p'), inline=False)
+                    embed.add_field(name="Publication DOI: ", value=dataset.get_uvlhub_doi(), inline=False)
 
-            # Crear un embed para cada página
-            def create_embed(page):
-                dataset = page[0]
-                metadata = dataset.ds_meta_data
+                    tags = (', '.join(tag.strip() for tag in metadata.tags.split(','))
+                            if metadata.tags else 'No tags available')
+                    embed.add_field(name="Tags: ", value=tags, inline=False)
 
-                embed = discord.Embed(
-                    title=f"Dataset: {dataset.name()}",
-                    description=f"{metadata.description}",
-                    color=discord.Color.green()
-                )
-                # Embed for more information
-                embed.add_field(name="Publication type:", value=dataset.get_cleaned_publication_type(), inline=False)
-                embed.add_field(name="Created at: ", value=dataset.created_at.strftime('%B %d, %Y at %I:%M %p'),
-                                inline=False)
-                embed.add_field(name="Publication DOI: ", value=dataset.get_uvlhub_doi(), inline=False)
+                    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+                    embeds.append(embed)
 
-                tags = (', '.join(tag.strip() for tag in metadata.tags.split(','))
-                        if metadata.tags else 'No tags available')
-                embed.add_field(name="Tags: ", value=tags, inline=False)
-
-                embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
-                return embed
-
-            # Llamar a la función de paginación
-            await paginate(interaction, pages, create_embed)
+                # Llamar a la función de paginación
+                await paginate(interaction, embeds)
 
         except Exception as e:
             if not interaction.response.is_done():
