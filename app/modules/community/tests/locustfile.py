@@ -15,7 +15,6 @@ class CommunityBehavior(TaskSet):
     def view_communities(self):
         search_terms = ["Bio", "science", "AI", ""]
         search_term = random.choice(search_terms)
-
         params = {"search": search_term} if search_term else {}
         response = self.client.get("/communities", params=params)
 

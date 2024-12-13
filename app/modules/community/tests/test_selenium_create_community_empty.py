@@ -27,5 +27,5 @@ class TestTestCreate():
         self.driver.find_element(By.LINK_TEXT, "All Communities").click()
         self.driver.find_element(By.LINK_TEXT, "Create Community").click()
         self.driver.find_element(By.ID, "submit").click()
-        elements = self.driver.find_elements(By.CSS_SELECTOR, ".community-item")  # Selector de elementos de comunidad
+        elements = self.driver.find_elements(By.CSS_SELECTOR, ".community-item")
         assert len(elements) == 0, "Se creó una comunidad inesperadamente"
