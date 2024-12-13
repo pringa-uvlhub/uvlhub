@@ -21,7 +21,6 @@ def index():
 @community_bp.route('/my_communities', methods=['GET'])
 @login_required
 def index_my_communities():
-    # Filtra las comunidades que han sido creadas por el usuario actual
     communities = Community.query.filter_by(created_by_id=current_user.id).all()
     return render_template('community/index_my_communities.html', communities=communities)
 
@@ -29,7 +28,6 @@ def index_my_communities():
 @community_bp.route('/my_joined_communities', methods=['GET'])
 @login_required
 def index_joined_communities():
-
     communities = current_user.communities
     return render_template('community/index_joined_communities.html', communities=communities)
 
@@ -45,11 +43,10 @@ def create():
 
         try:
             logger.info("Creating community...")
-            community_service = CommunityService()
             community = community_service.create_from_form(
                 form=form,
                 current_user=current_user
-                )
+            )
             community_service.join_community(community.id, current_user)
             flash('Community created successfully!', 'success')
             return redirect(url_for('community.index_my_communities'))
@@ -65,19 +62,14 @@ def create():
 def show_community(community_id):
     community = community_service.get_by_id(community_id)
     if not community:
-        abort(404)
+        abort(404, description=f"Community with ID {community_id} not found.")
 
     user = auth_service.get_by_id(community.created_by_id)
-
     user_admin = auth_service.get_by_id(community.admin_by_id)
 
     user_fullname = f"{user.profile.name} {user.profile.surname}" if user.profile else "Unknown"
+    admin_fullname = f"{user_admin.profile.name} {user_admin.profile.surname}" if user_admin.profile else "Unknown"
 
-    admin_fullname = f"{user_admin.profile.name} {user_admin.profile.surname}" if user.profile else "Unknown"
-
-    if not community:
-        flash('Community not found!', 'danger')
-        return redirect(url_for('community.index'))
     return render_template('community/show.html', community=community, user_fullname=user_fullname,
                            admin_fullname=admin_fullname)
 
@@ -87,10 +79,10 @@ def show_community(community_id):
 def delete_community(community_id):
     community = community_service.get_by_id(community_id)
     if not community:
-        abort(404)
+        abort(404, description=f"Community with ID {community_id} not found.")
 
     if community.admin_by_id != current_user.id:
-        abort(403)
+        abort(403, description="You do not have permission to delete this community.")
 
     try:
         if community_service.delete_community(community_id):
@@ -108,10 +100,8 @@ def delete_community(community_id):
 def join_community(community_id):
     try:
         community = Community.query.get(community_id)
-
-    # Si la comunidad no existe, abortar con un error 404
         if not community:
-            abort(404, description="Community not found.")
+            abort(404, description=f"Community with ID {community_id} not found.")
         if current_user in community.users:
             abort(403, description="You are already a member of this community.")
         success = community_service.join_community(community_id, current_user)
@@ -119,7 +109,7 @@ def join_community(community_id):
         if success:
             flash('You have successfully joined the community!', 'success')
         else:
-            abort(500)
+            abort(500, description="An unexpected error occurred while joining the community.")
 
     except ValueError as e:
         flash(str(e), 'danger')
@@ -134,7 +124,7 @@ def join_community(community_id):
 def list_members(community_id):
     community = community_service.get_by_id(community_id)
     if not community:
-        abort(404)
+        abort(404, description=f"Community with ID {community_id} not found.")
 
     members = community.users
     return render_template('community/members.html', community=community, members=members)
@@ -144,27 +134,22 @@ def list_members(community_id):
 @login_required
 def leave_community(community_id):
     try:
-        # Obtén la comunidad por ID
         community = community_service.get_by_id(community_id)
 
         if not community:
-            abort(404)
+            abort(404, description=f"Community with ID {community_id} not found.")
 
         if community.admin_by_id == current_user.id and len(community.users.all()) == 1:
-            flash(
-                'You are the only member left in the community. Please delete the community instead of leaving.',
-                'danger')
+            flash('You are the only member left in the community. Please delete the community instead of leaving.',
+                  'danger')
             return redirect(url_for('community.show_community', community_id=community_id))
 
-        # Comprobar si el usuario es el admin y hay otros miembros
         if community.admin_by_id == current_user.id:
-            flash(
-                'You cannot leave the community because you are the admin. '
-                'Please transfer the admin role to someone else first.',
-                'danger')
+            flash('You cannot leave the community because you are the admin. '
+                  'Please transfer the admin role to someone else first.',
+                  'danger')
             return redirect(url_for('community.show_community', community_id=community_id))
 
-        # Si no es el administrador, procedemos con la salida
         success = community_service.leave_community(community_id, current_user)
 
         if success:
@@ -178,7 +163,6 @@ def leave_community(community_id):
         logger.error(f"Unexpected error: {e}")
         flash('An error occurred while leaving the community.', 'danger')
 
-    # Redirigir al show de la comunidad
     return redirect(url_for('community.show_community', community_id=community_id))
 
 
@@ -212,11 +196,10 @@ def edit_community(community_id):
     community = community_service.get_community_by_id(community_id)
 
     if not community:
-        abort(404)
+        abort(404, description=f"Community with ID {community_id} not found.")
 
-    # Verificar que el usuario actual es el administrador
     if community.admin_by_id != current_user.id:
-        abort(403)
+        abort(403, description="You do not have permission to edit this community.")
 
     form = CommunityForm(obj=community)
 
@@ -242,26 +225,21 @@ def edit_community(community_id):
 @login_required
 def remove_user(community_id, user_id):
     try:
-        # Obtener la comunidad y el usuario a expulsar
         community = community_service.get_by_id(community_id)
         user = auth_service.get_by_id(user_id)
 
-        # Verificar si la comunidad existe
         if not community:
             flash('Community not found!', 'danger')
             return redirect(url_for('community.index'))
 
-        # Verificar si el usuario es el administrador de la comunidad
         if community.admin_by_id != current_user.id:
             flash('You do not have permission to remove users from this community.', 'danger')
             return redirect(url_for('community.show_community', community_id=community_id))
 
-        # Verificar si el usuario a expulsar es miembro de la comunidad
         if user not in community.users:
             flash('The user is not a member of this community.', 'info')
             return redirect(url_for('community.show_community', community_id=community_id))
 
-        # Expulsar al usuario
         success = community_service.remove_user_from_community(community_id, user)
 
         if success:

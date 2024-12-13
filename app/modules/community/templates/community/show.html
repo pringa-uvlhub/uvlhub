@@ -21,41 +21,33 @@
     <p><strong>Created By:</strong> {{ user_fullname }}</p>
     <p><strong>Managed By:</strong> {{ admin_fullname }}</p>
 
-    <!-- Mostrar solo los mensajes flash de tipo 'danger' -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages%}
-
-                    {% for category, message in messages %}
-                        {% if category == 'danger' %}
-                        <div class="alert alert-danger">
-                            <ul>
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'danger' %}
+                    <div class="alert alert-danger">
+                        <ul>
                             <li>{{ message }}</li>
-                            </ul>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
-
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <!-- Apartado de Members -->
     <div class="d-flex align-items-center my-3">
         <p class="me-3 mb-0"><strong>Members:</strong> {{ community.users.all()|length }}</p>
         <a href="{{ url_for('community.list_members', community_id=community.id) }}" class="btn btn-info">View Members</a>
     </div>
 
-
-    <!-- Si el usuario es miembro -->
     {% if current_user in community.users %}
         <div class="alert alert-info mt-3">
             You are a member of this community
         </div>
-        <!-- Botón para abandonar la comunidad -->
         <form action="{{ url_for('community.leave_community', community_id=community.id) }}" method="POST" style="display:inline;">
             <button type="submit" class="btn btn-warning">Leave Community</button>
         </form>
     {% else %}
-        <!-- Botón para unirse a la comunidad -->
         <form action="{{ url_for('community.join_community', community_id=community.id) }}" method="POST" style="display:inline;">
             <button type="submit" class="btn btn-success">Join Community</button>
         </form>
@@ -65,8 +57,7 @@
     <form action="{{ url_for('community.delete_community', community_id=community.id) }}" method="POST" style="display:inline;">
         <button type="submit" class="btn btn-danger">Delete Community</button>
     </form>
-    {% endif %}
-    {% if community.admin_by_id == current_user.id %}
+
     <div class="my-3">
         <a href="{{ url_for('community.edit_community', community_id=community.id) }}" class="btn btn-secondary">
             Edit Community
