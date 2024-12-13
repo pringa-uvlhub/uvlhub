@@ -1,0 +1,84 @@
+name: Scheduled Release with PR
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Fetch all tags from remote
+      run: |
+        git fetch --tags
+
+    - name: Get the latest tag (if exists)
+      id: get_latest_tag
+      run: |
+        latest_tag=$(git tag --list | sort -V | tail -n 1)
+        echo "latest_tag=${latest_tag}" >> $GITHUB_ENV
+        echo "Latest tag found: $latest_tag"
+
+    - name: Determine the next version
+      id: determine_version
+      run: |
+        latest_version="${{ env.latest_tag }}"
+        
+        if [[ "$latest_version" =~ ^v?[0-9]+\.[0-9]+$ ]]; then
+          major_version="${latest_version#v}"
+          major_version="${major_version%.*}"
+          
+          new_version=$((major_version + 1))
+          new_version="v${new_version}.0"
+        else
+          new_version="v1.0"
+        fi
+        
+        echo "new_version=${new_version}" >> $GITHUB_ENV
+        echo "New version calculated: $new_version"
+
+    - name: Check if the new tag already exists
+      id: check_new_tag
+      run: |
+        if git rev-parse "${{ env.new_version }}" >/dev/null 2>&1; then
+          echo "Tag ${{ env.new_version }} already exists."
+        else
+          echo "Tag ${{ env.new_version }} does not exist. Creating it now."
+          
+          git tag ${{ env.new_version }}
+          git push origin ${{ env.new_version }}
+        fi
+
+  create-pull-request:
+    runs-on: ubuntu-latest
+    needs: create-release
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install GitHub CLI
+      run: |
+        sudo apt-get install gh
+
+    - name: Authenticate GitHub CLI
+      run: |
+        echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+    - name: Get Current Date
+      id: get_date
+      run: |
+        current_date=$(date +'%d-%m-%Y')
+        echo "current_date=${current_date}" >> $GITHUB_ENV
+
+    - name: Create Pull Request from develop to main
+      run: |
+        gh pr create \
+          --title "Release/${{ env.current_date }}" \
+          --body "This pull request prepares the release of a new version." \
+          --base main \
+          --head develop
