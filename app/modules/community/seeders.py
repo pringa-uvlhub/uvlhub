@@ -45,6 +45,7 @@ class CommunitySeeder(BaseSeeder):
                 admin_by_id=user_ids[1],
                 users=[users[1]]  # Añade al creador como miembro automáticamente
             ),
+
             Community(
                 name="Scientific Community",
                 description=(
@@ -56,6 +57,33 @@ class CommunitySeeder(BaseSeeder):
                 logo=None,  # No se asigna logo, utilizará el predeterminado.
                 admin_by_id=user_ids[0],
                 users=[users[0]]  # Añade al creador como miembro automáticamente
+            ),
+            Community(
+                name="Dark Matter",
+                description="A group for discussing advancements in Dark Matter.",
+                created_by_id=user_ids[1],  # Usa otro usuario si está disponible.
+                created_at=datetime.now(timezone.utc),
+                logo=None,
+                admin_by_id=user_ids[1],
+                users=[users[1]]  # Añade al creador como miembro automáticamente
+            ),
+            Community(
+                name="Biology",
+                description="A group for discussing advancements in biology.",
+                created_by_id=user_ids[1],  # Usa otro usuario si está disponible.
+                created_at=datetime.now(timezone.utc),
+                logo=None,
+                admin_by_id=user_ids[1],
+                users=[users[1], users[0]]
+            ),
+            Community(
+                name="Atomic",
+                description="A group for discussing advancements in atomic.",
+                created_by_id=user_ids[0],  # Usa otro usuario si está disponible.
+                created_at=datetime.now(timezone.utc),
+                logo=None,
+                admin_by_id=user_ids[0],
+                users=[users[1], users[0]]
             ),
         ]
 
