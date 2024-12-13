@@ -27,6 +27,24 @@ def get_introduction_embed():
     return embed
 
 
+def get_info_datasets():
+    embed = discord.Embed(
+                title="Managing Datasets in UVLHub",
+                description="UVLHub allows you to upload, store, and analyze your UVL models. All datasets are backed \
+                            up with Zenodo, ensuring data permanence and integrity.\n\n"
+                            "Steps to manage your datasets:\n"
+                            "1. Upload UVL models via the web app.\n"
+                            "2. Store related metadata like title, authors, and tags.\n"
+                            "3. Analyze models with integrated tools like Flamapy.\n"
+                            "4. Datasets are assigned a DOI for reference and retrieval via Zenodo.\n\n"
+                            "Resources:\n"
+                            "- [UVLHub Documentation](https://docs.uvlhub.io/)\n"
+                            "- [Zenodo Repository](https://zenodo.org/)"
+            )
+    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+    return embed
+
+
 def get_dataset_embed(dataset):
     """
     Crea un embed para un dataset proporcionado.

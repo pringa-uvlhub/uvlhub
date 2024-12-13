@@ -3,7 +3,7 @@ import app
 import os
 
 from discord.ext import commands
-from app.discord.embeds import get_introduction_embed, get_dataset_embed
+from app.discord.embeds import get_introduction_embed, get_dataset_embed, get_info_datasets
 from discord.ui import View
 
 
@@ -97,6 +97,11 @@ def start_bot():
     async def introduction(interaction: discord.Interaction):
         embed = get_introduction_embed()
         # Enviar el embed en la respuesta al slash command
+        await interaction.response.send_message(embed=embed)
+
+    @bot.tree.command(name="info_datasets", description="Learn how to manage datasets in UVLHub.")
+    async def info_datasets(interaction: discord.Interaction):
+        embed = get_info_datasets()
         await interaction.response.send_message(embed=embed)
 
     @bot.tree.command(name="list_datasets", description="List all synchronized datasets.")
