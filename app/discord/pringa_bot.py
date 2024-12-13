@@ -67,6 +67,7 @@ class PaginatorView(View):
 def start_bot():
     from app.modules.dataset.services import DataSetService
     from app.modules.community.services import CommunityService
+    from app.modules.explore.services import ExploreService
     app_create = app.create_app()
 
     token = os.getenv("DISCORD_TOKEN")
@@ -139,7 +140,7 @@ def start_bot():
                 await interaction.response.send_message(f"Error listing datasets: {str(e)}")
             else:
                 await interaction.followup.send(f"Error listing datasets: {str(e)}")
-                
+
     @bot.tree.command(name="list_communities", description="List all available communities.")
     async def list_communities(interaction: discord.Interaction):
         try:
@@ -175,6 +176,64 @@ def start_bot():
                 await interaction.response.send_message(f"Error listing communities: {str(e)}")
             else:
                 await interaction.followup.send(f"Error listing communities: {str(e)}")
+
+    @bot.tree.command(name="filter_datasets", description="Filter datasets based on various criteria.")
+    async def filter_datasets(
+        interaction: discord.Interaction,
+        query: str = "",
+        query_author: str = "",
+        query_tag: str = "",
+        query_features: str = "",
+        query_models: str = "",
+        sorting: str = "newest",
+        publication_type: str = "any"
+    ):
+        try:
+            with app_create.app_context():
+                # Llama al método de filtrado con los parámetros corregidos
+                datasets = ExploreService().filter(query=query,
+                                                   queryAuthor=query_author,
+                                                   queryTag=query_tag,
+                                                   queryFeatures=query_features,
+                                                   queryModels=query_models,
+                                                   sorting=sorting,
+                                                   publication_type=publication_type
+                                                   )
+
+                if not datasets:
+                    await interaction.response.send_message("No datasets matched the criteria.")
+                    return
+
+                # Crear una lista de embeds
+                embeds = []
+                for dataset in datasets:
+                    metadata = dataset.ds_meta_data
+                    embed = discord.Embed(
+                        title=f"Dataset: {dataset.name()}",
+                        description=f"{metadata.description}",
+                        color=discord.Color.green()
+                    )
+                    embed.add_field(name="Publication type:",
+                                    value=dataset.get_cleaned_publication_type(), inline=False)
+                    embed.add_field(name="Created at: ",
+                                    value=dataset.created_at.strftime('%B %d, %Y at %I:%M %p'), inline=False)
+                    embed.add_field(name="Publication DOI: ", value=dataset.get_uvlhub_doi(), inline=False)
+
+                    tags = (', '.join(tag.strip() for tag in metadata.tags.split(','))
+                            if metadata.tags else 'No tags available')
+                    embed.add_field(name="Tags: ", value=tags, inline=False)
+
+                    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+                    embeds.append(embed)
+
+                # Llamar a la función de paginación
+                await paginate(interaction, embeds)
+
+        except Exception as e:
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"Error filtering datasets: {str(e)}")
+            else:
+                await interaction.followup.send(f"Error filtering datasets: {str(e)}")
 
     # Función para correr el bot
     def run_discord_bot():
