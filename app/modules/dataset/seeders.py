@@ -60,7 +60,7 @@ class DataSetSeeder(BaseSeeder):
                 dataset_doi=None,
                 tags='tag1, tag2',
                 staging_area=True,
-                ds_metrics_id=seeded_ds_metrics.id
+                ds_metrics_id=seeded_ds_metrics[0].id
             )
         )
         seeded_ds_meta_data = self.seed(ds_meta_data_list)
