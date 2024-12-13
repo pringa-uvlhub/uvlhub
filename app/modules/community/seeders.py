@@ -32,15 +32,20 @@ class CommunitySeeder(BaseSeeder):
                 description="A community for developers passionate about open source projects.",
                 created_by_id=user_ids[0],  # Asigna al primer usuario como creador.
                 created_at=datetime.now(timezone.utc),
-                logo=None
+                logo=None,
+                admin_by_id=user_ids[0],
+                users=[users[0]]  # Añade al creador como miembro automáticamente
             ),
             Community(
                 name="AI Researchers",
                 description="A group for discussing advancements in AI and machine learning.",
                 created_by_id=user_ids[1],  # Usa otro usuario si está disponible.
                 created_at=datetime.now(timezone.utc),
-                logo=None  # Otro logo específico
+                logo=None,
+                admin_by_id=user_ids[1],
+                users=[users[1]]  # Añade al creador como miembro automáticamente
             ),
+
             Community(
                 name="Scientific Community",
                 description=(
@@ -49,9 +54,40 @@ class CommunitySeeder(BaseSeeder):
                 ),
                 created_by_id=user_ids[0],  # Usar el primer usuario.
                 created_at=datetime.now(timezone.utc),
-                logo=None  # No se asigna logo, utilizará el predeterminado.
+                logo=None,  # No se asigna logo, utilizará el predeterminado.
+                admin_by_id=user_ids[0],
+                users=[users[0]]  # Añade al creador como miembro automáticamente
+            ),
+            Community(
+                name="Dark Matter",
+                description="A group for discussing advancements in Dark Matter.",
+                created_by_id=user_ids[1],  # Usa otro usuario si está disponible.
+                created_at=datetime.now(timezone.utc),
+                logo=None,
+                admin_by_id=user_ids[1],
+                users=[users[1]]  # Añade al creador como miembro automáticamente
+            ),
+            Community(
+                name="Biology",
+                description="A group for discussing advancements in biology.",
+                created_by_id=user_ids[1],  # Usa otro usuario si está disponible.
+                created_at=datetime.now(timezone.utc),
+                logo=None,
+                admin_by_id=user_ids[1],
+                users=[users[1], users[0]]
+            ),
+            Community(
+                name="Atomic",
+                description="A group for discussing advancements in atomic.",
+                created_by_id=user_ids[0],  # Usa otro usuario si está disponible.
+                created_at=datetime.now(timezone.utc),
+                logo=None,
+                admin_by_id=user_ids[0],
+                users=[users[1], users[0]]
             ),
         ]
 
         # Insertar comunidades en la base de datos.
         self.seed(communities)
+
+        # Después de crear las comunidades, agregar los creadores como miembros.

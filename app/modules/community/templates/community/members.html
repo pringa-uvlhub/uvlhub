@@ -1,0 +1,60 @@
+{% extends "base_template.html" %}
+
+{% block title %}Community Members{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h1 class="h3 mb-3"><b>Members of {{ community.name }}</b></h1>
+
+    <a href="{{ url_for('community.show_community', community_id=community.id) }}" class="btn btn-secondary mb-4">
+        Back to Community
+    </a>
+
+    {% if members %}
+        <div class="list-group">
+            {% for member in members %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">{{ member.profile.name }} {{ member.profile.surname }}</h5>
+                        <small class="text-muted">{{ member.email }}</small>
+                    </div>
+
+                    <div>
+                        <!-- Marca para el creador -->
+                        {% if member.id == community.created_by_id %}
+                            <span class="badge bg-primary">Creator</span>
+                        {% endif %}
+
+                        <!-- Marca para el administrador -->
+                        {% if member.id == community.admin_by_id %}
+                            <span class="badge bg-success">Admin</span>
+                        {% endif %}
+
+                        {% if current_user.id == community.admin_by_id and member.id != community.admin_by_id %}
+                            <!-- Botón para conceder el rol de administrador -->
+                            <form action="{{ url_for('community.grant_admin', community_id=community.id, user_id=member.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-warning btn-sm">
+                                    Grant Admin
+                                </button>
+                            </form>
+
+                            <!-- Botón para eliminar al usuario de la comunidad -->
+                            <form action="{{ url_for('community.remove_user', community_id=community.id, user_id=member.id) }}" method="POST" style="display:inline; margin-left: 5px;">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    Remove User
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning mt-4">
+            This community has no members yet.
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

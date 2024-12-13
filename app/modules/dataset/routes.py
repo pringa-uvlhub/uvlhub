@@ -35,6 +35,7 @@ from app.modules.dataset.services import (
     DSRatingService
 )
 from app.modules.zenodo.services import ZenodoService
+from app.modules.fakenodo.services import FakenodoService
 from app.modules.dataset.repositories import (
     DSMetaDataRepository,
     DataSetRepository
@@ -49,6 +50,7 @@ dataset_service = DataSetService()
 author_service = AuthorService()
 dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
+fakenodo_service = FakenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 ds_rating_service = DSRatingService()
@@ -117,11 +119,92 @@ def upload_dataset_zenodo():
     return render_template("dataset/upload_dataset.html", form=form)
 
 
+@dataset_bp.route("/dataset/upload-fakenodo", methods=["POST"])
+@login_required
+def upload_dataset_fakenodo():
+    form = DataSetForm()
+    if request.method == "POST":
+
+        dataset = None
+
+        if not form.validate_on_submit():
+            return jsonify({"message": form.errors}), 400
+
+        try:
+            logger.info("Creating dataset...")
+            dataset = dataset_service.create_from_form(form=form, current_user=current_user, staging_area=False)
+            logger.info(f"Created dataset: {dataset}")
+            dataset_service.move_feature_models(dataset)
+        except Exception as exc:
+            logger.exception(f"Exception while create dataset data in local {exc}")
+            return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+
+        try:
+            fakenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+            fakenodo_ds_doi = fakenodo_response_json.get("fakenodo_doi")
+        except Exception as exc:
+            fakenodo_response_json = {}
+            logger.exception(f"Exception while create dataset data in Fakenodo {exc}")
+
+        # update dataset with new fakenodo doi
+        dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_fakenodo_doi=fakenodo_ds_doi)
+
+        # Delete temp folder
+        file_path = current_user.temp_folder()
+        if os.path.exists(file_path) and os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+
+        msg = "Everything works!"
+        return jsonify({"message": msg}), 200
+
+
+@dataset_bp.route("/dataset/upload-fakenodo/<int:dataset_id>", methods=["POST"])
+@login_required
+def upload_dataset_fakenodo_from_staging(dataset_id):
+    form = DataSetForm()
+    dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+    if not dataset:
+        abort(404)
+
+    if not form.validate_on_submit():
+        print("Form errors:", form.errors)
+        return jsonify({"message": form.errors}), 400
+
+    dataset.ds_meta_data.staging_area = False
+    dataset.ds_meta_data.build = False
+    dataset = dataset_service.update_from_form(dataset, form, current_user)
+    dataset_service.move_feature_models(dataset)
+
+    try:
+        fakenodo_response_json = fakenodo_service.create_new_deposition(dataset)
+        fakenodo_ds_doi = fakenodo_response_json.get("fakenodo_doi")
+    except Exception as exc:
+        fakenodo_response_json = {}
+        logger.exception(f"Exception while create dataset data in Fakenodo {exc}")
+
+    # update dataset with new fakenodo doi
+    dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_fakenodo_doi=fakenodo_ds_doi)
+
+    # Delete temp folder
+    file_path = current_user.temp_folder()
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+    msg = "Everything works!"
+    return jsonify({"message": msg}), 200
+
+
 @dataset_bp.route("/dataset/upload/<int:dataset_id>", methods=["POST"])
 @login_required
 def upload_dataset_zenodo_from_staging(dataset_id):
     form = DataSetForm()
     dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+    if not dataset:
+        abort(404)
+
+    if not form.validate_on_submit():
+        print("Form errors:", form.errors)
+        return jsonify({"message": form.errors}), 400
     dataset.ds_meta_data.staging_area = False
     dataset.ds_meta_data.build = False
     dataset = dataset_service.update_from_form(dataset, form, current_user)
@@ -235,12 +318,34 @@ def update_staging_area_dataset(dataset_id):
                                feature_models=feature_models_data)
 
 
+@dataset_bp.route("/dataset/delete/<int:dataset_id>", methods=["DELETE"])
+@login_required
+def delete_dataset(dataset_id):
+    dataset = dataset_service.get_staging_area_dataset(current_user.id, dataset_id)
+    if not dataset:
+        abort(404, description="Dataset not found")
+
+    if dataset.user_id != current_user.id:
+        abort(403, description="You do not have permission to delete this dataset")
+
+    try:
+        dataset_service.delete(dataset_id)
+        temp_folder = os.path.join('uploads', f'user_{current_user.id}', f'dataset_{dataset_id}')
+        if os.path.exists(temp_folder) and os.path.isdir(temp_folder):
+            shutil.rmtree(temp_folder)
+
+        return jsonify({"message": "Dataset deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"message": f"An error occurred while deleting the dataset: {str(e)}"}), 500
+
+
 @dataset_bp.route("/dataset/list", methods=["GET", "POST"])
 @login_required
 def list_dataset():
     return render_template(
         "dataset/list_datasets.html",
         datasets=dataset_service.get_synchronized(current_user.id),
+        fakenodo_datasets=dataset_service.get_fakenodo_synchronized(current_user.id),
         local_datasets=dataset_service.get_unsynchronized(current_user.id),
         unprepared_datasets=dataset_service.get_staging_area(current_user.id),
     )
@@ -490,6 +595,21 @@ def get_unsynchronized_dataset(dataset_id):
 
     # Get dataset
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+
+    if not dataset:
+        abort(404)
+
+    print(dataset.to_dict())
+
+    return render_template("dataset/view_dataset.html", dataset=dataset)
+
+
+@dataset_bp.route("/dataset/fakenodo-synchronized/<int:dataset_id>/", methods=["GET"])
+@login_required
+def get_fakenodo_synchronized_dataset(dataset_id):
+
+    # Get dataset
+    dataset = dataset_service.get_fakenodo_synchronized_dataset(current_user.id, dataset_id)
 
     if not dataset:
         abort(404)

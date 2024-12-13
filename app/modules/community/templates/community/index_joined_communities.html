@@ -1,0 +1,36 @@
+{% extends "base_template.html" %}
+
+{% block title %}View Communities{% endblock %}
+
+{% block content %}
+
+    <h1 class="h3 mb-3"><b>My Joined Communities</b></h1>
+
+    <a href="{{ url_for('community.create') }}" class="btn btn-primary mb-4">Create Community</a>
+
+    <div class="row row-cols-1 row-cols-lg-3 row-cols-md-2 row-cols-12 g-4">
+        {% for community in communities %}
+        <div class="col">
+            <!-- Envolver todo el div con un enlace para hacerlo clicable -->
+            <a href="{{ url_for('community.show_community', community_id=community.id) }}" class="text-decoration-none">
+                <div class="card h-100">
+                    <!-- Renderiza el logo dinámico o el predeterminado -->
+                    <img src="{{ url_for('static', filename=community.logo) }}" 
+                        class="card-img-top custom-img" alt="{{ community.name }}">
+                    <div class="card-body custom-card-body">
+                        <h5 class="card-title">{{ community.name }}</h5>
+                        <p class="card-text">
+                            {{ community.description }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('community.scripts') }}"></script>
+{% endblock %}

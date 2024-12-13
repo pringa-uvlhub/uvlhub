@@ -645,11 +645,11 @@
     {% endif %}
 
     {% if request.path.startswith('/dataset/staging-area') %}
-    <div class="col-12">
-
-        <button type="button" class="btn btn-primary mt-2" id="update_button">Update Dataset</button>
-        <div id="error_message" style="color: red;"></div>
+    <div class="d-flex align-items-center mt-2">
+        <button type="button" class="btn btn-primary me-2" id="update_button">Update Dataset</button>
+        <button type="button" class="btn btn-danger" id="delete_button">Delete Dataset</button>
     </div>
+    <div id="error_message" style="color: red;"></div>
         
     {% endif %}
 
@@ -676,6 +676,9 @@
                 <button id="upload_button" class="btn btn-primary mt-2" disabled>
                     <i data-feather="upload" class="center-button-icon"></i>
                     Upload dataset</button>
+                <button id="upload_fakenodo_button" class="btn btn-primary mt-2">
+                    <i data-feather="upload" class="center-button-icon"></i>
+                    Upload dataset fakenodo</button>
 
                 <div id="loading" style="display: none">
                     <img width="40px" src="{{ url_for("static", filename="gifs/loading.svg") }}"/>
