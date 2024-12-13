@@ -66,6 +66,7 @@ class PaginatorView(View):
 
 def start_bot():
     from app.modules.dataset.services import DataSetService
+    from app.modules.community.services import CommunityService
     app_create = app.create_app()
 
     token = os.getenv("DISCORD_TOKEN")
@@ -138,6 +139,42 @@ def start_bot():
                 await interaction.response.send_message(f"Error listing datasets: {str(e)}")
             else:
                 await interaction.followup.send(f"Error listing datasets: {str(e)}")
+                
+    @bot.tree.command(name="list_communities", description="List all available communities.")
+    async def list_communities(interaction: discord.Interaction):
+        try:
+            with app_create.app_context():
+                community_service = CommunityService()
+                communities = community_service.get_all_communities()
+
+                if not communities:
+                    await interaction.response.send_message("No communities found.")
+                    return
+
+                # Crear una lista de embeds
+                embeds = []
+                for community in communities:
+                    embed = discord.Embed(
+                        title=f"Community: {community.name}",
+                        description=f"{community.description}",
+                        color=discord.Color.blue()
+                    )
+                    embed.add_field(name="Created at:",
+                                    value=community.created_at.strftime('%B %d, %Y at %I:%M %p'), inline=False)
+                    embed.add_field(name="Created by:", value=str(community.created_by_id), inline=False)
+                    embed.add_field(name="Admin ID:", value=str(community.admin_by_id), inline=False)
+                    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+
+                    embeds.append(embed)
+
+                # Llamar a la función de paginación
+                await paginate(interaction, embeds)
+
+        except Exception as e:
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"Error listing communities: {str(e)}")
+            else:
+                await interaction.followup.send(f"Error listing communities: {str(e)}")
 
     # Función para correr el bot
     def run_discord_bot():
