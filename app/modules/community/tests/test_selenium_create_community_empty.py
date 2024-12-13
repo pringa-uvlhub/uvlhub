@@ -23,7 +23,6 @@ class TestTestCreate():
         self.driver.find_element(By.ID, "password").click()
         self.driver.find_element(By.ID, "password").send_keys("1234")
         self.driver.find_element(By.ID, "submit").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".list-unstyled > li:nth-child(4)").click()
         self.driver.find_element(By.LINK_TEXT, "All Communities").click()
         self.driver.find_element(By.LINK_TEXT, "Create Community").click()
         self.driver.find_element(By.ID, "submit").click()
