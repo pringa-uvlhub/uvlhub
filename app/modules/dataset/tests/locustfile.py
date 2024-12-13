@@ -1,9 +1,9 @@
 import os
+import secrets
 import shutil
 from locust import HttpUser, TaskSet, task
 from core.locust.common import get_csrf_token
 from core.environment.host import get_host_for_locust_testing
-import random
 
 
 class DatasetBehavior(TaskSet):
@@ -29,7 +29,7 @@ class DatasetBehavior(TaskSet):
 
     @task(11)
     def upload_dataset_fakenodo_from_staging(self):
-        random_number = random.randint(1000, 9999)
+        random_number = secrets.randbelow(9000) + 1000
         form_data = {
             "title": f"uploaded fakenodo dataset {random_number}",
             "desc": "uploaded fakenodo dataset",
@@ -59,7 +59,7 @@ class DatasetBehavior(TaskSet):
 
     @task(10)
     def upload_dataset_fakenodo(self):
-        random_number = random.randint(1000, 9999)
+        random_number = secrets.randbelow(9000) + 1000
         form_data = {
             "title": f"uploaded fakenodo dataset {random_number}",
             "desc": "uploaded fakenodo dataset",
@@ -89,7 +89,7 @@ class DatasetBehavior(TaskSet):
 
     @task(9)
     def upload_dataset_zenodo(self):
-        random_number = random.randint(1000, 9999)
+        random_number = secrets.randbelow(9000) + 1000
         form_data = {
             "title": f"uploaded zenodo dataset {random_number}",
             "desc": "uploaded zenodo dataset",
@@ -119,7 +119,7 @@ class DatasetBehavior(TaskSet):
 
     @task(8)
     def upload_dataset_zenodo_from_staging(self):
-        random_number = random.randint(1000, 9999)
+        random_number = secrets.randbelow(9000) + 1000
         form_data = {
             "title": f"uploaded zenodo dataset {random_number}",
             "desc": "uploaded zenodo dataset",
@@ -150,7 +150,7 @@ class DatasetBehavior(TaskSet):
     @task(7)
     def update_staging_area_dataset(self):
         # Continuar con el update del dataset
-        random_number = random.randint(1000, 9999)
+        random_number = secrets.randbelow(9000) + 1000
         form_data = {
             "title": f"updated staging dataset {random_number}",
             "desc": "updated staging description",
@@ -221,8 +221,8 @@ class DatasetBehavior(TaskSet):
     @task(4)
     def rate_dataset(self):
         """Simula el envío de una calificación a un dataset."""
-        dataset_id = random.randint(1, 4)
-        rating_value = random.randint(0, 5)
+        dataset_id = secrets.randbelow(4) + 1
+        rating_value = secrets.randbelow(6)
         response = self.client.post(f"/datasets/{dataset_id}/rate", json={"rating": rating_value})
 
         if response.status_code == 200:
@@ -235,7 +235,7 @@ class DatasetBehavior(TaskSet):
     @task(3)
     def get_dataset_average_rating(self):
         """Simula obtener el promedio de calificaciones de un dataset."""
-        dataset_id = random.randint(1, 4)
+        dataset_id = secrets.randbelow(4) + 1
         response = self.client.get(f"/datasets/{dataset_id}/average-rating")
 
         if response.status_code == 200:
