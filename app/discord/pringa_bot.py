@@ -15,21 +15,34 @@ async def paginate(interaction, embeds, timeout=60):
     - timeout: Tiempo en segundos para esperar por la respuesta (por defecto 60s).
     """
     current_page = 0
+    total_pages = len(embeds)
+
     embed = embeds[current_page]
+    embed.set_footer(text=f"Page {current_page + 1}/{total_pages}")
 
     # Crear el mensaje inicial con un embed
-    await interaction.response.send_message(embed=embed, view=PaginatorView(embeds, current_page))
+    await interaction.response.send_message(embed=embed, view=PaginatorView(embeds, current_page, total_pages))
 
 
 class PaginatorView(View):
-    def __init__(self, embeds, current_page):
+    def __init__(self, embeds, current_page, total_pages):
         super().__init__(timeout=60)
         self.embeds = embeds
         self.current_page = current_page
+        self.total_pages = total_pages
+        self.update_buttons()
 
     async def update_page(self, interaction: discord.Interaction):
         embed = self.embeds[self.current_page]
+        embed.set_footer(text=f"Page {self.current_page + 1}/{self.total_pages}")
+        self.update_buttons()
         await interaction.response.edit_message(embed=embed, view=self)
+
+    def update_buttons(self):
+        # Deshabilitar el botón "Anterior" si estamos en la primera página
+        self.children[0].disabled = self.current_page == 0
+        # Deshabilitar el botón "Siguiente" si estamos en la última página
+        self.children[1].disabled = self.current_page == self.total_pages - 1
 
     @discord.ui.button(label="◀️ Previous", style=discord.ButtonStyle.primary)
     async def previous_page(self, interaction: discord.Interaction, button: discord.Button):
