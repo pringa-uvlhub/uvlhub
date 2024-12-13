@@ -1,5 +1,5 @@
 import logging
-from flask import request, render_template, flash, redirect, url_for, jsonify
+from flask import abort, request, render_template, flash, redirect, url_for, jsonify
 from flask_login import current_user, login_required
 from app.modules.community.forms import CommunityForm
 from app.modules.community.models import Community
@@ -64,6 +64,8 @@ def create():
 @community_bp.route('/community/<int:community_id>', methods=['GET'])
 def show_community(community_id):
     community = community_service.get_by_id(community_id)
+    if not community:
+        abort(404)
 
     user = auth_service.get_by_id(community.created_by_id)
 
@@ -85,12 +87,10 @@ def show_community(community_id):
 def delete_community(community_id):
     community = community_service.get_by_id(community_id)
     if not community:
-        flash('Community not found!', 'danger')
-        return redirect(url_for('community.index'))
+        abort(404)
 
     if community.admin_by_id != current_user.id:
-        flash('You are not authorized to delete this community.', 'danger')
-        return redirect(url_for('community.index'))
+        abort(403)
 
     try:
         if community_service.delete_community(community_id):
@@ -107,12 +107,19 @@ def delete_community(community_id):
 @login_required
 def join_community(community_id):
     try:
+        community = Community.query.get(community_id)
+
+    # Si la comunidad no existe, abortar con un error 404
+        if not community:
+            abort(404, description="Community not found.")
+        if current_user in community.users:
+            abort(403, description="You are already a member of this community.")
         success = community_service.join_community(community_id, current_user)
 
         if success:
             flash('You have successfully joined the community!', 'success')
         else:
-            flash('You are already a member of this community.', 'info')
+            abort(500)
 
     except ValueError as e:
         flash(str(e), 'danger')
@@ -127,8 +134,7 @@ def join_community(community_id):
 def list_members(community_id):
     community = community_service.get_by_id(community_id)
     if not community:
-        flash('Community not found!', 'danger')
-        return redirect(url_for('community.index'))
+        abort(404)
 
     members = community.users
     return render_template('community/members.html', community=community, members=members)
@@ -142,8 +148,7 @@ def leave_community(community_id):
         community = community_service.get_by_id(community_id)
 
         if not community:
-            flash('Community not found!', 'danger')
-            return redirect(url_for('community.index'))
+            abort(404)
 
         if community.admin_by_id == current_user.id and len(community.users.all()) == 1:
             flash(
@@ -207,13 +212,11 @@ def edit_community(community_id):
     community = community_service.get_community_by_id(community_id)
 
     if not community:
-        flash('Community not found!', 'danger')
-        return redirect(url_for('community.index'))
+        abort(404)
 
     # Verificar que el usuario actual es el administrador
     if community.admin_by_id != current_user.id:
-        flash('You are not authorized to edit this community.', 'danger')
-        return redirect(url_for('community.show_community', community_id=community_id))
+        abort(403)
 
     form = CommunityForm(obj=community)
 
