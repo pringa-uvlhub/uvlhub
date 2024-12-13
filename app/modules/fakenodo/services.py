@@ -2,7 +2,7 @@ from app.modules.fakenodo.repositories import FakenodoRepository
 from core.services.BaseService import BaseService
 
 from app.modules.dataset.models import DataSet
-import random
+import secrets
 
 
 class FakenodoService(BaseService):
@@ -20,8 +20,8 @@ class FakenodoService(BaseService):
             dict: A dictionary containing the doi and a status code 201.
         """
 
-        random_numbers1 = ''.join([str(random.randint(0, 9)) for _ in range(2)])
-        random_numbers2 = ''.join([str(random.randint(0, 9)) for _ in range(4)])
+        random_numbers1 = ''.join([str(secrets.randbelow(10)) for _ in range(2)])
+        random_numbers2 = ''.join([str(secrets.randbelow(10)) for _ in range(4)])
         fakenodo_doi = f"{random_numbers1}.{random_numbers2}/{dataset.ds_meta_data.title}"
         # Construir el diccionario de respuesta
         response = {
