@@ -49,6 +49,13 @@ def client():
                          created_at=datetime.now())
             db.session.add(admin)
             db.session.commit()
+            user_test = User(id=10,
+                             email="usertest@example.com",
+                             password="password",
+                             is_admin=False,
+                             created_at=datetime.now())
+            db.session.add(user_test)
+            db.session.commit()
             dsmetadata_test = DSMetaData(
                 id=15,
                 title="Sample Dataset Test 15",
@@ -136,3 +143,15 @@ def test_bottom_go_to_home(client):
     # Realizar una solicitud GET a la URL obtenida
     response = client.get(go_home_url)
     assert response.status_code == 200
+
+
+def test_dashboard_not_accesible(client):
+    login_response = login(client, "usertest@example.com", "1234")
+    assert login_response.status_code == 200, "Login successful"
+
+    response = client.get('/dashboard')
+    print(response.data.decode('utf-8'))
+
+    # Verificar que el contenido de la respuesta contiene el mensaje de error
+    assert "<h1>Redirecting...</h1>" in response.data.decode('utf-8'), "Expected '<h1>Redirecting...</h1>' not found"
+    logout(client)
