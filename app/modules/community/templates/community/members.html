@@ -21,25 +21,21 @@
                     </div>
 
                     <div>
-                        <!-- Marca para el creador -->
                         {% if member.id == community.created_by_id %}
                             <span class="badge bg-primary">Creator</span>
                         {% endif %}
 
-                        <!-- Marca para el administrador -->
                         {% if member.id == community.admin_by_id %}
                             <span class="badge bg-success">Admin</span>
                         {% endif %}
 
                         {% if current_user.id == community.admin_by_id and member.id != community.admin_by_id %}
-                            <!-- Botón para conceder el rol de administrador -->
                             <form action="{{ url_for('community.grant_admin', community_id=community.id, user_id=member.id) }}" method="POST" style="display:inline;">
                                 <button type="submit" class="btn btn-warning btn-sm">
                                     Grant Admin
                                 </button>
                             </form>
 
-                            <!-- Botón para eliminar al usuario de la comunidad -->
                             <form action="{{ url_for('community.remove_user', community_id=community.id, user_id=member.id) }}" method="POST" style="display:inline; margin-left: 5px;">
                                 <button type="submit" class="btn btn-danger btn-sm">
                                     Remove User
