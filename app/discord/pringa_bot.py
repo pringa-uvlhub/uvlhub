@@ -3,7 +3,10 @@ import app
 import os
 
 from discord.ext import commands
-from app.discord.embeds import get_introduction_embed, get_dataset_embed, get_info_datasets, get_info_uvl
+from app.discord.embeds import (
+    get_introduction_embed, get_dataset_embed, get_info_datasets,
+    get_info_uvl, get_info_communities
+)
 from discord.ui import View
 
 
@@ -107,6 +110,11 @@ def start_bot():
     @bot.tree.command(name="info_uvl", description="Learn the basics of UVL and how to create variability models.")
     async def info_uvl(interaction: discord.Interaction):
         embed = get_info_uvl()
+        await interaction.response.send_message(embed=embed)
+
+    @bot.tree.command(name="info_communities", description="Provides information about communities in uvlhub.")
+    async def info_communities(interaction: discord.Integration):
+        embed = get_info_communities()
         await interaction.response.send_message(embed=embed)
 
     @bot.tree.command(name="list_datasets", description="List all synchronized datasets.")

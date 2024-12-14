@@ -73,6 +73,28 @@ def get_info_uvl():
     return embed
 
 
+def get_info_communities():
+    embed = discord.Embed(
+        title="What are Communities in uvlhub?",
+        description=(
+            "Communities in uvlhub are groups of users that share common interests. "
+            "Registered users can create and join these communities to collaborate, "
+            "discuss, and share knowledge. Some examples of popular communities include:\n\n"
+            "**Open Source Enthusiasts**: Developers passionate about open source projects.\n"
+            "**AI Researchers**: A group dedicated to advancements in AI and machine learning.\n"
+            "**Scientific Community**: Researchers collaborating on scientific breakthroughs and papers.\n\n"
+            "Each community has a creator and a manager, and members can contribute by sharing content and "
+            "engaging in discussions related to their common interests."
+        ),
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="Creating Communities", value="Any registered user can create a new community.")
+    embed.add_field(name="Managing Communities", value="The creator or manager oversees the community activities.")
+    embed.add_field(name="Joining Communities",
+                    value="Users can browse and join communities that align with their interests.")
+    return embed
+
+
 def get_dataset_embed(dataset):
     """
     Crea un embed para un dataset proporcionado.
