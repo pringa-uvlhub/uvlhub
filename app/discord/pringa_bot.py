@@ -5,7 +5,7 @@ import os
 from discord.ext import commands
 from app.discord.embeds import (
     get_introduction_embed, get_dataset_embed, get_info_datasets,
-    get_info_uvl, get_info_communities
+    get_info_uvl, get_info_communities, get_info_zenodo
 )
 from discord.ui import View
 
@@ -115,6 +115,11 @@ def start_bot():
     @bot.tree.command(name="info_communities", description="Provides information about communities in uvlhub.")
     async def info_communities(interaction: discord.Integration):
         embed = get_info_communities()
+        await interaction.response.send_message(embed=embed)
+
+    @bot.tree.command(name="info_zenodo", description="Learn about Zenodo and how it integrates with UVLHub.")
+    async def info_zenodo(interaction: discord.Interaction):
+        embed = get_info_zenodo()
         await interaction.response.send_message(embed=embed)
 
     @bot.tree.command(name="list_datasets", description="List all synchronized datasets.")

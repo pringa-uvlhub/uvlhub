@@ -95,6 +95,26 @@ def get_info_communities():
     return embed
 
 
+def get_info_zenodo():
+    embed = discord.Embed(
+        title="Zenodo and UVLHub Integration",
+        description=(
+            "Zenodo is a general-purpose open repository developed by CERN. It allows researchers \
+            to share and preserve their datasets, software, and other digital research outputs. "
+            "All datasets stored in UVLHub are backed up by Zenodo, \
+                ensuring long-term preservation and accessibility.\n\n"
+            "**Benefits of Zenodo in UVLHub:**\n"
+            "✅ Permanent storage for all uploaded UVL models.\n"
+            "✅ Each dataset is assigned a DOI for academic citation and referencing.\n"
+            "✅ Supports Open Science principles, facilitating collaboration and data sharing among researchers.\n\n"
+            "By integrating with Zenodo, UVLHub ensures that your data remains accessible and safe for future use."
+        ),
+        color=discord.Color.blue()
+    )
+    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+    return embed
+
+
 def get_dataset_embed(dataset):
     """
     Crea un embed para un dataset proporcionado.
