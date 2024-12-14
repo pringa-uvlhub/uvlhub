@@ -1,15 +1,19 @@
-from locust import HttpUser, TaskSet, task, between
-from core.environment.host import get_host_for_locust_testing
+from locust import HttpUser, task, between
+
 
 class AdminTestSuite(HttpUser):
     wait_time = between(1, 5)
 
     def on_start(self):
-        self.client.post("/login", data={
+        response = self.client.post("/login", data={
             "email": "user1@example.com",
             "password": "1234",
             "is_admin": True
         })
+        if response.status_code == 200:
+            print("Admin login successful")
+        else:
+            print(f"Admin login failed: {response.status_code}")
 
     @task(1)
     def load_dashboard_no_data(self):
@@ -18,22 +22,3 @@ class AdminTestSuite(HttpUser):
             print("Dashboard no data loaded successfully")
         else:
             print(f"Dashboard no data failed: {response.status_code}")
-
-
-class AdminBehavior(TaskSet):
-    def on_start(self):
-        self.index()
-
-    @task
-    def index(self):
-        response = self.client.get("/admin")
-
-        if response.status_code != 200:
-            print(f"Admin index failed: {response.status_code}")
-
-
-class AdminUser(HttpUser):
-    tasks = [AdminBehavior]
-    min_wait = 5000
-    max_wait = 9000
-    host = get_host_for_locust_testing()
