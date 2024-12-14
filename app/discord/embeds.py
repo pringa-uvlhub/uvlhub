@@ -145,3 +145,32 @@ def get_dataset_embed(dataset):
     embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
 
     return embed
+
+
+def get_help():
+    embed = discord.Embed(
+        title="What commands can you use with Pringa bot in UVLHub?",
+        description=("""
+            **Available Commands:**
+
+            **Text Commands**:
+            - `ping`: Responds with "Pong!" to check if the bot is working.
+            - `test`: Responds with "¡Estoy funcionando!" to confirm the bot's functionality.
+
+            **Slash Commands**:
+            - `/introduction`: Shows an introduction to UVLHub and commands to get started.
+            - `/info_datasets`: Learn how to manage datasets in UVLHub.
+            - `/info_uvl`: Learn the basics of UVL and how to create variability models.
+            - `/info_communities`: Provides information about communities in UVLHub.
+            - `/info_zenodo`: Learn about Zenodo and its integration with UVLHub.
+            - `/list_datasets`: List all synchronized datasets.
+            - `/list_communities`: List all available communities.
+            - `/filter_datasets`: Filter datasets based on various criteria.
+            - `/filter_communities`: Filter communities by name or description.
+
+            Use `/` before a command to run slash commands or `!` to run text commands.
+            """),
+        color=discord.Color.red()
+    )
+    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+    return embed
