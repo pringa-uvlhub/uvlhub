@@ -161,7 +161,7 @@ def start_bot():
                     embed = discord.Embed(
                         title=f"Community: {community.name}",
                         description=f"{community.description}",
-                        color=discord.Color.blue()
+                        color=discord.Color.green()
                     )
                     embed.add_field(name="Created at:",
                                     value=community.created_at.strftime('%B %d, %Y at %I:%M %p'), inline=False)
@@ -236,7 +236,7 @@ def start_bot():
                     embed = discord.Embed(
                         title=f"Community: {community.name}",
                         description=f"{community.description}",
-                        color=discord.Color.purple()
+                        color=discord.Color.green()
                     )
                     embed.add_field(name="Created at:",
                                     value=community.created_at.strftime('%B %d, %Y at %I:%M %p'), inline=False)

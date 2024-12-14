@@ -29,18 +29,21 @@ def get_introduction_embed():
 
 def get_info_datasets():
     embed = discord.Embed(
-                title="Managing Datasets in UVLHub",
-                description="UVLHub allows you to upload, store, and analyze your UVL models. All datasets are backed \
-                            up with Zenodo, ensuring data permanence and integrity.\n\n"
-                            "Steps to manage your datasets:\n"
-                            "1. Upload UVL models via the web app.\n"
-                            "2. Store related metadata like title, authors, and tags.\n"
-                            "3. Analyze models with integrated tools like Flamapy.\n"
-                            "4. Datasets are assigned a DOI for reference and retrieval via Zenodo.\n\n"
-                            "Resources:\n"
-                            "- [UVLHub Documentation](https://docs.uvlhub.io/)\n"
-                            "- [Zenodo Repository](https://zenodo.org/)"
-            )
+        title="Managing Datasets in UVLHub",
+        description=(
+            "UVLHub allows you to upload, store, and analyze your UVL models. All datasets are backed \
+            up with Zenodo, ensuring data permanence and integrity.\n\n"
+            "Steps to manage your datasets:\n"
+            "1. Upload UVL models via the web app.\n"
+            "2. Store related metadata like title, authors, and tags.\n"
+            "3. Analyze models with integrated tools like Flamapy.\n"
+            "4. Datasets are assigned a DOI for reference and retrieval via Zenodo.\n\n"
+            "Resources:\n"
+            "- [UVLHub Documentation](https://docs.uvlhub.io/)\n"
+            "- [Zenodo Repository](https://zenodo.org/)"
+        ),
+        color=discord.Color.blue()
+    )
     embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
     return embed
 
@@ -48,26 +51,29 @@ def get_info_datasets():
 def get_info_uvl():
     embed = discord.Embed(
         title="Universal Variability Language (UVL)",
-        description="UVL is a standardized language for representing variability models with a tree-like structure. \
-                    You can use concepts like mandatory, optional, or, alternative features, \
-                    and cross-tree constraints to build complex models.\n\n"
-                    "Here's a simple example:\n"
-                    "```\n"
-                    "features\n"
-                    "  Sandwich\n"
-                    "    mandatory\n"
-                    "      Bread\n"
-                    "    optional\n"
-                    "      Sauce\n"
-                    "        alternative\n"
-                    "          Ketchup\n"
-                    "          Mustard\n"
-                    "constraints\n"
-                    "  Ketchup => Cheese\n"
-                    "```\n"
-                    "Learn more about the core and advanced language levels in our \
-                        [UVL Documentation](https://universal-variability-language.github.io/). \n"
-                    "Want to tryout UVL yourself? Check [UVL playground](https://uvl.uni-ulm.de/)"
+        description=(
+            "UVL is a standardized language for representing variability models with a tree-like structure. \
+            You can use concepts like mandatory, optional, or, alternative features, \
+            and cross-tree constraints to build complex models.\n\n"
+            "Here's a simple example:\n"
+            "```\n"
+            "features\n"
+            "  Sandwich\n"
+            "    mandatory\n"
+            "      Bread\n"
+            "    optional\n"
+            "      Sauce\n"
+            "        alternative\n"
+            "          Ketchup\n"
+            "          Mustard\n"
+            "constraints\n"
+            "  Ketchup => Cheese\n"
+            "```\n"
+            "Learn more about the core and advanced language levels in our \
+                [UVL Documentation](https://universal-variability-language.github.io/). \n"
+            "Want to tryout UVL yourself? Check [UVL playground](https://uvl.uni-ulm.de/)"
+            ),
+        color=discord.Color.blue()
     )
     embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
     return embed
