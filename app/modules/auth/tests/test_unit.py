@@ -1,23 +1,38 @@
+from flask_login import login_user
 import pytest
 from flask import url_for
-
+from app.modules.auth.models import User
+from app.modules.profile.models import UserProfile
 from app.modules.auth.services import AuthenticationService
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.repositories import UserProfileRepository
+from app import create_app, db
+from datetime import datetime
 from unittest.mock import patch
 
 
-@pytest.fixture(scope="module")
-def test_client(test_client):
-    """
-    Extends the test_client fixture to add additional specific data for module testing.
-    """
-    with test_client.application.app_context():
-        # Add HERE new elements to the database that you want to exist in the test context.
-        # DO NOT FORGET to use db.session.add(<element>) and db.session.commit() to save the data.
-        pass
+@pytest.fixture
+def client():
+    app = create_app('testing')
+    with app.test_client() as client:
+        with app.app_context():
+            # Configuración de la base de datos en modo de prueba
+            db.drop_all()
+            db.create_all()
 
-    yield test_client
+            user = User(id=1, email="user1@example.com", password="1234", created_at=datetime(2022, 3, 13))
+            db.session.add(user)
+            db.session.commit()
+
+            profile = UserProfile(user_id=user.id, surname="TestSurname", name="TestName",
+                                  affiliation="TestAffiliation", orcid="0000-0000-0000-0001")
+            db.session.add(profile)
+            db.session.commit()
+
+            yield client
+
+            db.session.remove()
+            db.drop_all()
 
 
 def test_login_success(test_client):
@@ -173,3 +188,118 @@ def test_service_create_with_profile_fail_no_password(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
+
+
+def test_forgot_password_authenticated(test_client):
+    user = User(email='test@example.com')
+    user.set_password('password')
+    login_user(user)
+
+    response = test_client.get(url_for('auth.forgot_password'))
+
+    assert response.status_code == 302
+    assert response.location == url_for('public.index', _external=False)
+
+
+def test_forgot_password_get(test_client):
+    test_client.get(url_for('auth.logout'))
+
+    response = test_client.get(url_for('auth.forgot_password'))
+    assert response.status_code == 200
+
+
+def test_forgot_password_post_invalid_form(test_client):
+    test_client.get(url_for('auth.logout'))
+    response = test_client.post(url_for('auth.forgot_password'), data={})
+
+    assert response.status_code == 200
+
+
+def test_forgot_password_post_email_not_exist(test_client):
+    test_client.get(url_for('auth.logout'))
+
+    response = test_client.post(url_for('auth.forgot_password'), data={'email': 'nonexistent@example.com'})
+
+    assert response.status_code == 302
+    assert response.location == url_for('auth.forgot_password')
+
+
+def test_forgot_password_post_email_exist(test_client):
+    user = User(id=8, email="foo0@example.com", password="1234", created_at=datetime(2022, 3, 13))
+    db.session.add(user)
+    db.session.commit()
+
+    test_client.get(url_for('auth.logout'))
+    response = test_client.post(url_for('auth.forgot_password'), data={'email': 'foo0@example.com'})
+
+    assert response.status_code == 302
+    assert response.location == url_for('auth.login', _external=False)
+
+
+def test_reset_password_authenticated(test_client):
+    user = User(email="test@example.com")
+    user.set_password("password")
+    login_user(user)
+
+    response = test_client.get(url_for("auth.reset_password", token="some_token"))
+
+    assert response.status_code == 302
+    assert response.location == url_for("public.index", _external=False)
+
+
+def test_reset_password_invalid_or_expired_token(test_client):
+    test_client.get(url_for('auth.logout'))
+
+#   codacy-disable-line hardcoded-credentials
+    ERROR_MESSAGE_INVALID_TOKEN = "invalid_or_expired_token"  # nosec
+
+    response = test_client.get(url_for("auth.reset_password", token=ERROR_MESSAGE_INVALID_TOKEN))
+
+    assert response.status_code == 302
+    assert response.location == url_for("auth.forgot_password", _external=False)
+
+    with test_client.session_transaction() as session:
+        assert '_flashes' in session
+        flashes = session['_flashes']
+        assert any("El enlace de restablecimiento es inválido o ha expirado." in flash[1] for flash in flashes)
+
+
+def test_reset_password_valid_token_invalid_form(test_client):
+    user = User(id=9, email="foo1@example.com", password="1234", created_at=datetime(2022, 3, 13))
+    db.session.add(user)
+    db.session.commit()
+
+    user = UserRepository().get_by_email("foo1@example.com")
+
+    valid_token = User.generate_reset_token(user)
+    test_client.get("/logout", follow_redirects=True)
+    response = test_client.get(url_for("auth.reset_password", token=valid_token))
+
+    assert response.status_code == 200
+    response = test_client.post(url_for("auth.reset_password", token=valid_token), data={})
+    assert response.status_code == 200
+
+
+def test_reset_password_valid_token_valid_form(test_client):
+    user = User(id=10, email="foo2@example.com", password="1234", created_at=datetime(2022, 3, 13))
+    db.session.add(user)
+    db.session.commit()
+
+    user = UserRepository().get_by_email("foo2@example.com")
+
+    valid_token = User.generate_reset_token(user)
+    test_client.get("/logout", follow_redirects=True)
+    user = User.query.filter_by(email="foo2@example.com").first()
+
+    response = test_client.get(url_for("auth.reset_password", token=valid_token))
+    assert response.status_code == 200
+
+    response = test_client.post(
+        url_for("auth.reset_password", token=valid_token),
+        data={"password": "newpassword123", "confirm_password": "newpassword123"}
+    )
+
+    assert response.status_code == 302
+    assert response.location == url_for("auth.login", _external=False)
+    user = User.query.filter_by(email="foo2@example.com").first()
+    assert user.check_password("newpassword123")
