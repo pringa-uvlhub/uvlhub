@@ -213,6 +213,26 @@
                 </div>
             {% endif %}
 
+            {% if dataset.ds_meta_data.dataset_fakenodo_doi %}
+            <div class="card-body" style="padding-top: 0px; display: flex; justify-content: space-between; gap: 50px;">
+                <div style="display: flex; flex-direction: column;">
+                    <div style="margin-top: 0px; flex-direction: column;">
+                        <div style="display: inline-block; cursor: pointer; color: #ddd;" id="star-rating-{{ dataset.id }}">
+                            {% for i in range(1, 6) %}
+                                <span data-value="{{ i }}" style="font-size: 1.5rem;">☆</span>
+                            {% endfor %}
+                        </div>
+                        <button onclick="submitRating('{{ dataset.id }}')" style="display: inline-block; margin-left: 10px; font-size: 0.9rem; {% if not current_user.is_authenticated %}display: none;{% endif %}">
+                            Rate
+                        </button>
+                        </div>
+                        <div>
+                            Average Rating: <span id="average-rating-{{ dataset.id }}">0</span>/5
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
         </div>
 
         <div class="card">
