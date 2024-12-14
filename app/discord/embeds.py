@@ -45,6 +45,34 @@ def get_info_datasets():
     return embed
 
 
+def get_info_uvl():
+    embed = discord.Embed(
+        title="Universal Variability Language (UVL)",
+        description="UVL is a standardized language for representing variability models with a tree-like structure. \
+                    You can use concepts like mandatory, optional, or, alternative features, \
+                    and cross-tree constraints to build complex models.\n\n"
+                    "Here's a simple example:\n"
+                    "```\n"
+                    "features\n"
+                    "  Sandwich\n"
+                    "    mandatory\n"
+                    "      Bread\n"
+                    "    optional\n"
+                    "      Sauce\n"
+                    "        alternative\n"
+                    "          Ketchup\n"
+                    "          Mustard\n"
+                    "constraints\n"
+                    "  Ketchup => Cheese\n"
+                    "```\n"
+                    "Learn more about the core and advanced language levels in our \
+                        [UVL Documentation](https://universal-variability-language.github.io/). \n"
+                    "Want to tryout UVL yourself? Check [UVL playground](https://uvl.uni-ulm.de/)"
+    )
+    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+    return embed
+
+
 def get_dataset_embed(dataset):
     """
     Crea un embed para un dataset proporcionado.
