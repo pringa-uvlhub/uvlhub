@@ -104,25 +104,6 @@ def test_signup_user_sends_verification_email(test_client):
         assert response.request.path == url_for("auth.confirmation"), "Signup redirection was incorrect"
 
 
-# def test_unverified_user_cannot_login(test_client):
-#     # Crear usuario sin verificar
-#     response = test_client.post(
-#        "/signup",
-#          data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
-#          follow_redirects=True,
-#      )
-#
-#     # Intentar iniciar sesión sin verificar
-#     response = test_client.post(
-#         "/login",
-#         data=dict(email="foo@example.com", password="foo1234"),
-#         follow_redirects=True,
-#      )
-#     print(response.data)
-#     # Comprobar que la autenticación falla
-#     assert b"Please verify your email" in response.data
-
-
 def test_email_verification_token_generation():
     auth_service = AuthenticationService()
     user_data = {
@@ -132,18 +113,6 @@ def test_email_verification_token_generation():
     }
     token = auth_service.serializer.dumps(user_data, salt='email-confirmation-salt')
     assert token is not None, "Token was not generated successfully"
-
-
-def test_email_verification_token_confirmation():
-    auth_service = AuthenticationService()
-    user_data = {
-        "name": "Test",
-        "email": "test@example.com",
-        "password": "test1234"
-    }
-    token = auth_service.serializer.dumps(user_data['email'], salt='email-confirmation-salt')
-    email = auth_service.confirm_token(token)
-    assert email == user_data['email'], "Token confirmation failed"
 
 
 def test_service_create_with_profie_success(clean_database):
@@ -188,6 +157,99 @@ def test_service_create_with_profile_fail_no_password(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
+
+
+def test_unverified_user_cannot_login(test_client):
+    # Crear usuario sin verificar
+    test_client.post(
+        "/signup",
+        data=dict(name="Foo", surname="Example", email="foo@example.com", password="foo1234"),
+        follow_redirects=True,
+    )
+
+    # Intentar iniciar sesión sin verificar
+    response = test_client.post(
+        "/login",
+        data=dict(email="foo@example.com", password="foo1234"),
+        follow_redirects=True,
+    )
+
+    # Comprobar que la autenticación falla
+    assert response.request.path == url_for("auth.login"), "Login redirection was incorrect"
+
+
+def test_confirm_email_invalid_token(test_client):
+    invalid_token = "invalid_token"
+    response = test_client.get(url_for('auth.confirm_email', token=invalid_token))
+    assert response.status_code == 302
+    with test_client.session_transaction() as session:
+        flashes = session['_flashes']
+        assert any('Invalid confirmation token.' in flash[1] for flash in flashes)
+
+
+def test_confirm_email_already_confirmed(test_client):
+    user = User(id=11, email="alreadyconfirmed@example.com", password="1234", created_at=datetime(2022, 3, 13))
+    db.session.add(user)
+    db.session.commit()
+
+    token = AuthenticationService().serializer.dumps({"email": "alreadyconfirmed@example.com"},
+                                                     salt='email-confirmation-salt')
+    response = test_client.get(url_for('auth.confirm_email', token=token))
+
+    assert response.status_code == 302
+
+
+def test_signup_success_created_user_verification(test_client):
+    response = test_client.post(url_for('auth.show_signup_form'), data={
+        'email': 'test@example.com',
+        'password': 'password123',
+        'name': 'Test',
+        'surname': 'User'
+    })
+    assert response.status_code == 302  # Redirige a la página de confirmación
+    assert response.location == url_for('auth.confirmation')
+    # Verificar que el usuario no ha sido creado todavía porque la confirmación es necesaria
+    user = User.query.filter_by(email='test@example.com').first()
+    assert user is None  # El usuario aún no debe existir hasta confirmar el email
+
+
+def test_signup_existing_email(test_client):
+    # Crear un usuario existente
+    user = User(email='existing@example.com', password='password', created_at=datetime(2022, 3, 13))
+    db.session.add(user)
+    db.session.commit()
+
+    # Intentar registrarse con el mismo correo electrónico
+    response = test_client.post(url_for('auth.show_signup_form'), data={
+        'email': 'existing@example.com',
+        'password': 'newpassword',
+        'name': 'New',
+        'surname': 'User'
+    })
+    assert response.status_code == 200
+    assert b'Email existing@example.com in use' in response.data
+
+
+def test_signup_missing_fields(test_client):
+    response = test_client.post(url_for('auth.show_signup_form'), data={
+        'email': '',
+        'password': '',
+        'name': '',
+        'surname': ''
+    })
+    assert response.status_code == 200
+    assert b'This field is required' in response.data  # Verificar que hay errores de validación por campos vacíos
+
+
+def test_signup_invalid_email_format(test_client):
+    response = test_client.post(url_for('auth.show_signup_form'), data={
+        'email': 'invalid-email',
+        'password': 'password123',
+        'name': 'Test',
+        'surname': 'User'
+    })
+    assert response.status_code == 200
+    assert b'Invalid email address' in response.data
 
 
 def test_forgot_password_authenticated(test_client):
