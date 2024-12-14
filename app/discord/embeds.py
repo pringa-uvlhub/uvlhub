@@ -88,6 +88,7 @@ def get_info_communities():
         ),
         color=discord.Color.blue()
     )
+    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
     embed.add_field(name="Creating Communities", value="Any registered user can create a new community.")
     embed.add_field(name="Managing Communities", value="The creator or manager oversees the community activities.")
     embed.add_field(name="Joining Communities",
