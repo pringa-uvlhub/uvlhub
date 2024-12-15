@@ -148,6 +148,9 @@
                                             href="{{ url_for('dataset.update_staging_area_dataset', dataset_id=unprepared_dataset.id) }}">
                                             {{ unprepared_dataset.ds_meta_data.title }}
                                         </a>
+                                        {% if unprepared_dataset.ds_meta_data.build %}
+                                        <i data-feather="tool" class="ms-2" title="Build"></i>
+                                    {% endif %}
                                     </td>
                                     <td>{{ unprepared_dataset.ds_meta_data.description }}</td>
                                     <td>{{ unprepared_dataset.ds_meta_data.publication_type.name.replace('_', ' ').title()
