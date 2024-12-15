@@ -24,7 +24,7 @@ class TestCreate():
         self.driver.find_element(By.ID, "submit").click()
         self.driver.find_element(By.LINK_TEXT, "Sample dataset 4").click()
         self.driver.find_element(By.CSS_SELECTOR, ".list-group-item:nth-child(2) .btn:nth-child(4)").click()
-        time.sleep(.02)
+        time.sleep(.2)
         self.driver.find_element(By.LINK_TEXT, "Build Dataset").click()
         self.driver.execute_script("document.body.style.zoom='60%'")
         self.driver.find_element(By.ID, "agreeCheckbox").click()
