@@ -104,7 +104,6 @@ def forgot_password():
     if form.validate_on_submit():
         email = request.form.get('email')
         user = UserRepository().get_by_email(email)
-        print(user)
         if not user:
             flash("El correo electrónico no existe en el sistema.", "error")
             return redirect(url_for('auth.forgot_password'))
@@ -115,8 +114,6 @@ def forgot_password():
             reset_url = url_for('auth.reset_password', token=token, _external=True)
             send_reset_email(user.email, reset_url)
             flash('Se ha enviado un enlace de restablecimiento a tu correo.', 'info')
-        else:
-            flash('Si el correo existe, recibirás un enlace de restablecimiento.', 'info')
         return redirect(url_for('auth.login'))
     return render_template('auth/forgot_password.html', form=form)
 
