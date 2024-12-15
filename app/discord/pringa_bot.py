@@ -123,7 +123,7 @@ def start_bot():
         await interaction.response.send_message(embed=embed)
 
     @bot.tree.command(name="help", description="Learn about commands you can use with pringa_bot in UVLHub.")
-    async def help(interaction: discord.Interaction):
+    async def help_commands(interaction: discord.Interaction):
         embed = get_help()
         await interaction.response.send_message(embed=embed)
 
@@ -271,7 +271,7 @@ def start_bot():
                 temp_dir = tempfile.mkdtemp()
                 zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")
                 with ZipFile(zip_path, "w") as zipf:
-                    for subdir, dirs, files in os.walk(file_path):
+                    for subdir, _, files in os.walk(file_path):
                         for file in files:
                             full_path = os.path.join(subdir, file)
                             relative_path = os.path.relpath(full_path, file_path)
@@ -280,7 +280,7 @@ def start_bot():
                 return dataset, zip_path
 
             try:
-                dataset, zip_path = download_dataset(dataset_id)
+                _, zip_path = download_dataset(dataset_id)
                 await interaction.response.send_message(file=discord.File(zip_path), embed=download_embed("Downloaded"))
             except Exception:
                 await interaction.response.send_message(
