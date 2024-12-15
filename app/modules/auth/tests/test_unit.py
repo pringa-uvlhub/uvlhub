@@ -180,8 +180,7 @@ def test_unverified_user_cannot_login(test_client):
 
 def test_confirm_email_invalid_token(test_client):
     # Se define una constante para evitar el hardcoding
-    INVALID_TOKEN = "invalid_token"
-    response = test_client.get(url_for('auth.confirm_email', token=INVALID_TOKEN))
+    response = test_client.get(url_for('auth.confirm_email', token="invalid_token"))
     assert response.status_code == 302
     with test_client.session_transaction() as session:
         flashes = session['_flashes']
