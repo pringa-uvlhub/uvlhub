@@ -2,6 +2,7 @@
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+import os
 
 
 class TestUpdateds():
@@ -28,21 +29,30 @@ class TestUpdateds():
         self.driver.find_element(By.ID, "password").send_keys("1234")
         self.driver.find_element(By.ID, "submit").click()
         self.driver.find_element(By.CSS_SELECTOR, ".sidebar-toggle").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(10) .align-middle:nth-child(2)").click()
+        self.driver.find_element(By.ID, "title").click()
+        self.driver.find_element(By.ID, "title").send_keys("test_ds_updatedataset")
+        self.driver.find_element(By.ID, "desc").click()
+        self.driver.find_element(By.ID, "desc").send_keys("test")
+        self.driver.find_element(By.CSS_SELECTOR, ".col-xl-6:nth-child(2)").click()
+        self.driver.find_element(By.ID, "myDropzone").click()
+        # Subir el archivo file1.uvl
+        file_input = self.driver.find_element(By.CSS_SELECTOR, "input[type='file']")
+        file_path = os.path.abspath("app/modules/dataset/uvl_examples/file1.uvl")
+        file_input.send_keys(file_path)
+        self.driver.execute_script("document.body.style.zoom='50%'")
+        # Esperar a que el archivo se cargue completamente
+        time.sleep(2)  # Ajusta el tiempo de espera según sea necesario
+        # Continuar con el resto del test si es necesario
+        self.driver.find_element(By.ID, "create_button").click()
+        time.sleep(1)
+        self.driver.find_element(By.CSS_SELECTOR, ".sidebar-toggle").click()
         self.driver.find_element(By.LINK_TEXT, "My datasets").click()
         self.driver.execute_script("document.body.style.zoom='50%'")
-        self.driver.find_element(By.LINK_TEXT, "Staging area dataset").click()
+        self.driver.find_element(By.LINK_TEXT, "test_ds_updatedataset").click()
         # Ajusta el zoom al 50% para que se vea más parte de la pantalla
         self.driver.execute_script("document.body.style.zoom='50%'")
         self.driver.find_element(By.ID, "title").click()
         self.driver.find_element(By.ID, "title").clear()
-        self.driver.find_element(By.ID, "title").send_keys("Staging area dataset123")
-        self.driver.find_element(By.ID, "update_button").click()
-        # Vuelvo a actualizarlo para dejarlo como estaba antes
-        time.sleep(0.1)
-        self.driver.execute_script("document.body.style.zoom='50%'")
-        self.driver.find_element(By.LINK_TEXT, "Staging area dataset123").click()
-        self.driver.execute_script("document.body.style.zoom='50%'")
-        self.driver.find_element(By.ID, "title").click()
-        self.driver.find_element(By.ID, "title").clear()
-        self.driver.find_element(By.ID, "title").send_keys("Staging area dataset")
+        self.driver.find_element(By.ID, "title").send_keys("test_ds_updatedataset123")
         self.driver.find_element(By.ID, "update_button").click()
