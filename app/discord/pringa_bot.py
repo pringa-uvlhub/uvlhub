@@ -67,26 +67,17 @@ class PaginatorView(View):
             await self.message.edit(view=self)
 
 
-def start_bot():
+def initialize_bot():
+    intents = discord.Intents.all()
+    intents.message_content = True
+    return commands.Bot(command_prefix='!', intents=intents)
+
+
+def register_commands(bot):
     from app.modules.dataset.services import DataSetService
     from app.modules.community.services import CommunityService
     from app.modules.explore.services import ExploreService
     app_create = app.create_app()
-
-    token = os.getenv("DISCORD_TOKEN")
-    intents = discord.Intents.all()
-    intents.message_content = True
-    # Crear el bot con el prefijo '!' y los intents definidos
-    bot = commands.Bot(command_prefix='!', intents=intents)
-
-    @bot.event
-    async def on_ready():
-        print(f'Bot conectado como {bot.user}')
-        try:
-            synced = await bot.tree.sync()
-            print(f'Successfully synced {len(synced)} slash commands.')
-        except Exception as e:
-            print(f'Failed to sync commands: {e}')
 
     @bot.command(name='ping')
     async def ping(ctx):
@@ -285,6 +276,22 @@ def start_bot():
             except Exception:
                 await interaction.response.send_message(
                             embed=download_embed("That dataset has not been found.", "Not Found"))
+
+
+def start_bot():
+    token = os.getenv("DISCORD_TOKEN")
+
+    bot = initialize_bot()
+    register_commands(bot)
+
+    @bot.event
+    async def on_ready():
+        print(f'Bot conectado como {bot.user}')
+        try:
+            synced = await bot.tree.sync()
+            print(f'Successfully synced {len(synced)} slash commands.')
+        except Exception as e:
+            print(f'Failed to sync commands: {e}')
 
     # Función para correr el bot
     def run_discord_bot():
