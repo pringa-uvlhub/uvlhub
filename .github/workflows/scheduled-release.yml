@@ -11,10 +11,14 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Clonar todo el historial para todas las ramas
+
+    - name: Fetch all branches
+      run: git fetch origin main develop
 
     - name: Fetch all tags from remote
-      run: |
-        git fetch --tags
+      run: git fetch --tags
 
     - name: Get the latest tag (if exists)
       id: get_latest_tag
@@ -23,21 +27,54 @@ jobs:
         echo "latest_tag=${latest_tag}" >> $GITHUB_ENV
         echo "Latest tag found: $latest_tag"
 
+    - name: Get number of commits in develop since last tag
+      id: commits_since_tag
+      run: |
+        latest_tag="${{ env.latest_tag }}"
+        if [ -z "$latest_tag" ]; then
+          # No previous tag, assume entire history
+          commit_count=$(git rev-list --count origin/develop)
+        else
+          # Count commits in develop since the latest tag
+          commit_count=$(git rev-list --count ${latest_tag}..origin/develop)
+        fi
+        echo "commit_count=${commit_count}" >> $GITHUB_ENV
+        echo "Number of commits in develop since last tag: $commit_count"
+
+    - name: Skip if no commits since last tag
+      if: env.commit_count == '0'
+      run: |
+        echo "No commits in develop since the last tag. Skipping tag creation."
+        exit 0  # Exit early to skip the rest of the steps if no commits
+
     - name: Determine the next version
       id: determine_version
       run: |
         latest_version="${{ env.latest_tag }}"
+        commit_count="${{ env.commit_count }}"
         
-        if [[ "$latest_version" =~ ^v?[0-9]+\.[0-9]+$ ]]; then
-          major_version="${latest_version#v}"
-          major_version="${major_version%.*}"
-          
-          new_version=$((major_version + 1))
-          new_version="v${new_version}.0"
-        else
+        if [[ -z "$latest_version" ]] || [[ ! "$latest_version" =~ ^v?[0-9]+\.[0-9]+$ ]]; then
+          # If no valid previous tag exists, start at v1.0
           new_version="v1.0"
+        else
+          # Extract major and minor versions from the latest tag
+          version="${latest_version#v}" # Remove the 'v' prefix if exists
+          major_version="${version%%.*}" # Extract major version
+          minor_version="${version#*.}" # Extract minor version
+
+          if [[ "$commit_count" -ge 10 ]]; then
+            # Increment major version
+            major_version=$((major_version + 1))
+            minor_version=0
+          else
+            # Increment minor version
+            minor_version=$((minor_version + 1))
+          fi
+
+          # Build the new version string
+          new_version="v${major_version}.${minor_version}"
         fi
-        
+
         echo "new_version=${new_version}" >> $GITHUB_ENV
         echo "New version calculated: $new_version"
 
@@ -47,10 +84,13 @@ jobs:
         if git rev-parse "${{ env.new_version }}" >/dev/null 2>&1; then
           echo "Tag ${{ env.new_version }} already exists."
         else
-          echo "Tag ${{ env.new_version }} does not exist. Creating it now."
-          
-          git tag ${{ env.new_version }}
-          git push origin ${{ env.new_version }}
+          if [ "${{ env.commit_count }}" -gt 0 ]; then
+            echo "Tag ${{ env.new_version }} does not exist. Creating it now."
+            git tag ${{ env.new_version }}
+            git push origin ${{ env.new_version }}
+          else
+            echo "No commits in develop since last tag. Skipping tag creation."
+          fi
         fi
 
   create-pull-request:
@@ -60,14 +100,29 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Fetch all branches
+      run: git fetch origin main develop
 
     - name: Install GitHub CLI
-      run: |
-        sudo apt-get install gh
+      run: sudo apt-get install gh
 
     - name: Authenticate GitHub CLI
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+    - name: Check if there are commits to release
+      id: check_commits
       run: |
-        echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+        # Check if there are commits in develop since the latest tag
+        commit_count=$(git rev-list --count origin/main..origin/develop)
+        echo "commits_between_main_and_develop=$commit_count" >> $GITHUB_ENV
+        if [[ "$commit_count" -eq 0 ]]; then
+          echo "No commits in develop since the latest tag. Skipping pull request creation."
+          exit 0  # Exit early if no commits found
+        fi
+        echo "Commits found in develop: $commit_count"
 
     - name: Get Current Date
       id: get_date
@@ -76,6 +131,7 @@ jobs:
         echo "current_date=${current_date}" >> $GITHUB_ENV
 
     - name: Create Pull Request from develop to main
+      if: env.commits_between_main_and_develop != '0'
       run: |
         gh pr create \
           --title "Release/${{ env.current_date }}" \
