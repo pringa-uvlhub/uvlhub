@@ -257,6 +257,9 @@ class DataSetRepository(BaseRepository):
 
     def get_dataset_by_id(self, dataset_id: int) -> DataSet:
         return self.model.query.filter_by(id=dataset_id).first()
+    
+    def get_dataset_by_name(self, dataset_name: str) -> DataSet:
+        return self.model.query.filter_by(name=dataset_name).first()
 
     def get_dataset_by_metadata_id(self, metadata_id):
 
