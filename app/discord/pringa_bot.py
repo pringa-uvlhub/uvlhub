@@ -121,7 +121,7 @@ def start_bot():
     async def info_zenodo(interaction: discord.Interaction):
         embed = get_info_zenodo()
         await interaction.response.send_message(embed=embed)
-      
+
     @bot.tree.command(name="help", description="Learn about commands you can use with pringa_bot in UVLHub.")
     async def help(interaction: discord.Interaction):
         embed = get_help()
@@ -276,7 +276,7 @@ def start_bot():
                             full_path = os.path.join(subdir, file)
                             relative_path = os.path.relpath(full_path, file_path)
                             zipf.write(full_path, arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path))
-                                    
+
                 return dataset, zip_path
 
             try:
