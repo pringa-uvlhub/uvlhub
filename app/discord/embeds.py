@@ -177,7 +177,7 @@ def get_help():
     return embed
 
 
-def download_embed(desc, title="Download Dataset of UVLHUb", name=None, field_desc=None, thumbnail=False):  
+def download_embed(desc, title="Download Dataset of UVLHUb", name=None, field_desc=None, thumbnail=False):
     embed = discord.Embed(
         title="Download Dataset of UVLHUb",
         description=desc,
@@ -185,5 +185,4 @@ def download_embed(desc, title="Download Dataset of UVLHUb", name=None, field_de
         color=discord.Color.blue()
     )
     embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
-
     return embed

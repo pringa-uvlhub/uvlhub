@@ -31,8 +31,6 @@ class CommunityRepository(BaseRepository):
 
     def delete_community(self, community_id: int) -> bool:
         return self.delete(community_id)
-    
+
     def get_all(self) -> list[Community]:
         return self.model.query.order_by(self.model.created_at.desc()).all()
-
-

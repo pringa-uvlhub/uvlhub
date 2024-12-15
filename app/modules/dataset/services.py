@@ -53,11 +53,10 @@ class DataSetService(BaseService):
         self.dsviewrecord_repostory = DSViewRecordRepository()
         self.dsrating_repository = DSRatingRepository()
         self.hubfileviewrecord_repository = HubfileViewRecordRepository()
-        
+
     def get_dataset_by_name_or_id(self, identifier: int):
         """
         Obtiene un dataset a partir de su nombre o ID.
-        
         :param identifier: Nombre o ID del dataset.
         :return: Objeto del dataset o None si no se encuentra.
         """

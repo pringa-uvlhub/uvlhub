@@ -150,7 +150,7 @@ class CommunityService(BaseService):
         self.repository.session.commit()
 
         return True
-    
+
     def filter_communities(self, query: str) -> list[Community]:
         try:
             # Búsqueda basada en el nombre o la descripción de la comunidad

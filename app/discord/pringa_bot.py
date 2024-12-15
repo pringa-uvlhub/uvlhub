@@ -121,7 +121,7 @@ def start_bot():
     async def info_zenodo(interaction: discord.Interaction):
         embed = get_info_zenodo()
         await interaction.response.send_message(embed=embed)
-        
+      
     @bot.tree.command(name="help", description="Learn about commands you can use with pringa_bot in UVLHub.")
     async def help(interaction: discord.Interaction):
         embed = get_help()
@@ -258,7 +258,7 @@ def start_bot():
                 await interaction.response.send_message(f"Error filtering communities: {str(e)}")
             else:
                 await interaction.followup.send(f"Error filtering communities: {str(e)}")
-                        
+
     @bot.tree.command(name="download_dataset", description="Obtain UVL models from a dataset in a zip file")
     async def download_dataset(interaction: discord.Interaction, dataset_id: int):
         from app.modules.dataset.services import DataSetService
@@ -276,9 +276,9 @@ def start_bot():
                             full_path = os.path.join(subdir, file)
                             relative_path = os.path.relpath(full_path, file_path)
                             zipf.write(full_path, arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path))
-                
+                                    
                 return dataset, zip_path
-            
+
             try:
                 dataset, zip_path = download_dataset(dataset_id)
                 await interaction.response.send_message(file=discord.File(zip_path), embed=download_embed("Downloaded"))
