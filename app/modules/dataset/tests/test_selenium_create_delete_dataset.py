@@ -61,6 +61,6 @@ class TestDelete:
         # Comprobar que el dataset "test_delete" ya no está en el listado
         dataset_titles = self.driver.find_elements(By.XPATH, "//table//tbody//tr//td//a")
         dataset_titles_text = [title.text for title in dataset_titles]
-        
+
         # Verificar que el título 'test_delete' ya no aparece en la lista de datasets
         assert "test_delete" not in dataset_titles_text, "El dataset 'test_delete' sigue apareciendo en el listado"

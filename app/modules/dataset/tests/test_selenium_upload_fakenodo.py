@@ -39,7 +39,7 @@ class TestFakendooupload():
         time.sleep(1)
         self.driver.execute_script("document.body.style.zoom='50%'")
         self.driver.find_element(By.ID, "upload_fakenodo_button").click()
-        
+
         time.sleep(1)
 
         # Obtener los títulos de los datasets en la sección Fakenodo Datasets
@@ -48,4 +48,3 @@ class TestFakendooupload():
 
         # Verificar que el dataset 'test_ds_upload_zenodo' está en la lista
         assert "test_ds" in dataset_titles_text, "El dataset no se encuentra en la sección de Fakenodo Datasets"
-

@@ -59,4 +59,3 @@ class TestUploadzenodo():
         # Verificar que el dataset 'test_ds_upload_fakenodo' está en la lista
         assert "test_ds_upload_fakenodo" in dataset_titles_text,  \
             "El dataset no se encuentra en la sección de FakeNode Datasets"
-
