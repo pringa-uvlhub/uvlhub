@@ -179,9 +179,9 @@ def test_unverified_user_cannot_login(test_client):
 
 
 def test_confirm_email_invalid_token(test_client):
-    # 'invalid_token' se usa solo en pruebas y no es sensible
-    invalid_token = "invalid_token" # noqa
-    response = test_client.get(url_for('auth.confirm_email', token=invalid_token))
+    # Se define una constante para evitar el hardcoding
+    INVALID_TOKEN = "invalid_token"
+    response = test_client.get(url_for('auth.confirm_email', token=INVALID_TOKEN))
     assert response.status_code == 302
     with test_client.session_transaction() as session:
         flashes = session['_flashes']
