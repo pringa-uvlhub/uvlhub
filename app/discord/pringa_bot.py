@@ -5,7 +5,7 @@ import os
 from discord.ext import commands
 from app.discord.embeds import (
     get_introduction_embed, get_dataset_embed, get_info_datasets,
-    get_info_uvl, get_info_communities, get_info_zenodo, get_help
+    get_info_uvl, get_info_communities, get_info_zenodo, get_help, download_embed
 )
 from discord.ui import View
 
@@ -258,6 +258,33 @@ def start_bot():
                 await interaction.response.send_message(f"Error filtering communities: {str(e)}")
             else:
                 await interaction.followup.send(f"Error filtering communities: {str(e)}")
+                        
+    @bot.tree.command(name="download_dataset", description="Obtain UVL models from a dataset in a zip file")
+    async def download_dataset(interaction: discord.Interaction, dataset_id: int):
+        from app.modules.dataset.services import DataSetService
+        import tempfile
+        from zipfile import ZipFile
+        with app_create.app_context():
+            def download_dataset(dataset_id):
+                dataset = DataSetService().get_dataset_by_name_or_id(dataset_id)
+                file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+                temp_dir = tempfile.mkdtemp()
+                zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")
+                with ZipFile(zip_path, "w") as zipf:
+                    for subdir, dirs, files in os.walk(file_path):
+                        for file in files:
+                            full_path = os.path.join(subdir, file)
+                            relative_path = os.path.relpath(full_path, file_path)
+                            zipf.write(full_path, arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path))
+                
+                return dataset, zip_path
+            
+            try:
+                dataset, zip_path = download_dataset(dataset_id)
+                await interaction.response.send_message(file=discord.File(zip_path), embed=download_embed("Downloaded"))
+            except Exception:
+                await interaction.response.send_message(
+                            embed=download_embed("That dataset has not been found.", "Not Found"))
 
     # Función para correr el bot
     def run_discord_bot():

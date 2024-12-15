@@ -1,3 +1,4 @@
+import datetime
 import discord
 
 
@@ -173,4 +174,16 @@ def get_help():
         color=discord.Color.red()
     )
     embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+    return embed
+
+
+def download_embed(desc, title="Download Dataset of UVLHUb", name=None, field_desc=None, thumbnail=False):  
+    embed = discord.Embed(
+        title="Download Dataset of UVLHUb",
+        description=desc,
+        timestamp=datetime.datetime.now(),
+        color=discord.Color.blue()
+    )
+    embed.set_thumbnail(url="https://www.uvlhub.io/static/img/icons/icon-250x250.png")
+
     return embed
