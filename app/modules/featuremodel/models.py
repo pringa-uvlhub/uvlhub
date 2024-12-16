@@ -38,12 +38,6 @@ class FMMetaData(db.Model):
     fm_metrics = db.relationship('FMMetrics', uselist=False, backref='fm_meta_data')
     authors = db.relationship('Author', backref='fm_metadata', lazy=True, cascade="all, delete",
                               foreign_keys=[Author.fm_meta_data_id])
-    
-    # def update_rating(self):
-    #     total_ratings = sum(rating.rating for rating in self.ratings)
-    #     count = len(self.ratings)
-    #     self.rating = total_ratings / count if count > 0 else 0
-    #     db.session.commit()
 
     def __repr__(self):
         return f'FMMetaData<{self.title}'
