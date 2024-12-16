@@ -89,21 +89,21 @@ class FeatureModelRatingService(BaseService):
     def __init__(self):
         super().__init__(FeatureModelRatingRepository())
 
-    def add_or_update_rating(self, feature_model_id: int, user_id: int, rating_value: int) -> FeatureModelRating:
-        rating = self.repository.get_user_rating(feature_model_id, user_id)
+    def add_or_update_rating(self, fm_meta_data_id: int, user_id: int, rating_value: int) -> FeatureModelRating:
+        rating = self.repository.get_user_rating(fm_meta_data_id, user_id)
         if rating:
             print(f"Actualizando rating a {rating_value}")
             rating.rating = rating_value
         else:
             print("Valor de rating en el servicio:", rating_value)
             rating = self.repository.create(
-                commit=False, feature_model_id=feature_model_id, user_id=user_id, rating=rating_value)
+                commit=False, fm_meta_data_id=fm_meta_data_id, user_id=user_id, rating=rating_value)
             print("Valor de rating en el servicio:", rating.rating)
         self.repository.session.commit()
         return rating
 
-    def get_dataset_average_rating(self, feature_model_id: int) -> float:
-        return self.repository.get_average_rating(feature_model_id)
+    def get_dataset_average_rating(self, fm_meta_data_id: int) -> float:
+        return self.repository.get_average_rating(fm_meta_data_id)
 
-    def get_total_ratings(self, feature_model_id: int) -> int:
-        return self.repository.count_ratings(feature_model_id)
+    def get_total_ratings(self, fm_meta_data_id: int) -> int:
+        return self.repository.count_ratings(fm_meta_data_id)
