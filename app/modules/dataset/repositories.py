@@ -183,10 +183,10 @@ class DataSetRepository(BaseRepository):
             .all()
         )
 
-    def get_fakenodo_synchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
+    def get_fakenodo_synchronized_dataset(self, dataset_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)
-            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None), DataSet.id == dataset_id,
+            .filter(DSMetaData.dataset_doi.is_(None), DataSet.id == dataset_id,
                     DSMetaData.staging_area.is_(False), DSMetaData.dataset_fakenodo_doi.isnot(None))
             .first()
         )

@@ -48,7 +48,6 @@ def create():
                 current_user=current_user
             )
             community_service.join_community(community.id, current_user)
-            flash('Community created successfully!', 'success')
             return redirect(url_for('community.index_my_communities'))
 
         except Exception as e:
@@ -85,9 +84,7 @@ def delete_community(community_id):
         abort(403, description="You do not have permission to delete this community.")
 
     try:
-        if community_service.delete_community(community_id):
-            flash('Community deleted successfully!', 'success')
-        else:
+        if not community_service.delete_community(community_id):
             flash('Community could not be deleted.', 'danger')
     except Exception as e:
         flash(f'Error deleting community: {e}', 'danger')
