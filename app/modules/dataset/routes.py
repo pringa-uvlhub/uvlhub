@@ -510,10 +510,11 @@ def subdomain_index(doi):
 
     # Get dataset
     dataset = ds_meta_data.data_set
+    feature_models = [fm.to_dict() for fm in dataset.feature_models]
 
     # Save the cookie to the user's browser
     user_cookie = ds_view_record_service.create_cookie(dataset=dataset)
-    resp = make_response(render_template("dataset/view_dataset.html", dataset=dataset))
+    resp = make_response(render_template("dataset/view_dataset.html", dataset=dataset, feature_models=feature_models))
     resp.set_cookie("view_cookie", user_cookie)
 
     return resp
@@ -525,13 +526,14 @@ def get_unsynchronized_dataset(dataset_id):
 
     # Get dataset
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+    feature_models = [fm.to_dict() for fm in dataset.feature_models]
 
     if not dataset:
         abort(404)
 
     print(dataset.to_dict())
 
-    return render_template("dataset/view_dataset.html", dataset=dataset)
+    return render_template("dataset/view_dataset.html", dataset=dataset, feature_models=feature_models)
 
 
 @dataset_bp.route("/dataset/fakenodo-synchronized/<int:dataset_id>/", methods=["GET"])
@@ -540,13 +542,14 @@ def get_fakenodo_synchronized_dataset(dataset_id):
 
     # Get dataset
     dataset = dataset_service.get_fakenodo_synchronized_dataset(dataset_id)
+    feature_models = [fm.to_dict() for fm in dataset.feature_models]
 
     if not dataset:
         abort(404)
 
     print(dataset.to_dict())
 
-    return render_template("dataset/view_dataset.html", dataset=dataset)
+    return render_template("dataset/view_dataset.html", dataset=dataset, feature_models=feature_models)
 
 
 @dataset_bp.route("/datasets/<int:dataset_id>/rate", methods=["POST"])

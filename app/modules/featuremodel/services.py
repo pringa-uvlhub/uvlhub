@@ -1,4 +1,6 @@
+from app.modules.featuremodel.models import FeatureModelRating
 from app.modules.featuremodel.repositories import FMMetaDataRepository, FeatureModelRepository
+from app.modules.featuremodel.repositories import FeatureModelRatingRepository
 from app.modules.hubfile.services import HubfileService
 from core.services.BaseService import BaseService
 from app.modules.hubfile.models import Hubfile
@@ -17,6 +19,7 @@ class FeatureModelService(BaseService):
         self.fm_meta_data_repository = FMMetaDataRepository
         self.hubfile_service = HubfileService()
         self.repository = FeatureModelRepository()
+        self.featuremodelrating_repository = FeatureModelRatingService()
 
     def total_feature_model_views(self) -> int:
         return self.hubfile_service.total_hubfile_views()
@@ -80,3 +83,27 @@ class FeatureModelService(BaseService):
     class FMMetaDataService(BaseService):
         def __init__(self):
             super().__init__(FMMetaDataRepository())
+
+
+class FeatureModelRatingService(BaseService):
+    def __init__(self):
+        super().__init__(FeatureModelRatingRepository())
+
+    def add_or_update_rating(self, feature_model_id: int, user_id: int, rating_value: int) -> FeatureModelRating:
+        rating = self.repository.get_user_rating(feature_model_id, user_id)
+        if rating:
+            print(f"Actualizando rating a {rating_value}")
+            rating.rating = rating_value
+        else:
+            print("Valor de rating en el servicio:", rating_value)
+            rating = self.repository.create(
+                commit=False, feature_model_id=feature_model_id, user_id=user_id, rating=rating_value)
+            print("Valor de rating en el servicio:", rating.rating)
+        self.repository.session.commit()
+        return rating
+
+    def get_dataset_average_rating(self, feature_model_id: int) -> float:
+        return self.repository.get_average_rating(feature_model_id)
+
+    def get_total_ratings(self, feature_model_id: int) -> int:
+        return self.repository.count_ratings(feature_model_id)

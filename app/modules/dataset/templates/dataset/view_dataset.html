@@ -372,7 +372,31 @@
                                     <i data-feather="eye"></i>
                                     Add to build dataset
                                 </button>
-
+                                <div>
+                                    {% if dataset.ds_meta_data.dataset_doi %}
+                                    <div style="display: inline-block; cursor: pointer; color: #ddd;"id="star-rating-feature-{{ feature_model.id }}">
+                                        {% for i in range(1, 6) %}
+                                            <span data-value="{{ i }}" style="font-size: 1.5rem;">☆</span>
+                                        {% endfor %}
+                                    </div>
+                                    <button onclick="submitFeatureModelRating('{{ feature_model.id }}')" style="display: inline-block; margin-left: 10px; font-size: 0.9rem; {% if not current_user.is_authenticated %}display: none;{% endif %}">Rate</button>
+                                    <div>
+                                        Average Rating: <span id="average-rating-feature-{{ feature_model.id }}">0</span>/5
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if dataset.ds_meta_data.dataset_fakenodo_doi %}
+                                    <div style="display: inline-block; cursor: pointer; color: #ddd;"id="star-rating-feature-{{ feature_model.id }}">
+                                        {% for i in range(1, 6) %}
+                                            <span data-value="{{ i }}" style="font-size: 1.5rem;">☆</span>
+                                        {% endfor %}
+                                    </div>
+                                    <button onclick="submitFeatureModelRating('{{ feature_model.id }}')" style="display: inline-block; margin-left: 10px; font-size: 0.9rem; {% if not current_user.is_authenticated %}display: none;{% endif %}">Rate</button>
+                                    <div>
+                                        Average Rating: <span id="average-rating-feature-{{ feature_model.id }}">0</span>/5
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -578,7 +602,7 @@
         });
     }
 
-
+    (() => {
     const selectedRatings = {};
 
     function submitRating(datasetId) {
@@ -597,7 +621,6 @@
                 console.log('Rating submitted:', data);
                 updateAverageRating(datasetId);
                 alert('Your rating has been submitted.');
-                showMessage(`Your rating of ${ratingValue} has been submitted.`, "success");
             })
             .catch(error => console.error('Error submitting rating:', error));
         } else {
@@ -618,20 +641,22 @@
         const datasetId = {{ dataset.id }};
         const starRatingContainer = document.getElementById('star-rating-' + datasetId);
 
-        starRatingContainer.querySelectorAll('span').forEach(star => {
-        star.addEventListener('click', function () {
-            const ratingValue = this.getAttribute('data-value');
-            const currentRating = selectedRatings[datasetId];
+        if (starRatingContainer) {
+            starRatingContainer.querySelectorAll('span').forEach(star => {
+                star.addEventListener('click', function () {
+                    const ratingValue = this.getAttribute('data-value');
+                    const currentRating = selectedRatings[datasetId];
 
-            if (currentRating === ratingValue) {
-                delete selectedRatings[datasetId];
-                highlightStars(starRatingContainer, 0);
-            } else {
-                selectedRatings[datasetId] = ratingValue;
-                highlightStars(starRatingContainer, ratingValue);
-            }
-        });
-    });
+                    if (currentRating === ratingValue) {
+                        delete selectedRatings[datasetId];
+                        highlightStars(starRatingContainer, 0);
+                    } else {
+                        selectedRatings[datasetId] = ratingValue;
+                        highlightStars(starRatingContainer, ratingValue);
+                    }
+                });
+            });
+        }
 
         updateAverageRating(datasetId);
 
@@ -643,6 +668,85 @@
         }
     });
 
+    window.submitRating = submitRating;
+})();
+
+</script>
+
+<script>
+(() => {
+    const featureModelRatings = {};
+
+    function submitFeatureModelRating(featureModelId) {
+        const ratingValue = featureModelRatings[featureModelId] || 0;
+
+        if (ratingValue >= 0) {
+            fetch(`/feature-models/${featureModelId}/rate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ rating: ratingValue })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Feature model rating submitted:', data);
+                updateFeatureModelAverageRating(featureModelId);
+                alert('Your rating has been submitted.');
+            })
+            .catch(error => console.error('Error submitting feature model rating:', error));
+        } else {
+            alert('Please select a rating before submitting.');
+        }
+    }
+
+    function updateFeatureModelAverageRating(featureModelId) {
+        fetch(`/feature-models/${featureModelId}/average-rating`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('average-rating-feature-' + featureModelId).innerText = data.average_rating.toFixed(1);
+        })
+        .catch(error => console.error('Error fetching average feature model rating:', error));
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const featureModels = {{ feature_models | tojson }};
+        
+        
+        featureModels.forEach(featureModel => {
+            const featureModelId = featureModel.id;
+            const starRatingContainer = document.getElementById('star-rating-feature-' + featureModelId);
+
+            if (starRatingContainer) {
+                starRatingContainer.querySelectorAll('span').forEach(star => {
+                    star.addEventListener('click', function () {
+                        const ratingValue = this.getAttribute('data-value');
+                        const currentRating = featureModelRatings[featureModelId];
+
+                        if (currentRating === ratingValue) {
+                            delete featureModelRatings[featureModelId];
+                            highlightStars(starRatingContainer, 0);
+                        } else {
+                            featureModelRatings[featureModelId] = ratingValue;
+                            highlightStars(starRatingContainer, ratingValue);
+                        }
+                    });
+                });
+            }
+
+            updateFeatureModelAverageRating(featureModelId);
+
+            function highlightStars(container, rating) {
+                container.querySelectorAll('span').forEach(star => {
+                    const starValue = star.getAttribute('data-value');
+                    star.style.color = starValue <= rating ? '#FFD700' : '#ddd';
+                });
+            }
+        });
+    });
+
+    window.submitFeatureModelRating = submitFeatureModelRating;
+})();
 
 </script>
 
