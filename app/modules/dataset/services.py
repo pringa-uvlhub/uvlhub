@@ -190,7 +190,7 @@ class DataSetService(BaseService):
     def update_from_form(self, dataset: DataSet, form, current_user):
         dataset.ds_meta_data.title = form.title.data
         dataset.ds_meta_data.description = form.desc.data
-        dataset.ds_meta_data.publication_type = form.publication_type.data
+        dataset.ds_meta_data.publication_type = PublicationType(form.publication_type.data)
         dataset.ds_meta_data.publication_doi = form.publication_doi.data
         dataset.ds_meta_data.dataset_doi = form.dataset_doi.data
         dataset.ds_meta_data.tags = form.tags.data
