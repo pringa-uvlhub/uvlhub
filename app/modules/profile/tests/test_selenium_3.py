@@ -27,5 +27,3 @@ class TestViewProfile3():
         time.sleep(2)
         self.driver.find_element(By.LINK_TEXT, "Back to home").click()
         time.sleep(2)
-
-
