@@ -54,6 +54,21 @@ class DataSetService(BaseService):
         self.dsrating_repository = DSRatingRepository()
         self.hubfileviewrecord_repository = HubfileViewRecordRepository()
 
+    def get_dataset_by_name_or_id(self, identifier: int):
+        """
+        Obtiene un dataset a partir de su nombre o ID.
+        :param identifier: Nombre o ID del dataset.
+        :return: Objeto del dataset o None si no se encuentra.
+        """
+        # Intentar obtener el dataset por ID primero
+        dataset = self.dataset_repository.get_dataset_by_id(identifier)
+        if dataset:
+            return dataset
+
+        # Si no se encuentra por ID, intentar buscar por nombre
+        dataset = self.dataset_repository.get_dataset_by_name(identifier)
+        return dataset
+
     def move_feature_models(self, dataset: DataSet):
         current_user = AuthenticationService().get_authenticated_user()
         source_dir = current_user.temp_folder()
@@ -87,8 +102,11 @@ class DataSetService(BaseService):
     def get_fakenodo_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_fakenodo_synchronized(current_user_id)
 
-    def get_fakenodo_synchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
-        return self.repository.get_fakenodo_synchronized_dataset(current_user_id, dataset_id)
+    def get_fakenodo_synchronized_dataset(self, dataset_id: int) -> DataSet:
+        return self.repository.get_fakenodo_synchronized_dataset(dataset_id)
+
+    def all_synchronized(self):
+        return self.repository.all_synchronized()
 
     def latest_synchronized(self):
         return self.repository.latest_synchronized()

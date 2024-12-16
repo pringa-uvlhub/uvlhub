@@ -22,6 +22,7 @@ class TestTestpruebaseleniumratedataset():
         self.driver.find_element(By.ID, "submit").click()
         self.driver.find_element(By.CSS_SELECTOR, ".sidebar-toggle").click()
         self.driver.find_element(By.CSS_SELECTOR, ".sidebar-item:nth-child(11) .align-middle:nth-child(2)").click()
+        self.driver.execute_script("document.body.style.zoom='50%'")
         self.driver.find_element(By.LINK_TEXT, "Staging area dataset").click()
         self.driver.execute_script("document.body.style.zoom='50%'")
         time.sleep(1)

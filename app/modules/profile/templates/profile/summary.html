@@ -1,6 +1,5 @@
 {% extends "base_template.html" %}
 
-
 {% block title %}User Profile{% endblock %}
 
 {% block content %}
@@ -34,21 +33,22 @@
 
 <h1 class="h3 mb-3">User datasets</h1>
 
-    {% if datasets %}
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Title</th>
-                                <th>Publication type</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                          
-                            {% for dataset in datasets %}
+{% if datasets %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Publication type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      
+                        {% for dataset in datasets %}
+                        {% if not (user.id != current_user.id and (dataset.ds_meta_data.staging_area or (not dataset.ds_meta_data.dataset_fakenodo_doi and not dataset.ds_meta_data.dataset_doi))) %}
                         <tr>
                             <td>
                                 {% if dataset.ds_meta_data.dataset_doi %}
@@ -59,11 +59,11 @@
                                     <a href="{{ url_for('dataset.get_fakenodo_synchronized_dataset', dataset_id=dataset.id) }}">
                                         {{ dataset.ds_meta_data.title }}
                                     </a>
-                                {% elif dataset.ds_meta_data.staging_area %}
+                                {% elif dataset.ds_meta_data.staging_area and user.id == current_user.id %}
                                     <a href="{{ url_for('dataset.update_staging_area_dataset', dataset_id=dataset.id) }}">
                                         {{ dataset.ds_meta_data.title }}
                                     </a>
-                                {% elif not dataset.ds_meta_data.dataset_fakenodo_doi and not dataset.ds_meta_data.staging_area %}
+                                {% elif not dataset.ds_meta_data.dataset_fakenodo_doi and not dataset.ds_meta_data.staging_area and user.id == current_user.id %}
                                     <a href="{{ url_for('dataset.get_unsynchronized_dataset', dataset_id=dataset.id) }}">
                                         {{ dataset.ds_meta_data.title }}
                                     </a>
@@ -73,54 +73,54 @@
                             </td>
                             <td>{{ dataset.ds_meta_data.publication_type.name.replace('_', ' ').title() }}</td>
                         </tr>
+                        {% endif %}
                         {% else %}
-                          
                             <tr>
                                 <td colspan="2">No datasets uploaded.</td>
                             </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-   <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-center mt-4">
-                <nav>
-                    <ul class="pagination">
-                        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                            <a class="page-link" href="{% if pagination.has_prev %}{{ url_for('profile.user_profile', user_id=user.id, page=pagination.prev_num) }}{% else %}# {% endif %}" aria-label="Previous">
-                                &laquo;
-                            </a>
-                        </li>
-                        {% for num in pagination.iter_pages() %}
-                        <li class="page-item {% if num == pagination.page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('profile.user_profile', user_id=user.id, page=num) }}">
-                                {{ num }}
-                            </a>
-                        </li>
                         {% endfor %}
-                        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                            <a class="page-link" href="{% if pagination.has_next %}{{ url_for('profile.user_profile', user_id=user.id, page=pagination.next_num) }}{% else %}# {% endif %}" aria-label="Next">
-                                &raquo;
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="alert alert-info" role="alert">
-        No datasets found
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-center mt-4">
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{% if pagination.has_prev %}{{ url_for('profile.user_profile', user_id=user.id, page=pagination.prev_num) }}{% else %}# {% endif %}" aria-label="Previous">
+                            &laquo;
+                        </a>
+                    </li>
+                    {% for num in pagination.iter_pages() %}
+                    <li class="page-item {% if num == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('profile.user_profile', user_id=user.id, page=num) }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{% if pagination.has_next %}{{ url_for('profile.user_profile', user_id=user.id, page=pagination.next_num) }}{% else %}# {% endif %}" aria-label="Next">
+                            &raquo;
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
-    {% endif %}
+</div>
+{% else %}
+<div class="alert alert-info" role="alert">
+    No datasets found
+</div>
+{% endif %}
 
 {% endblock %}
 
 {% block scripts %}
-    <script src="{{ url_for('profile.scripts') }}"></script>
+<script src="{{ url_for('profile.scripts') }}"></script>
 {% endblock %}

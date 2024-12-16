@@ -134,3 +134,20 @@ class CommunityService(BaseService):
         self.repository.session.commit()
 
         return True
+
+    def filter_communities(self, query: str) -> list[Community]:
+        try:
+            # Búsqueda basada en el nombre o la descripción de la comunidad
+            filtered_communities = (
+                self.repository.model.query
+                .filter(
+                    (self.repository.model.name.ilike(f"%{query}%")) |
+                    (self.repository.model.description.ilike(f"%{query}%"))
+                )
+                .order_by(self.repository.model.created_at.desc())
+                .all()
+            )
+            return filtered_communities
+        except Exception as exc:
+            logger.error(f"Error filtering communities with query '{query}': {exc}")
+            raise exc
