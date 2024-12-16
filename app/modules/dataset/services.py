@@ -102,8 +102,8 @@ class DataSetService(BaseService):
     def get_fakenodo_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_fakenodo_synchronized(current_user_id)
 
-    def get_fakenodo_synchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
-        return self.repository.get_fakenodo_synchronized_dataset(current_user_id, dataset_id)
+    def get_fakenodo_synchronized_dataset(self, dataset_id: int) -> DataSet:
+        return self.repository.get_fakenodo_synchronized_dataset(dataset_id)
 
     def all_synchronized(self):
         return self.repository.all_synchronized()

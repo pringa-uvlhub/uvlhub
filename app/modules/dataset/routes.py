@@ -539,7 +539,7 @@ def get_unsynchronized_dataset(dataset_id):
 def get_fakenodo_synchronized_dataset(dataset_id):
 
     # Get dataset
-    dataset = dataset_service.get_fakenodo_synchronized_dataset(current_user.id, dataset_id)
+    dataset = dataset_service.get_fakenodo_synchronized_dataset(dataset_id)
 
     if not dataset:
         abort(404)
