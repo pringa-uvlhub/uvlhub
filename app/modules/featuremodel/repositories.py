@@ -26,14 +26,14 @@ class FeatureModelRatingRepository(BaseRepository):
     def __init__(self):
         super().__init__(FeatureModelRating)
 
-    def get_user_rating(self, feature_model_id: int, user_id: int) -> Optional[FeatureModelRating]:
-        return self.model.query.filter(FeatureModelRating.feature_model_id == feature_model_id,
+    def get_user_rating(self, fm_meta_data_id: int, user_id: int) -> Optional[FeatureModelRating]:
+        return self.model.query.filter(FeatureModelRating.fm_meta_data_id == fm_meta_data_id,
                                        FeatureModelRating.user_id == user_id).first()
 
-    def get_average_rating(self, feature_model_id: int) -> float:
-        average = self.model.query.filter(FeatureModelRating.feature_model_id == feature_model_id) \
+    def get_average_rating(self, fm_meta_data_id: int) -> float:
+        average = self.model.query.filter(FeatureModelRating.fm_meta_data_id == fm_meta_data_id) \
             .with_entities(func.avg(FeatureModelRating.rating)).scalar()
         return average if average else 0.0
 
-    def count_ratings(self, feature_model_id: int) -> int:
-        return self.model.query.filter(FeatureModelRating.feature_model_id == feature_model_id).count()
+    def count_ratings(self, fm_meta_data_id: int) -> int:
+        return self.model.query.filter(FeatureModelRating.fm_meta_data_id == fm_meta_data_id).count()
