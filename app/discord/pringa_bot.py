@@ -279,7 +279,7 @@ def register_commands(bot):
 
 
 def start_bot():
-    token = os.getenv("DISCORD_TOKEN")
+    token = os.getenv("DISCORD_BOT_TOKEN")
 
     bot = initialize_bot()
     register_commands(bot)
