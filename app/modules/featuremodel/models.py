@@ -1,3 +1,4 @@
+from datetime import datetime
 from app import db
 from sqlalchemy import Enum as SQLAlchemyEnum
 
@@ -18,6 +19,7 @@ class FeatureModel(db.Model):
         return {
             'id': self.id,
             'title': self.fm_meta_data.title,
+            'rating': self.fm_meta_data.rating,
             'files': [file.to_dict() for file in self.files]
         }
 
@@ -26,6 +28,7 @@ class FMMetaData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uvl_filename = db.Column(db.String(120), nullable=False)
     title = db.Column(db.String(120), nullable=False)
+    rating = db.Column(db.Float, default=0.0)
     description = db.Column(db.Text, nullable=False)
     publication_type = db.Column(SQLAlchemyEnum(PublicationType), nullable=False)
     publication_doi = db.Column(db.String(120))
@@ -47,3 +50,22 @@ class FMMetrics(db.Model):
 
     def __repr__(self):
         return f'FMMetrics<solver={self.solver}, not_solver={self.not_solver}>'
+
+
+class FeatureModelRating(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    fm_meta_data_id = db.Column(db.Integer, db.ForeignKey('fm_meta_data.id'), nullable=False)
+    rating = db.Column(db.Float, default=0, nullable=False)
+    rated_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    fm_meta_data = db.relationship('FMMetaData', backref=db.backref('ratings', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'fm_meta_data_id': self.fm_meta_data_id,
+            'rating': self.rating,
+            'rated_date': self.rated_date
+        }

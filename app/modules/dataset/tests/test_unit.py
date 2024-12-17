@@ -500,6 +500,56 @@ def test_update_staging_area_dataset(client):
     logout(client)
 
 
+def test_update_staging_area_dataset_publication_type_spaces(client):
+    login_response = login(client, "user5@example.com", "1234")
+    assert login_response.status_code == 200, "Login was unsuccessful."
+
+    # Obtener el ID del dataset creado en la fixture
+    dataset = DataSet.query.join(DSMetaData).filter(DSMetaData.title == "Staging area Dataset").first()
+    assert dataset is not None, "Dataset with title 'Staging area Dataset' not found"
+    dataset_id = dataset.id
+
+    # Hacer una solicitud GET a la ruta /dataset/staging-area/<int:dataset_id> para obtener
+    # el formulario de actualización
+    response = client.get(f'/dataset/staging-area/{dataset_id}')
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+
+    # Datos de ejemplo para actualizar el dataset
+    form_data_update = {
+        "title": "updated unique dataset",
+        "desc": "updated description",
+        "publication_type": "softwaredocumentation",
+        "publication_doi": "",
+        "dataset_doi": "",
+        "tags": "",
+        "authors-0-name": "Updated Author Name",
+        "authors-0-affiliation": "Updated Author Affiliation",
+        "authors-0-orcid": "0000-0001-2345-6789",
+        "feature_models-0-uvl_filename": "file9.uvl",
+        "feature_models-0-title": "Updated Feature Model Title",
+        "feature_models-0-desc": "Updated Feature Model Description",
+        "feature_models-0-publication_type": "none",
+        "feature_models-0-publication_doi": "",
+        "feature_models-0-tags": "",
+        "feature_models-0-version": "1.0",
+        "feature_models-0-authors-0-name": "Updated FM Author Name",
+        "feature_models-0-authors-0-affiliation": "Updated FM Author Affiliation",
+        "feature_models-0-authors-0-orcid": "0000-0002-3456-7890"
+    }
+
+    # Enviar la solicitud POST con los datos del formulario para actualizar el dataset
+    response = client.post(f'/dataset/staging-area/{dataset_id}', data=form_data_update)
+    assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}"
+
+    # Verificar que el publication type se actualizó correctamente
+    updated_dataset = DataSet.query.get(dataset_id)
+    assert str(updated_dataset.ds_meta_data.publication_type) == str(PublicationType.SOFTWARE_DOCUMENTATION), \
+        f"Expected publication type {str(PublicationType.SOFTWARE_DOCUMENTATION)}, but got " \
+        f"{str(updated_dataset.ds_meta_data.publication_type)}"
+
+    logout(client)
+
+
 def test_delete_dataset(client):
     login_response = login(client, "user5@example.com", "1234")
     assert login_response.status_code == 200, "Login was unsuccessful."

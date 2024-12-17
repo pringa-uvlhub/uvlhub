@@ -64,5 +64,4 @@ def test_user_profile_nonexistent_user(test_client):
     login(test_client, "user@example.com", "test1234")
     response = test_client.get("/profile/9999")
     assert response.status_code == 404, "Expected 404 for nonexistent user profile."
-
     logout(test_client)
