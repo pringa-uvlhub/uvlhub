@@ -5,7 +5,13 @@
 {% block content %}
 
     <h1 class="h3 mb-3"><b>My Created Communities</b></h1>
-
+    <form method="GET" action="{{ url_for('community.view_my_communities') }}" class="mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" name="search" placeholder="Search by name" value="{{ request.args.get('search', '') }}">
+            <button class="btn btn-secondary" type="submit">Search</button>
+        </div>
+    </form>
+    
     <a href="{{ url_for('community.create') }}" class="btn btn-primary mb-4">Create Community</a>
 
     <div class="row row-cols-1 row-cols-lg-3 row-cols-md-2 row-cols-12 g-4">
