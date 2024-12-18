@@ -261,3 +261,20 @@ def view_communities():
     else:
         communities = Community.query.all()
     return render_template('community/index.html', communities=communities)
+
+
+@community_bp.route('/my_community', methods=['GET'])
+@login_required
+def view_my_communities():
+    search_term = request.args.get('search', '').strip()
+
+    if search_term:
+
+        communities = Community.query.filter(
+            Community.name.ilike(f'%{search_term}%'),
+            Community.created_by_id == current_user.id
+        ).all()
+    else:
+        communities = Community.query.filter_by(created_by_id=current_user.id).all()
+
+    return render_template('community/index_my_communities.html', communities=communities)
